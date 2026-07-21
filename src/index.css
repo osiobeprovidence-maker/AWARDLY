@@ -1,0 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, serif;
+  
+  --color-gold-50: #fbf8f1;
+  --color-gold-100: #f5eedb;
+  --color-gold-200: #ead8b0;
+  --color-gold-300: #debe7e;
+  --color-gold-400: #d4a352;
+  --color-gold-500: #c68a35;
+  --color-gold-600: #ab6e2a;
+  --color-gold-700: #895225;
+  --color-gold-800: #714324;
+  --color-gold-900: #5c3720;
+  --color-gold-950: #351d0f;
+
+  --color-dark-50: #f6f6f6;
+  --color-dark-100: #e7e7e7;
+  --color-dark-200: #d1d1d1;
+  --color-dark-300: #b0b0b0;
+  --color-dark-400: #888888;
+  --color-dark-500: #6d6d6d;
+  --color-dark-600: #5d5d5d;
+  --color-dark-700: #4f4f4f;
+  --color-dark-800: #454545;
+  --color-dark-900: #3d3d3d;
+  --color-dark-950: #0a0a0a;
+}
+
+@layer base {
+  body {
+    @apply bg-dark-950 text-dark-50 font-sans antialiased selection:bg-gold-500/30 selection:text-gold-100 overflow-x-hidden;
+  }
+}
+
+.glass-panel {
+  @apply bg-dark-900/40 backdrop-blur-md border border-white/5 shadow-xl;
+}
+
+.glass-panel-hover {
+  @apply hover:bg-dark-900/60 transition-colors duration-300;
+}
+
+/* Custom scrollbar for a sleek look */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-dark-950;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-dark-800 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-dark-700;
+}

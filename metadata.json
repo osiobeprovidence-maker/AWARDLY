@@ -1,0 +1,6 @@
+{
+  "name": "AWARDLY",
+  "description": "A premium social community and award event management platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
