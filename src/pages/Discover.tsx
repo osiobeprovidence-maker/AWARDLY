@@ -6,11 +6,12 @@ import { Input } from '../components/ui/Input';
 import { Search, Trophy, Users, Star, ArrowRight, ShieldCheck, Globe, Radio, Sparkles, TrendingUp, Filter, Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
+import { headiesLogo, awardStage } from '../data';
 
 const categories = ['All', 'Entertainment', 'Corporate', 'Government', 'Non-Profit', 'Tech'];
 
 const hubs = [
-  { id: 'headies', name: 'Headies Official', category: 'Entertainment', followers: '1.4M', events: '14 Active', rating: 4.9, image: '/src/assets/images/headies_logo_gold_1784644513476.jpg', isLive: true },
+  { id: 'headies', name: 'Headies Official', category: 'Entertainment', followers: '1.4M', events: '14 Active', rating: 4.9, image: headiesLogo, isLive: true },
   { id: 'banking', name: 'Global Banking Awards', category: 'Corporate', followers: '450K', events: '2 Active', rating: 4.8, image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&q=80&w=800', isLive: false },
   { id: 'oscars', name: 'Cinema Excellence', category: 'Entertainment', followers: '5.2M', events: '1 Active', rating: 5.0, image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800', isLive: true },
   { id: 'un-sdg', name: 'Impact Global', category: 'Non-Profit', followers: '890K', events: '8 Active', rating: 4.7, image: 'https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?auto=format&fit=crop&q=80&w=800', isLive: false },
@@ -175,7 +176,7 @@ export function Discover() {
         {!searchQuery && selectedCategory === 'All' && (
           <div className="mb-24 grid grid-cols-1 lg:grid-cols-2 gap-8">
              <Card className="aspect-[21/9] p-0 overflow-hidden relative group cursor-pointer border-gold-500/20">
-                <img src="/src/assets/images/cinematic_award_stage_1784642261177.jpg" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" alt="Featured" />
+                 <img src={awardStage} className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" alt="Featured" />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/20 to-transparent" />
                 <div className="absolute bottom-8 left-8 right-8">
                    <span className="px-3 py-1 bg-gold-500 text-dark-950 text-[8px] font-black uppercase tracking-widest rounded mb-4 inline-block">Featured Awards Hub</span>

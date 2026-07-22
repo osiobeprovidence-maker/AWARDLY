@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { useNavigate, Link } from 'react-router-dom';
 import { Trophy, Star, Shield, Zap, Globe, Users, ArrowRight, CheckCircle2, ChevronRight, Menu, X } from 'lucide-react';
 import { BrandLogo } from '../components/brand/BrandLogo';
+import { headiesBanner } from '../data';
 
 export function Home() {
   const navigate = useNavigate();
@@ -236,7 +237,7 @@ export function Home() {
                 <div className="aspect-square bg-gold-400/10 rounded-full blur-[100px] absolute inset-0 -z-10" />
                 <div className="rounded-3xl border border-white/10 bg-dark-900 shadow-2xl overflow-hidden p-2 transform rotate-3">
                    <img 
-                    src="/src/assets/images/headies_banner_crowd_1784644528540.jpg" 
+                    src={headiesBanner} 
                     alt="Platform Preview" 
                     className="w-full h-auto rounded-2xl opacity-90 grayscale hover:grayscale-0 transition-all duration-700"
                     referrerPolicy="no-referrer"

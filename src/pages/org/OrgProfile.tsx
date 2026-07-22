@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { mockOrgs, mockEvents, mockPosts, mockNominees } from '../../data';
+import { mockOrgs, mockEvents, mockPosts, mockNominees, cocaColaBanner, awardStage } from '../../data';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs';
@@ -186,12 +186,12 @@ export function OrgProfile() {
                  <p className="text-white font-serif text-sm italic">The Coca-Cola Company</p>
               </div>
               <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/10 p-1 flex items-center justify-center overflow-hidden group-hover:border-red-500/30 transition-all">
-                 <img 
-                   src="/src/assets/images/coca_cola_sponsor_banner_1784649889595.jpg" 
-                   className="h-full w-full object-cover rounded-lg" 
-                   alt="Coca-Cola" 
-                   referrerPolicy="no-referrer" 
-                 />
+                  <img 
+                    src={cocaColaBanner} 
+                    className="h-full w-full object-cover rounded-lg" 
+                    alt="Coca-Cola" 
+                    referrerPolicy="no-referrer" 
+                  />
               </div>
            </div>
         </div>
@@ -235,12 +235,12 @@ export function OrgProfile() {
                           <div className="p-8 flex-1">
                              <div className="flex items-center gap-3 mb-4">
                                 <div className="h-6 w-6 rounded bg-white/5 border border-white/10 p-1 flex items-center justify-center">
-                                   <img 
-                                     src="/src/assets/images/coca_cola_sponsor_banner_1784649889595.jpg" 
-                                     className="h-full w-full object-contain grayscale group-hover:grayscale-0 transition-all" 
-                                     alt="Coke" 
-                                     referrerPolicy="no-referrer" 
-                                   />
+                                    <img 
+                                      src={cocaColaBanner} 
+                                      className="h-full w-full object-contain grayscale group-hover:grayscale-0 transition-all" 
+                                      alt="Coke" 
+                                      referrerPolicy="no-referrer" 
+                                    />
                                 </div>
                                 <span className="text-[8px] font-black uppercase tracking-[0.2em] text-dark-500">Presented by The Coca-Cola Company</span>
                              </div>
@@ -525,7 +525,7 @@ export function OrgProfile() {
                          <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-lg bg-white/5 border border-white/10 p-1.5 flex items-center justify-center">
                                <img 
-                                 src="/src/assets/images/coca_cola_sponsor_banner_1784649889595.jpg" 
+                                 src={cocaColaBanner} 
                                  className="h-full w-full object-contain" 
                                  alt="Coca-Cola" 
                                  referrerPolicy="no-referrer" 
@@ -547,7 +547,7 @@ export function OrgProfile() {
                       <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                       <div className="absolute top-0 right-0 p-4 opacity-10">
                          <img 
-                           src="/src/assets/images/coca_cola_sponsor_banner_1784649889595.jpg" 
+                           src={cocaColaBanner} 
                            className="h-32 w-32 object-contain" 
                            alt="Coke Bg" 
                          />
@@ -622,12 +622,12 @@ export function OrgProfile() {
                           <span className="h-2 w-2 bg-white rounded-full animate-pulse mr-2" /> Live
                        </span>
                     </div>
-                    <img 
-                      src="/src/assets/images/cinematic_award_stage_1784642261177.jpg" 
-                      className="absolute inset-0 w-full h-full object-cover opacity-50 grayscale-0" 
-                      alt="Broadcast cover" 
-                      referrerPolicy="no-referrer"
-                    />
+                     <img 
+                       src={awardStage} 
+                       className="absolute inset-0 w-full h-full object-cover opacity-50 grayscale-0" 
+                       alt="Broadcast cover" 
+                       referrerPolicy="no-referrer"
+                     />
                     <div className="relative z-10 text-center">
                        <Button variant="glass" size="icon" className="h-20 w-20 rounded-full border-2 border-white/20 hover:scale-110 transition-transform">
                           <PlayCircle className="h-10 w-10 text-white fill-white" />
