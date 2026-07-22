@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { usePaystackPayment } from 'react-paystack';
 import { mockEvents, mockCategories, mockNominees, mockOrgs } from '../../data';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -36,29 +35,12 @@ export function EventDetails() {
     '100': 18000
   };
 
-  const config = {
-    reference: (new Date()).getTime().toString(),
-    email: "user@example.com",
-    amount: packagePrices[selectedPackage] * 100, // Amount is in kobo
-    publicKey: 'pk_test_your_public_key_here',
-  };
-
-  const initializePayment = usePaystackPayment(config);
-
-  const onSuccess = (reference: any) => {
+  const handleVote = () => {
     setIsVoting(true);
     setTimeout(() => {
       setIsVoting(false);
       setSelectedNominee(null);
     }, 2000);
-  };
-
-  const onClose = () => {
-    console.log('Payment closed');
-  };
-
-  const handleVote = () => {
-    initializePayment({ onSuccess, onClose });
   };
 
   return (
