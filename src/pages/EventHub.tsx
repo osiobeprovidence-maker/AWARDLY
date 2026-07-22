@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { PublicNav } from '../components/navigation/PublicNav';
+import { VideoPlayer } from '../components/player';
 import {
   Trophy, Calendar, Clock, MapPin, Users, Vote, Award, Target, CheckCircle2,
   ArrowRight, Share2, Bookmark, ExternalLink, ChevronDown, ChevronUp,
@@ -731,16 +732,17 @@ function BroadcastSection({ event, onFullscreen }: { event: EventData; onFullscr
     <div className="space-y-6">
       {/* Main Player */}
       <div id="broadcast-player" className="space-y-4">
-        <div className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-dark-900" style={{ aspectRatio: '16/9' }}>
-          {bc.youtubeVideoId ? (
-            <iframe
-              src={`https://www.youtube.com/embed/${bc.youtubeVideoId}?rel=0&modestbranding=1&playsinline=1`}
-              title={`${event.title} Live Broadcast`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-            />
-          ) : (
+        {bc.youtubeVideoId ? (
+          <VideoPlayer
+            videoId={bc.youtubeVideoId}
+            status={bc.status === 'live' ? 'live' : bc.status === 'replay' ? 'replay' : 'upcoming'}
+            viewerCount={bc.viewerCount}
+            title={event.title}
+            org={event.org}
+            scheduledAt={bc.scheduledAt}
+          />
+        ) : (
+          <div className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-dark-900" style={{ aspectRatio: '16/9' }}>
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
               <div className="h-16 w-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-5">
                 <Radio className="h-8 w-8 text-dark-600" />
@@ -754,8 +756,8 @@ function BroadcastSection({ event, onFullscreen }: { event: EventData; onFullscr
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Live Badge */}
         <div className="flex items-center gap-3">

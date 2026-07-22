@@ -12,7 +12,7 @@ import {
   useStreamData, useLikes, useBookmarks, useFollows,
   mockPosts, currentUser, showToast
 } from '../lib/feedData';
-import { VideoPlayer } from '../components/feed/VideoPlayer';
+import { VideoPlayer } from '../components/player';
 import { LikeButton } from '../components/feed/LikeButton';
 import { FollowButton } from '../components/feed/FollowButton';
 import { ViewerCounter } from '../components/feed/ViewerCounter';
@@ -74,7 +74,14 @@ export function LiveFeed() {
 
             {/* Video Player */}
             {loading ? <VideoSkeleton /> : (
-              <VideoPlayer videoId={stream.youtubeVideoId} status={stream.status} scheduledAt={stream.scheduledAt} />
+              <VideoPlayer
+                videoId={stream.youtubeVideoId}
+                status={stream.status}
+                viewerCount={stream.viewerCount}
+                title={stream.title}
+                org="Headies Official"
+                scheduledAt={stream.scheduledAt}
+              />
             )}
 
             {/* Stream Info */}
