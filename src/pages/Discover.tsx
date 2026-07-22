@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Search, Trophy, Users, Star, ArrowRight, ShieldCheck, Globe, Radio, Sparkles, TrendingUp, Filter, Menu, X } from 'lucide-react';
+import { Search, Trophy, Users, Star, ArrowRight, ShieldCheck, Globe, Radio, Filter, Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { headiesLogo, awardStage } from '../data';
@@ -175,8 +175,8 @@ export function Discover() {
 
         {/* Top Tier Spotlight */}
         {!searchQuery && selectedCategory === 'All' && (
-          <div className="mb-12 sm:mb-20 lg:mb-24 grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
-             <Card className="aspect-video sm:aspect-[21/9] lg:aspect-[21/9] p-0 overflow-hidden relative group cursor-pointer border-gold-500/20">
+          <div className="mb-12 sm:mb-20 lg:mb-24">
+             <Card className="aspect-video sm:aspect-[21/9] p-0 overflow-hidden relative group cursor-pointer border-gold-500/20">
                  <img src={awardStage} className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" alt="Featured" />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/20 to-transparent" />
                 <div className="absolute bottom-4 sm:bottom-8 left-4 sm:left-8 right-4 sm:right-8">
@@ -188,25 +188,6 @@ export function Discover() {
                    </Link>
                 </div>
              </Card>
-             <div className="grid grid-cols-2 gap-3 sm:gap-8">
-                <Card className="bg-dark-900 border-white/5 p-4 sm:p-8 flex flex-col justify-between hover:border-gold-500/30 transition-all">
-                   <TrendingUp className="h-6 sm:h-8 w-6 sm:w-8 text-gold-500 mb-3 sm:mb-6" />
-                   <div>
-                      <h4 className="text-white font-serif text-sm sm:text-xl mb-1 sm:mb-2 italic tracking-tight">Trending</h4>
-                      <p className="text-dark-500 text-[10px] sm:text-xs leading-relaxed uppercase tracking-widest font-bold">Best Director reached 450k votes</p>
-                   </div>
-                </Card>
-                <Card className="bg-dark-900 border-white/5 p-4 sm:p-8 flex flex-col justify-between hover:border-gold-500/30 transition-all">
-                   <Sparkles className="h-6 sm:h-8 w-6 sm:w-8 text-gold-500 mb-3 sm:mb-6" />
-                   <div>
-                      <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                        <h4 className="text-white font-serif text-sm sm:text-xl italic tracking-tight">Fintech Innovators</h4>
-                        <span className="px-2 py-0.5 bg-gold-500/10 border border-gold-500/20 rounded-full text-[8px] font-bold text-gold-500 uppercase tracking-widest">New</span>
-                      </div>
-                      <p className="text-dark-500 text-[10px] sm:text-xs leading-relaxed uppercase tracking-widest font-bold">Updated nominations for 2026</p>
-                   </div>
-                </Card>
-             </div>
           </div>
         )}
 
