@@ -114,7 +114,7 @@ export function Home() {
             transition={{ delay: 0.2 }}
             className="text-lg md:text-xl text-dark-300 max-w-2xl mb-12 leading-relaxed"
           >
-            AWARDLY is the premiere multi-tenant platform for prestigious organizations to host high-stakes awards, manage secure voting, and broadcast excellence to millions.
+            Awardly is the all-in-one platform for organizations to launch, manage, and monetize world-class awards. Create your own branded Award Hub, accept nominations, run secure voting, and celebrate excellence with confidence.
           </motion.p>
 
           <motion.div 
@@ -138,7 +138,7 @@ export function Home() {
             transition={{ delay: 0.6 }}
             className="mt-24 w-full"
           >
-             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-dark-500 mb-8">Trusted by Elite Organizations</p>
+             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-dark-500 mb-8">Built for Organizations That Celebrate Excellence</p>
              <div className="flex flex-wrap justify-center items-center gap-12 opacity-40 grayscale pointer-events-none">
                 <span className="text-2xl font-serif font-bold text-white tracking-widest">HEADIES</span>
                 <span className="text-2xl font-serif font-bold text-white tracking-widest">OSCARS</span>
@@ -155,17 +155,17 @@ export function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-24">
              <h2 className="text-3xl md:text-5xl font-serif text-white mb-6">Built for Prestige at Scale</h2>
-             <p className="text-dark-400 max-w-xl mx-auto">Everything you need to run professional ceremonies, from category definition to multi-channel voting.</p>
+             <p className="text-dark-400 max-w-xl mx-auto">Everything you need to plan, manage, and grow a professional awards program, from nominations and judging to secure voting, audience engagement, and winner announcements.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Trophy, title: 'Intelligent Categories', desc: 'Define complex award structures, nominee lists, and eligibility rules with a sleek dashboard.' },
-              { icon: Shield, title: 'Anti-Fraud Voting', desc: 'Secure voting engine with phone verification, payment gateway integration, and real-time auditing.' },
-              { icon: Zap, title: 'Real-time Analytics', desc: 'Watch the leaderboard evolve in real-time. Gain deep insights into your audience engagement.' },
-              { icon: Users, title: 'Audience CRM', desc: 'Own your audience data. Communicate with followers and build a community around your brand.' },
-              { icon: Globe, title: 'Full Customization', desc: 'Your brand, your rules. Customize every aspect of your public-facing award hub.' },
-              { icon: Star, title: 'Monetization Suite', desc: 'Generate revenue through paid voting packages, sponsored categories, and ads.' },
+              { icon: Trophy, title: 'Intelligent Categories', desc: 'Design award categories, eligibility rules, nominee requirements, and judging criteria through an intuitive management dashboard.' },
+              { icon: Shield, title: 'Anti-Fraud Voting', desc: 'Protect every vote using fraud detection, phone verification, payment integration, and real-time monitoring.' },
+              { icon: Zap, title: 'Real-time Analytics', desc: 'Track voting activity, audience engagement, and event performance through powerful real-time insights.' },
+              { icon: Users, title: 'Audience CRM', desc: 'Build lasting relationships with nominees, voters, sponsors, and supporters from one centralized platform.' },
+              { icon: Globe, title: 'Full Customization', desc: 'Launch a fully branded Award Hub that reflects your organization\'s identity, colors, and experience.' },
+              { icon: Star, title: 'Monetization Suite', desc: 'Generate sustainable revenue through paid voting, premium nominations, sponsorships, advertising, and partnerships.' },
             ].map((feature, i) => (
               <motion.div 
                 key={i}
@@ -191,19 +191,19 @@ export function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 text-center">
            <div>
               <h4 className="text-3xl md:text-6xl font-serif text-gold-400 mb-2">12M+</h4>
-              <p className="text-[10px] font-bold text-white uppercase tracking-widest">Votes Processed</p>
+               <p className="text-[10px] font-bold text-white uppercase tracking-widest">Votes Processed Securely</p>
            </div>
            <div>
               <h4 className="text-3xl md:text-6xl font-serif text-gold-400 mb-2">450+</h4>
-              <p className="text-[10px] font-bold text-white uppercase tracking-widest">Events Hosted</p>
+               <p className="text-[10px] font-bold text-white uppercase tracking-widest">Award Events Hosted</p>
            </div>
            <div>
               <h4 className="text-3xl md:text-6xl font-serif text-gold-400 mb-2">2k+</h4>
-              <p className="text-[10px] font-bold text-white uppercase tracking-widest">Award Hubs</p>
+               <p className="text-[10px] font-bold text-white uppercase tracking-widest">Award Hubs Created</p>
            </div>
            <div>
               <h4 className="text-3xl md:text-6xl font-serif text-gold-400 mb-2">$4M</h4>
-              <p className="text-[10px] font-bold text-white uppercase tracking-widest">Monetized for Hubs</p>
+               <p className="text-[10px] font-bold text-white uppercase tracking-widest">Revenue Generated for Organizers</p>
            </div>
         </div>
       </section>
@@ -216,9 +216,9 @@ export function Home() {
                 <h2 className="text-4xl font-serif text-white mb-8">From Concept to Ceremony in Minutes</h2>
                 <div className="space-y-12">
                    {[
-                     { step: '01', title: 'Onboard Organization', desc: 'Create your hub, upload your branding, and define your mission.' },
-                     { step: '02', title: 'Configure Awards', desc: 'Set up categories, nominees, and voting rules for your specific needs.' },
-                     { step: '03', title: 'Engage & Broadcast', desc: 'Launch your hub publically, open voting, and post community updates.' },
+                     { step: '01', title: 'Onboard Your Organization', desc: 'Create your Award Hub, upload your branding, and configure your organization.' },
+                     { step: '02', title: 'Build Your Awards', desc: 'Create categories, accept nominations, configure judges, and define your voting rules.' },
+                     { step: '03', title: 'Launch & Celebrate', desc: 'Open nominations or voting, engage your audience, announce winners, and celebrate excellence.' },
                    ].map((item, i) => (
                      <div key={i} className="flex gap-6 group">
                         <span className="text-3xl font-serif text-gold-500/20 group-hover:text-gold-500 transition-colors">{item.step}</span>
@@ -252,7 +252,7 @@ export function Home() {
       <section className="py-32 px-6 border-t border-white/5">
          <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl md:text-6xl font-serif text-white mb-8">Ready to define excellence?</h2>
-            <p className="text-dark-400 text-lg mb-12">Join thousands of organizations building world-class award experiences for their communities.</p>
+             <p className="text-dark-400 text-lg mb-12">Create a professional Award Hub in minutes and deliver unforgettable award experiences for your community.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                <Button onClick={() => navigate('/auth/signup')} size="lg" className="h-16 px-12 text-lg">Create Your Hub</Button>
                <Button onClick={() => navigate('/discover')} size="lg" variant="outline" className="h-16 px-12 text-lg">Browse Award Directory</Button>
@@ -269,7 +269,7 @@ export function Home() {
                 <BrandLogo />
               </Link>
               <p className="text-dark-400 text-sm leading-relaxed mb-6">
-                The global infrastructure for award management and community excellence.
+                The world's leading platform for award management, secure voting, and community recognition.
               </p>
               <div className="flex gap-4">
                 {['twitter', 'instagram', 'linkedin'].map((s) => (
