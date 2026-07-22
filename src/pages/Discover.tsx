@@ -116,10 +116,10 @@ export function Discover() {
 
             {/* View Schedule */}
             <div className="flex items-center px-4 sm:px-6 py-3 sm:py-0 sm:h-14 border-t sm:border-t-0 sm:border-l border-white/5 shrink-0">
-              <button className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-dark-400 hover:text-gold-500 transition-colors group">
+              <Link to="/schedule" className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-dark-400 hover:text-gold-500 transition-colors group">
                 View Schedule
                 <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-              </button>
+              </Link>
             </div>
           </div>
         </div>
