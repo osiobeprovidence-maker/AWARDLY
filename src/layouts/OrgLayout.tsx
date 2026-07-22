@@ -1,78 +1,12 @@
 import React from 'react';
-import { Outlet, NavLink, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { Search, Bell, Menu, User, X } from 'lucide-react';
+import { Outlet } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
-import { AnimatePresence } from 'motion/react';
+import { PublicNav } from '../components/navigation/PublicNav';
 
 export function OrgLayout() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-
   return (
     <div className="min-h-screen bg-dark-950 flex flex-col font-sans">
-      {/* Global Public Topnav */}
-      <nav className="h-20 border-b border-white/5 bg-dark-950/80 backdrop-blur-2xl sticky top-0 z-50 flex items-center justify-between px-6 lg:px-12">
-        <div className="flex items-center gap-12">
-          <NavLink to="/" className="flex items-center group">
-            <BrandLogo />
-          </NavLink>
-          
-          <div className="hidden lg:flex items-center gap-8">
-            <Link 
-              to="/discover" 
-              className="text-dark-400 hover:text-gold-400 text-xs font-bold uppercase tracking-[0.2em] transition-colors"
-            >
-              Explore
-            </Link>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center h-10 w-64 rounded-xl bg-white/5 border border-white/5 px-4 gap-3 text-dark-500">
-            <Search className="h-4 w-4" />
-            <span className="text-xs">Search hubs...</span>
-          </div>
-          
-          <div className="flex items-center gap-3">
-             <Link to="/auth/login" className="hidden sm:block text-xs font-bold uppercase tracking-widest text-dark-300 hover:text-white transition-colors px-4 py-2">Log In</Link>
-             <Link to="/auth/signup" className="hidden sm:block bg-gold-500 text-dark-950 px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gold-400 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-gold-500/20">Get Started</Link>
-             
-             <button 
-               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-               className="lg:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-white"
-             >
-               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-             </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 lg:hidden"
-          >
-            <div className="absolute inset-0 bg-dark-950/95 backdrop-blur-xl pt-24 px-6">
-              <div className="flex flex-col gap-6">
-                <Link 
-                  to="/discover" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-2xl font-serif text-white italic tracking-tight"
-                >
-                  Explore
-                </Link>
-                <div className="h-px w-full bg-white/5 my-4" />
-                <Link to="/auth/login" className="text-lg font-bold uppercase tracking-widest text-gold-500">Log In</Link>
-                <Link to="/auth/signup" className="text-lg font-bold uppercase tracking-widest text-white">Get Started</Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PublicNav />
 
       <main className="flex-1 flex flex-col">
         <Outlet />

@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Globe, BookOpen, MessageSquare, PlayCircle, Star, Trophy, Users, Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
+import { PublicNav } from '../components/navigation/PublicNav';
 
 const resources = [
   { 
@@ -34,61 +35,9 @@ const resources = [
 ];
 
 export function Resources() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-
   return (
     <div className="min-h-screen bg-dark-950">
-      <nav className="h-20 border-b border-white/5 px-6 flex items-center justify-between sticky top-0 z-50 bg-dark-950/80 backdrop-blur-xl text-white">
-        <Link to="/" className="flex items-center">
-          <BrandLogo />
-        </Link>
-        <div className="hidden md:flex gap-8">
-           <Link to="/discover" className="text-dark-300 hover:text-white transition-colors">Discover</Link>
-           <Link to="/pricing" className="text-dark-300 hover:text-white transition-colors">Pricing</Link>
-           <Link to="/resources" className="text-white font-medium">Resources</Link>
-        </div>
-        <div className="flex gap-4">
-           <Link to="/auth/login" className="hidden sm:block"><Button variant="ghost">Login</Button></Link>
-           <Link to="/auth/signup" className="hidden sm:block"><Button>Get Started</Button></Link>
-           
-           <button 
-             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-             className="md:hidden h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-white"
-           >
-             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-           </button>
-        </div>
-      </nav>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 md:hidden"
-          >
-            <div className="absolute inset-0 bg-dark-950/95 backdrop-blur-xl pt-24 px-6">
-              <div className="flex flex-col gap-6">
-                {['Discover', 'Pricing', 'Resources'].map((item) => (
-                  <Link 
-                    key={item} 
-                    to={item === 'Discover' ? '/discover' : item === 'Pricing' ? '/pricing' : '/resources'} 
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-2xl font-serif text-white italic tracking-tight"
-                  >
-                    {item}
-                  </Link>
-                ))}
-                <div className="h-px w-full bg-white/5 my-4" />
-                <Link to="/auth/login" className="text-lg font-bold uppercase tracking-widest text-gold-500">Log In</Link>
-                <Link to="/auth/signup" className="text-lg font-bold uppercase tracking-widest text-white">Get Started</Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PublicNav />
 
       <main className="max-w-7xl mx-auto px-6 py-24">
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16">

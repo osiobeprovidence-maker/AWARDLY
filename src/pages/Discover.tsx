@@ -6,6 +6,7 @@ import { Search, Trophy, Users, Star, ArrowRight, ShieldCheck, Globe, Radio, Spa
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { headiesLogo, awardStage } from '../data';
+import { PublicNav } from '../components/navigation/PublicNav';
 
 const categories = ['All', 'Entertainment', 'Corporate', 'Government', 'Non-Profit', 'Tech'];
 
@@ -21,7 +22,6 @@ const hubs = [
 export function Discover() {
   const [selectedCategory, setSelectedCategory] = React.useState('All');
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const filteredHubs = hubs.filter(hub => {
     const matchesCategory = selectedCategory === 'All' || hub.category === selectedCategory;
@@ -31,60 +31,7 @@ export function Discover() {
 
   return (
     <div className="min-h-screen bg-dark-950 font-sans">
-      {/* Top Navigation */}
-      <nav className="h-14 sm:h-16 lg:h-20 border-b border-white/5 bg-dark-950/80 backdrop-blur-2xl sticky top-0 z-50 flex items-center justify-between px-4 sm:px-6 lg:px-12">
-        <Link to="/" className="flex items-center group">
-          <BrandLogo />
-        </Link>
-        
-        <div className="hidden lg:flex items-center gap-8">
-          <Link 
-            to="/discover" 
-            className="text-xs font-bold uppercase tracking-[0.2em] transition-colors text-gold-500"
-          >
-            Explore
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-3 sm:gap-6">
-           <Link to="/auth/login" className="hidden sm:block text-xs font-bold uppercase tracking-widest text-dark-300 hover:text-white transition-colors">Log In</Link>
-           <Link to="/auth/signup" className="hidden sm:block bg-gold-500 text-dark-950 px-4 lg:px-6 py-2 lg:py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gold-400 transition-all shadow-lg shadow-gold-500/20">Get Started</Link>
-           
-           <button 
-             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-             className="lg:hidden h-9 w-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-white"
-           >
-             {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-           </button>
-        </div>
-      </nav>
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-40 lg:hidden"
-          >
-            <div className="absolute inset-0 bg-dark-950/95 backdrop-blur-xl pt-20 px-6">
-              <div className="flex flex-col gap-6">
-                <Link 
-                  to="/discover" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-2xl font-serif text-white italic tracking-tight"
-                >
-                  Explore
-                </Link>
-                <div className="h-px w-full bg-white/5" />
-                <Link to="/auth/login" className="text-lg font-bold uppercase tracking-widest text-gold-500">Log In</Link>
-                <Link to="/auth/signup" className="text-lg font-bold uppercase tracking-widest text-white">Get Started</Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <PublicNav />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         {/* Cinematic Header */}
