@@ -30,6 +30,10 @@ import { CategoryBranding } from './pages/dashboard/CategoryBranding';
 import { Followers } from './pages/dashboard/Followers';
 import { Pricing } from './pages/Pricing';
 import { Resources } from './pages/Resources';
+import { ArticlePage } from './pages/resources/ArticlePage';
+import { VideoPage } from './pages/resources/VideoPage';
+import { CaseStudyPage } from './pages/resources/CaseStudyPage';
+import { TemplatePage } from './pages/resources/TemplatePage';
 import { OrgLayout } from './layouts/OrgLayout';
 import { OrgProfile } from './pages/org/OrgProfile';
 import { Discover } from './pages/Discover';
@@ -59,6 +63,10 @@ export default function App() {
             <Route path="/events/:eventId/live" element={<LiveFeed />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/resources" element={<Resources />} />
+            <Route path="/resources/articles/:slug" element={<ArticlePage />} />
+            <Route path="/resources/videos/:slug" element={<VideoPage />} />
+            <Route path="/resources/case-studies/:slug" element={<CaseStudyPage />} />
+            <Route path="/resources/templates/:slug" element={<TemplatePage />} />
             
             {/* Auth routes */}
             <Route path="/auth" element={<AuthLayout />}>

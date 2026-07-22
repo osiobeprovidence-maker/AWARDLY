@@ -9,7 +9,7 @@ const navLinks = [
   { label: 'Explore', to: '/discover' },
   { label: 'Features', to: '/#features' },
   { label: 'Pricing', to: '/pricing' },
-  { label: 'Resources', to: '/resources' },
+  { label: 'Learning', to: '/resources' },
 ];
 
 export function PublicNav() {
