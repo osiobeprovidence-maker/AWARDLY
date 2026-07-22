@@ -36,6 +36,7 @@ import { Discover } from './pages/Discover';
 import { Schedule } from './pages/Schedule';
 import { AwardDetails } from './pages/AwardDetails';
 import { AwardPortal } from './pages/AwardPortal';
+import { EventHub } from './pages/EventHub';
 import { EventDetails } from './pages/org/EventDetails';
 import { CreateOrg } from './pages/onboarding/CreateOrg';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/schedule" element={<Schedule />} />
             <Route path="/awards/:awardId" element={<AwardDetails />} />
             <Route path="/awards/:awardId/portal" element={<AwardPortal />} />
+            <Route path="/events/:eventId" element={<EventHub />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/resources" element={<Resources />} />
             

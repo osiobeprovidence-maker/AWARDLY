@@ -373,7 +373,9 @@ export function OrgProfile() {
                       <CardContent className="p-6">
                          <h3 className="text-xl text-white font-serif mb-2">{event.title}</h3>
                          <p className="text-xs text-dark-400 mb-6 leading-relaxed line-clamp-2">{event.description}</p>
-                         <Button variant="outline" className="w-full border-white/10 group-hover:bg-gold-500 group-hover:text-dark-950 transition-all">Go to Event Hub</Button>
+                         <Link to={`/events/${event.id}`}>
+                          <Button variant="outline" className="w-full border-white/10 group-hover:bg-gold-500 group-hover:text-dark-950 transition-all">Go to Event Hub</Button>
+                       </Link>
                       </CardContent>
                    </Card>
                  ))}
