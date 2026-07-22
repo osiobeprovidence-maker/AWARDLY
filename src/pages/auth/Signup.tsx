@@ -4,14 +4,19 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Mail, Lock, User, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../lib/auth';
 
 export function Signup() {
   const navigate = useNavigate();
+  const { signUp } = useAuth();
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate auth, head to onboarding
+    signUp(name, email);
     navigate('/onboarding');
   };
 
@@ -39,7 +44,7 @@ export function Signup() {
               variant="outline" 
               className="w-full h-14 border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
               onClick={() => {
-                // Simulate Google Sign In
+                signUp('New User', 'user@example.com');
                 navigate('/onboarding');
               }}
             >
@@ -91,17 +96,17 @@ export function Signup() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-dark-300 ml-1">Full Name</label>
-                <Input icon={User} placeholder="Jane Doe" required />
+                <Input icon={User} placeholder="Jane Doe" required value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               
               <div className="space-y-1">
                 <label className="text-xs font-medium text-dark-300 ml-1">Email Address</label>
-                <Input type="email" icon={Mail} placeholder="jane@example.com" required />
+                <Input type="email" icon={Mail} placeholder="jane@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               
               <div className="space-y-1">
                 <label className="text-xs font-medium text-dark-300 ml-1">Password</label>
-                <Input type="password" icon={Lock} placeholder="••••••••" required />
+                <Input type="password" icon={Lock} placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
 
               <Button type="submit" className="w-full mt-4">
@@ -115,7 +120,7 @@ export function Signup() {
       <div className="mt-6 text-center text-sm text-dark-400">
         Already have an account?{' '}
         <Link to="/auth/login" className="text-gold-500 hover:text-gold-400 font-medium transition-colors">
-          Log in
+          Sign in
         </Link>
       </div>
     </motion.div>

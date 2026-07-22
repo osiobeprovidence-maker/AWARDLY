@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { mockEvents, mockCategories, mockNominees, mockOrgs } from '../../data';
+import { mockEvents, mockCategories, mockNominees, mockOrganizations } from '../../data';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { 
@@ -12,7 +12,7 @@ import {
 export function EventDetails() {
   const { eventId, orgId } = useParams();
   const event = mockEvents.find(e => e.id === eventId) || mockEvents[0];
-  const org = mockOrgs.find(o => o.id === (orgId || event.orgId));
+  const org = mockOrganizations.find(o => o.slug === (orgId || '')) || mockOrganizations.find(o => o.id === (orgId || event.orgId));
   const categories = mockCategories.filter(c => c.eventId === event.id);
 
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id);
@@ -62,7 +62,7 @@ export function EventDetails() {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
         
         <div className="absolute inset-0 max-w-7xl mx-auto px-6 h-full flex flex-col justify-end pb-16 z-10">
-          <Link to={`/org/${org?.id}`} className="inline-flex items-center text-xs font-bold uppercase tracking-[0.2em] text-dark-400 hover:text-white mb-8 transition-colors group">
+          <Link to={`/org/${org?.slug || org?.id}`} className="inline-flex items-center text-xs font-bold uppercase tracking-[0.2em] text-dark-400 hover:text-white mb-8 transition-colors group">
             <div className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mr-3 group-hover:bg-gold-500/10 transition-colors">
                <ArrowLeft className="h-4 w-4" />
             </div>

@@ -203,7 +203,7 @@ export function Discover() {
                 key={hub.id}
                 className="group"
               >
-                <Link to={`/org/${hub.id}`}>
+                <Link to={`/org/${hub.slug}`}>
                   <Card className="p-0 overflow-hidden border-white/5 group-hover:border-gold-500/30 transition-all duration-700 bg-dark-950 rounded-2xl sm:rounded-[32px] h-full flex flex-col">
                     <div className="aspect-[16/10] sm:aspect-[4/3] overflow-hidden relative grayscale group-hover:grayscale-0 transition-all duration-1000">
                       <img 

@@ -4,14 +4,18 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../lib/auth';
 
 export function Login() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [showEmailForm, setShowEmailForm] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate auth, head to dashboard
+    signIn(email);
     navigate('/dashboard');
   };
 
@@ -39,7 +43,7 @@ export function Login() {
               variant="outline" 
               className="w-full h-14 border-white/10 bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center gap-3"
               onClick={() => {
-                // Simulate Google Sign In
+                signIn('jackson@headies.com');
                 navigate('/dashboard');
               }}
             >
@@ -91,7 +95,7 @@ export function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-dark-300 ml-1">Email Address</label>
-                <Input type="email" icon={Mail} placeholder="name@organization.com" required />
+                <Input type="email" icon={Mail} placeholder="name@organization.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               
               <div className="space-y-1">
@@ -99,7 +103,7 @@ export function Login() {
                   <label className="text-xs font-medium text-dark-300 ml-1">Password</label>
                   <a href="#" className="text-xs text-gold-500 hover:text-gold-400 transition-colors">Forgot?</a>
                 </div>
-                <Input type="password" icon={Lock} placeholder="••••••••" required />
+                <Input type="password" icon={Lock} placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
 
               <Button type="submit" className="w-full mt-4">
@@ -113,7 +117,7 @@ export function Login() {
       <div className="mt-6 text-center text-sm text-dark-400">
         Don't have an account?{' '}
         <Link to="/auth/signup" className="text-gold-500 hover:text-gold-400 font-medium transition-colors">
-          Create one
+          Sign up
         </Link>
       </div>
     </motion.div>

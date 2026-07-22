@@ -28,6 +28,7 @@ import { ManageNominees } from './pages/dashboard/ManageNominees';
 import { ManageCriteria } from './pages/dashboard/ManageCriteria';
 import { CategoryBranding } from './pages/dashboard/CategoryBranding';
 import { Followers } from './pages/dashboard/Followers';
+import { TeamManagement } from './pages/dashboard/Team';
 import { Pricing } from './pages/Pricing';
 import { Resources } from './pages/Resources';
 import { ArticlePage } from './pages/resources/ArticlePage';
@@ -43,75 +44,79 @@ import { AwardPortal } from './pages/AwardPortal';
 import { EventHub } from './pages/EventHub';
 import { EventDetails } from './pages/org/EventDetails';
 import { LiveFeed } from './pages/LiveFeed';
-import { CreateOrg } from './pages/onboarding/CreateOrg';
+import { CreateOrgWizard } from './pages/onboarding/CreateOrgWizard';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 
 import { ToastProvider } from './lib/toast';
+import { AuthProvider } from './lib/auth';
 
 export default function App() {
   return (
     <BrowserRouter>
-      <ToastProvider>
-        <div className="relative min-h-screen">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/discover" element={<Discover />} />
-            <Route path="/schedule" element={<Schedule />} />
-            <Route path="/awards/:awardId" element={<AwardDetails />} />
-            <Route path="/awards/:awardId/portal" element={<AwardPortal />} />
-            <Route path="/events/:eventId" element={<EventHub />} />
-            <Route path="/events/:eventId/live" element={<LiveFeed />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/resources/articles/:slug" element={<ArticlePage />} />
-            <Route path="/resources/videos/:slug" element={<VideoPage />} />
-            <Route path="/resources/case-studies/:slug" element={<CaseStudyPage />} />
-            <Route path="/resources/templates/:slug" element={<TemplatePage />} />
-            
-            {/* Auth routes */}
-            <Route path="/auth" element={<AuthLayout />}>
-              <Route path="login" element={<Login />} />
-              <Route path="signup" element={<Signup />} />
-            </Route>
+      <AuthProvider>
+        <ToastProvider>
+          <div className="relative min-h-screen">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/schedule" element={<Schedule />} />
+              <Route path="/awards/:awardId" element={<AwardDetails />} />
+              <Route path="/awards/:awardId/portal" element={<AwardPortal />} />
+              <Route path="/events/:eventId" element={<EventHub />} />
+              <Route path="/events/:eventId/live" element={<LiveFeed />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/resources/articles/:slug" element={<ArticlePage />} />
+              <Route path="/resources/videos/:slug" element={<VideoPage />} />
+              <Route path="/resources/case-studies/:slug" element={<CaseStudyPage />} />
+              <Route path="/resources/templates/:slug" element={<TemplatePage />} />
+              
+              {/* Auth routes */}
+              <Route path="/auth" element={<AuthLayout />}>
+                <Route path="login" element={<Login />} />
+                <Route path="signup" element={<Signup />} />
+              </Route>
 
-            <Route path="/onboarding" element={<CreateOrg />} />
-            
-            {/* Dashboard routes */}
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<DashboardOverview />} />
-              <Route path="feed" element={<DashboardFeed />} />
-              <Route path="events" element={<DashboardEvents />} />
-              <Route path="events/create" element={<CreateEvent />} />
-              <Route path="events/:eventId/manage" element={<CreateEvent />} />
-              <Route path="events/:eventId/categories/:categoryId/nominees" element={<ManageNominees />} />
-              <Route path="events/:eventId/categories/:categoryId/criteria" element={<ManageCriteria />} />
-              <Route path="events/:eventId/categories/:categoryId/branding" element={<CategoryBranding />} />
-              <Route path="events/:eventId/categories/:categoryId/rules" element={<ManageRules />} />
-              <Route path="events/:eventId/categories/:categoryId/detail" element={<CategoryDetail />} />
-              <Route path="events/:eventId/categories/:categoryId" element={<CategoryDetail />} />
-              <Route path="followers" element={<Followers />} />
-              <Route path="voting" element={<DashboardVoting />} />
-              <Route path="monetization" element={<Monetization />} />
-              <Route path="voting/settings" element={<NominationSettings />} />
-              <Route path="live" element={<DashboardLive />} />
-              <Route path="media" element={<DashboardMedia />} />
-              <Route path="analytics" element={<DashboardAnalytics />} />
-              <Route path="settings" element={<DashboardSettings />} />
-            </Route>
+              <Route path="/onboarding" element={<CreateOrgWizard />} />
+              
+              {/* Dashboard routes */}
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<DashboardOverview />} />
+                <Route path="feed" element={<DashboardFeed />} />
+                <Route path="events" element={<DashboardEvents />} />
+                <Route path="events/create" element={<CreateEvent />} />
+                <Route path="events/:eventId/manage" element={<CreateEvent />} />
+                <Route path="events/:eventId/categories/:categoryId/nominees" element={<ManageNominees />} />
+                <Route path="events/:eventId/categories/:categoryId/criteria" element={<ManageCriteria />} />
+                <Route path="events/:eventId/categories/:categoryId/branding" element={<CategoryBranding />} />
+                <Route path="events/:eventId/categories/:categoryId/rules" element={<ManageRules />} />
+                <Route path="events/:eventId/categories/:categoryId/detail" element={<CategoryDetail />} />
+                <Route path="events/:eventId/categories/:categoryId" element={<CategoryDetail />} />
+                <Route path="followers" element={<Followers />} />
+                <Route path="team" element={<TeamManagement />} />
+                <Route path="voting" element={<DashboardVoting />} />
+                <Route path="monetization" element={<Monetization />} />
+                <Route path="voting/settings" element={<NominationSettings />} />
+                <Route path="live" element={<DashboardLive />} />
+                <Route path="media" element={<DashboardMedia />} />
+                <Route path="analytics" element={<DashboardAnalytics />} />
+                <Route path="settings" element={<DashboardSettings />} />
+              </Route>
 
-            {/* Public Org Routes */}
-            <Route path="/org" element={<OrgLayout />}>
-              <Route path=":orgId" element={<OrgProfile />} />
-              <Route path=":orgId/events/:eventId" element={<EventDetails />} />
-            </Route>
+              {/* Public Org Routes */}
+              <Route path="/org" element={<OrgLayout />}>
+                <Route path=":orgId" element={<OrgProfile />} />
+                <Route path=":orgId/events/:eventId" element={<EventDetails />} />
+              </Route>
 
-            {/* Platform Admin */}
-            <Route path="/admin" element={<AdminDashboard />} />
+              {/* Platform Admin */}
+              <Route path="/admin" element={<AdminDashboard />} />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </ToastProvider>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </ToastProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

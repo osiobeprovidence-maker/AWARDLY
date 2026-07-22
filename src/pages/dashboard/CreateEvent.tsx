@@ -16,6 +16,7 @@ import { Category, VotingRules } from '../../types';
 import { mockEvents } from '../../data';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useToast } from '../../lib/toast';
+import { useAuth } from '../../lib/auth';
 
 interface StepDef {
   label: string;
@@ -88,6 +89,7 @@ export function CreateEvent() {
   const { eventId } = useParams();
   const existingEvent = eventId ? mockEvents.find(e => e.id === eventId) : null;
   const { toast } = useToast();
+  const { currentOrg } = useAuth();
 
   const [step, setStep] = React.useState(0);
   const [data, setData] = React.useState<EventData>(DEFAULT_DATA);

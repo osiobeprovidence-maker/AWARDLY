@@ -5,13 +5,13 @@ import {
   MessageSquare, Heart, Share2, Image as ImageIcon, Video, 
   Send, MoreHorizontal, Pin, Bookmark, Flame, Zap, CheckCircle2 
 } from 'lucide-react';
-import { mockPosts, mockOrgs } from '../../data';
+import { mockPosts, mockOrganizations } from '../../data';
 import { motion } from 'motion/react';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useToast } from '../../lib/toast';
 
 export function DashboardFeed() {
-  const org = mockOrgs[0];
+  const org = mockOrganizations[0];
   const { toast } = useToast();
 
   return (

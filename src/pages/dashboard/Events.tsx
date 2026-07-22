@@ -2,14 +2,21 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Plus, Search, Calendar, Users, Trophy, ExternalLink, MoreVertical, Trash2, Edit3, X, AlertTriangle } from 'lucide-react';
-import { mockEvents } from '../../data';
+import { mockEvents, mockOrganizations } from '../../data';
 import { Input } from '../../components/ui/Input';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../../lib/auth';
 
 export function DashboardEvents() {
-  const [events, setEvents] = React.useState(mockEvents);
+  const { currentOrg } = useAuth();
+  const allOrgEvents = currentOrg ? mockEvents.filter(e => e.orgId === currentOrg.id) : mockEvents;
+  const [events, setEvents] = React.useState(allOrgEvents);
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    setEvents(currentOrg ? mockEvents.filter(e => e.orgId === currentOrg.id) : mockEvents);
+  }, [currentOrg]);
 
   const handleDelete = () => {
     if (deleteId) {
@@ -99,7 +106,7 @@ export function DashboardEvents() {
                              Manage
                            </Button>
                          </Link>
-                         <Link to={`/org/${event.orgId}/events/${event.id}`} target="_blank">
+                          <Link to={`/org/${currentOrg?.slug || event.orgId}/events/${event.id}`} target="_blank">
                            <Button variant="ghost" size="icon" className="h-8 w-8 text-dark-500 hover:text-white">
                              <ExternalLink className="h-4 w-4" />
                            </Button>

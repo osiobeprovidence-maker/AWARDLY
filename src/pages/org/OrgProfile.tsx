@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { mockOrgs, mockEvents, mockPosts, mockNominees, cocaColaBanner, awardStage } from '../../data';
+import { mockOrganizations, mockEvents, mockPosts, mockNominees, cocaColaBanner, awardStage } from '../../data';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs';
@@ -13,7 +13,7 @@ import {
 
 export function OrgProfile() {
   const { orgId } = useParams();
-  const org = mockOrgs.find(o => o.id === orgId) || mockOrgs[0];
+  const org = mockOrganizations.find(o => o.slug === orgId) || mockOrganizations.find(o => o.id === orgId) || mockOrganizations[0];
   const events = mockEvents.filter(e => e.orgId === org.id);
   const posts = mockPosts.filter(p => p.orgId === org.id);
   const activeVotingEvents = events.filter(e => e.isVotingActive);
@@ -294,7 +294,7 @@ export function OrgProfile() {
                        </div>
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                           {events.map((event) => (
-                            <Link to={`/org/${org.id}/events/${event.id}`} key={event.id}>
+                            <Link to={`/org/${org.slug}/events/${event.id}`} key={event.id}>
                               <Card className="p-0 overflow-hidden group hover:border-gold-500/30 transition-all border-white/5 h-full flex flex-col">
                                  <div className="h-40 overflow-hidden relative">
                                     <img src={event.coverUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 h-full" alt="event" referrerPolicy="no-referrer" />
@@ -427,7 +427,7 @@ export function OrgProfile() {
                             Support your favorite talents. Every vote counts towards shaping the future of African music excellence.
                          </p>
                          <div className="pt-4">
-                            <Link to={`/org/${org.id}/events/${selectedEvent.id}`}>
+                            <Link to={`/org/${org.slug}/events/${selectedEvent.id}`}>
                                <Button className="h-14 px-10 rounded-full text-xs font-bold uppercase tracking-[0.2em] shadow-2xl shadow-gold-500/20 group">
                                   Enter Voting Portal
                                   <ArrowRight className="ml-3 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -558,7 +558,7 @@ export function OrgProfile() {
                          <h4 className="text-dark-950 text-3xl md:text-5xl font-serif italic tracking-tight">Ready to make your voice heard?</h4>
                          <p className="text-dark-950/60 max-w-xl mx-auto text-sm">Join millions of fans across the globe in deciding the next generation of music icons. Secure, fair, and transparent.</p>
                          <div className="pt-4">
-                            <Link to={`/org/${org.id}/events/${selectedEvent.id}`}>
+                            <Link to={`/org/${org.slug}/events/${selectedEvent.id}`}>
                                <Button className="bg-dark-950 text-white hover:bg-dark-900 h-16 px-12 rounded-full text-xs font-bold uppercase tracking-[0.3em] shadow-2xl group/btn">
                                   Start Voting Now
                                   <ArrowRight className="ml-3 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
