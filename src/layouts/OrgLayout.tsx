@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { PublicNav } from '../components/navigation/PublicNav';
 

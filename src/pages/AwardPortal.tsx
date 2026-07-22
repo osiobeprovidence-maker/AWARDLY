@@ -324,7 +324,7 @@ function OverviewSection({ award }: { award: PortalAward }) {
           { label: 'Categories', value: award.stats.categories, icon: Award },
           { label: 'Nominees', value: award.stats.nominees, icon: Users },
           { label: 'Countries', value: award.stats.countries, icon: Globe },
-          { label: 'Edition', value: `${award.stats.yearsRunning}${award.stats.yearsRunning === 1 ? 'st' : award.stats.yearsRunning === 2 ? 'nd' : award.stats.yearsRunning === 3 ? 'rd' : 'th'}` },
+          { label: 'Edition', value: `${award.stats.yearsRunning}${award.stats.yearsRunning === 1 ? 'st' : award.stats.yearsRunning === 2 ? 'nd' : award.stats.yearsRunning === 3 ? 'rd' : 'th'}`, icon: TrendingUp },
         ].map((stat, i) => (
           <Card key={i} className="border-white/5 text-center">
             <CardContent className="p-4">
