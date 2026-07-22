@@ -101,7 +101,7 @@ export function Discover() {
              </Button>
           </div>
           
-          <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
+          <div className="hidden sm:flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1">
             {categories.map((cat) => (
               <button 
                 key={cat}
@@ -115,6 +115,19 @@ export function Discover() {
                 {cat}
               </button>
             ))}
+          </div>
+
+          <div className="sm:hidden">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white text-sm font-bold uppercase tracking-widest appearance-none outline-none focus:border-gold-500/50 transition-all cursor-pointer"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%236b7280' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center' }}
+            >
+              {categories.map((cat) => (
+                <option key={cat} value={cat} className="bg-dark-950 text-white">{cat}</option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -144,8 +157,11 @@ export function Discover() {
                 <Card className="bg-dark-900 border-white/5 p-4 sm:p-8 flex flex-col justify-between hover:border-gold-500/30 transition-all">
                    <Sparkles className="h-6 sm:h-8 w-6 sm:w-8 text-gold-500 mb-3 sm:mb-6" />
                    <div>
-                      <h4 className="text-white font-serif text-sm sm:text-xl mb-1 sm:mb-2 italic tracking-tight">New</h4>
-                      <p className="text-dark-500 text-[10px] sm:text-xs leading-relaxed uppercase tracking-widest font-bold">Fintech updated nominations</p>
+                      <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                        <h4 className="text-white font-serif text-sm sm:text-xl italic tracking-tight">Fintech Innovators</h4>
+                        <span className="px-2 py-0.5 bg-gold-500/10 border border-gold-500/20 rounded-full text-[8px] font-bold text-gold-500 uppercase tracking-widest">New</span>
+                      </div>
+                      <p className="text-dark-500 text-[10px] sm:text-xs leading-relaxed uppercase tracking-widest font-bold">Updated nominations for 2026</p>
                    </div>
                 </Card>
              </div>
