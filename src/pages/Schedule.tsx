@@ -390,7 +390,7 @@ export function Schedule() {
                           ) : (
                             <span className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">Completed</span>
                           )}
-                          <Link to={`/org/${event.id}`}>
+                          <Link to={`/awards/${event.id}`}>
                             <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-dark-400 hover:text-gold-500 group/btn">
                               View Details <ArrowRight className="h-3 w-3 ml-1 group-hover/btn:translate-x-0.5 transition-transform" />
                             </Button>
@@ -478,7 +478,7 @@ export function Schedule() {
                       </div>
 
                       <div className="mt-auto">
-                        <Link to={`/org/${event.id}`}>
+                        <Link to={`/awards/${event.id}`}>
                           <Button variant="outline" className="w-full h-10 border-white/10 text-[10px] font-bold uppercase tracking-widest hover:border-gold-500/30 hover:text-gold-500">
                             View Details <ArrowRight className="h-3 w-3 ml-1.5" />
                           </Button>

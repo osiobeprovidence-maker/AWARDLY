@@ -34,6 +34,7 @@ import { OrgLayout } from './layouts/OrgLayout';
 import { OrgProfile } from './pages/org/OrgProfile';
 import { Discover } from './pages/Discover';
 import { Schedule } from './pages/Schedule';
+import { AwardDetails } from './pages/AwardDetails';
 import { EventDetails } from './pages/org/EventDetails';
 import { CreateOrg } from './pages/onboarding/CreateOrg';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/discover" element={<Discover />} />
             <Route path="/schedule" element={<Schedule />} />
+            <Route path="/awards/:awardId" element={<AwardDetails />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/resources" element={<Resources />} />
             
