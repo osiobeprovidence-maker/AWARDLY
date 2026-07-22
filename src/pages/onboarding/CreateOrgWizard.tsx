@@ -9,9 +9,10 @@ import {
   Facebook, Twitter, Instagram, Linkedin, Youtube, Plus, X
 } from 'lucide-react';
 import {
-  COUNTRIES, ORG_TYPES, EMPTY_ORG_WIZARD, type OrgWizardDraft, type Organization, type OrganizationType
+  COUNTRIES, ORG_TYPES, EMPTY_ORG_WIZARD, type OrgWizardDraft, type OrganizationType
 } from '../../types';
-import { useAuth } from '../../lib/auth';
+import { useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { ImageUpload } from '../../components/ImageUpload';
 
 const STEPS = [
@@ -31,7 +32,7 @@ function slugify(s: string) {
 
 export function CreateOrgWizard() {
   const navigate = useNavigate();
-  const { createOrganization, user } = useAuth();
+  const createOrgMutation = useMutation(api.organizations.create);
   const [draft, setDraft] = useState<OrgWizardDraft>(() => {
     try {
       const saved = localStorage.getItem(DRAFT_KEY);
@@ -40,6 +41,7 @@ export function CreateOrgWizard() {
     return { ...EMPTY_ORG_WIZARD };
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const step = draft.step;
   const setStep = (s: number) => setDraft(d => ({ ...d, step: s }));
@@ -80,34 +82,43 @@ export function CreateOrgWizard() {
   };
   const prev = () => setStep(step - 1);
 
-  const finish = () => {
-    const org: Organization = {
-      id: `org_${Date.now()}`,
-      name: draft.name,
-      slug: draft.slug,
-      description: draft.description,
-      type: draft.type as OrganizationType,
-      logoUrl: draft.logoUrl || undefined,
-      coverUrl: draft.coverUrl || undefined,
-      primaryColor: draft.primaryColor,
-      secondaryColor: draft.secondaryColor,
-      website: draft.website || undefined,
-      country: draft.country,
-      headquarters: draft.headquarters || undefined,
-      foundedYear: draft.foundedYear ? parseInt(draft.foundedYear) : undefined,
-      contactEmail: draft.contactEmail,
-      phone: draft.phone || undefined,
-      socialLinks: draft.socialLinks,
-      isVerified: false,
-      verificationStatus: 'none',
-      followerCount: 0,
-      memberCount: 1,
-      eventCount: 0,
-      createdAt: new Date().toISOString(),
-    };
-    createOrganization(org);
-    localStorage.removeItem(DRAFT_KEY);
-    navigate('/dashboard');
+  const finish = async () => {
+    setIsSubmitting(true);
+    try {
+      console.log('Creating organization...', {
+        name: draft.name,
+        slug: draft.slug,
+        logoUrl: draft.logoUrl,
+        coverUrl: draft.coverUrl,
+      });
+
+      await createOrgMutation({
+        name: draft.name,
+        slug: draft.slug,
+        description: draft.description,
+        type: draft.type as any,
+        logoUrl: draft.logoUrl || undefined,
+        coverUrl: draft.coverUrl || undefined,
+        primaryColor: draft.primaryColor,
+        secondaryColor: draft.secondaryColor,
+        website: draft.website || undefined,
+        country: draft.country,
+        headquarters: draft.headquarters || undefined,
+        foundedYear: draft.foundedYear ? parseInt(draft.foundedYear) : undefined,
+        contactEmail: draft.contactEmail,
+        phone: draft.phone || undefined,
+        socialLinks: Object.values(draft.socialLinks).some(v => v) ? draft.socialLinks : undefined,
+      });
+
+      console.log('Organization created successfully!');
+      localStorage.removeItem(DRAFT_KEY);
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Failed to create organization:', error);
+      setErrors({ submit: error.message || 'Failed to create organization. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -186,8 +197,17 @@ export function CreateOrgWizard() {
                   Continue <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               ) : (
-                <Button onClick={finish} className="shadow-xl shadow-gold-500/20">
-                  <CheckCircle2 className="h-4 w-4 mr-2" /> Create Organization
+                <Button onClick={finish} disabled={isSubmitting} className="shadow-xl shadow-gold-500/20">
+                  {isSubmitting ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-dark-950 border-t-transparent rounded-full animate-spin mr-2" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" /> Create Organization
+                    </>
+                  )}
                 </Button>
               )}
             </div>
@@ -439,6 +459,19 @@ function StepReview({ draft }: { draft: OrgWizardDraft }) {
           <p className="text-dark-300 text-sm">{draft.description}</p>
         </div>
       </div>
+
+      {/* Upload warnings */}
+      {(!draft.logoUrl || !draft.coverUrl) && (
+        <div className="p-4 rounded-xl bg-gold-500/5 border border-gold-500/10">
+          <p className="text-sm text-gold-500/80">
+            <strong>Note:</strong> {!draft.logoUrl && !draft.coverUrl
+              ? 'No logo or cover image uploaded. You can add these later in settings.'
+              : !draft.logoUrl
+                ? 'No logo uploaded. You can add this later in settings.'
+                : 'No cover image uploaded. You can add this later in settings.'}
+          </p>
+        </div>
+      )}
 
       {/* Details summary */}
       <div className="grid md:grid-cols-2 gap-4">
