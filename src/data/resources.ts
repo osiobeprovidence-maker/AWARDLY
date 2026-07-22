@@ -49,7 +49,6 @@ export interface Template {
   slug: string;
   title: string;
   description: string;
-  icon: string;
   fileType: string;
   fileSize: string;
   downloads: number;
@@ -67,23 +66,22 @@ export interface BestPractice {
   slug: string;
   title: string;
   description: string;
-  icon: string;
   tips: string[];
   category: ResourceCategory;
 }
 
 // ─── Categories ────────────────────────────────────────────────────────────
-export const categories: Array<{ id: ResourceCategory; label: string; icon: string; description: string; count: number }> = [
-  { id: 'documentation', label: 'Documentation', icon: '📖', description: 'Complete guides to every Awardly feature', count: 24 },
-  { id: 'tutorials', label: 'Video Tutorials', icon: '🎥', description: 'Step-by-step video walkthroughs', count: 18 },
-  { id: 'case-studies', label: 'Case Studies', icon: '🏆', description: 'Real success stories from award organizers', count: 8 },
-  { id: 'templates', label: 'Templates', icon: '📋', description: 'Ready-to-use planning and evaluation templates', count: 15 },
-  { id: 'best-practices', label: 'Best Practices', icon: '🚀', description: 'Expert strategies for running world-class awards', count: 20 },
-  { id: 'monetization', label: 'Monetization', icon: '💰', description: 'Revenue strategies for award programs', count: 10 },
-  { id: 'community', label: 'Community', icon: '👥', description: 'Engage and grow your award community', count: 12 },
-  { id: 'security', label: 'Security', icon: '🔐', description: 'Platform security and vote integrity', count: 7 },
-  { id: 'analytics', label: 'Analytics', icon: '📊', description: 'Data-driven insights and reporting', count: 9 },
-  { id: 'api', label: 'API & Integrations', icon: '⚙', description: 'Developer documentation and webhooks', count: 5 },
+export const categories: Array<{ id: ResourceCategory; label: string; description: string; count: number }> = [
+  { id: 'documentation', label: 'Documentation', description: 'Complete guides to every Awardly feature', count: 24 },
+  { id: 'tutorials', label: 'Video Tutorials', description: 'Step-by-step video walkthroughs', count: 18 },
+  { id: 'case-studies', label: 'Case Studies', description: 'Real success stories from award organizers', count: 8 },
+  { id: 'templates', label: 'Templates', description: 'Ready-to-use planning and evaluation templates', count: 15 },
+  { id: 'best-practices', label: 'Best Practices', description: 'Expert strategies for running world-class awards', count: 20 },
+  { id: 'monetization', label: 'Monetization', description: 'Revenue strategies for award programs', count: 10 },
+  { id: 'community', label: 'Community', description: 'Engage and grow your award community', count: 12 },
+  { id: 'security', label: 'Security', description: 'Platform security and vote integrity', count: 7 },
+  { id: 'analytics', label: 'Analytics', description: 'Data-driven insights and reporting', count: 9 },
+  { id: 'api', label: 'API & Integrations', description: 'Developer documentation and webhooks', count: 5 },
 ];
 
 // ─── Articles ──────────────────────────────────────────────────────────────
@@ -321,7 +319,7 @@ export const caseStudies: CaseStudy[] = [
     slug: 'headies-success-story',
     title: 'The Headies: Africa\'s Premier Music Awards',
     organization: 'Headies Official',
-    logo: '🎵',
+    logo: '',
     cover: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=800',
     challenge: 'The Headies needed a secure, scalable platform to handle millions of votes across 24 categories while maintaining transparency and preventing fraud.',
     solution: 'Implemented Awardly\'s hybrid voting system with public voting (60%) and judge scoring (40%), combined with enterprise-grade anti-fraud measures.',
@@ -397,22 +395,22 @@ export const caseStudies: CaseStudy[] = [
 
 // ─── Templates ─────────────────────────────────────────────────────────────
 export const templates: Template[] = [
-  { slug: 'event-planning-checklist', title: 'Event Planning Checklist', description: 'A comprehensive 90-day countdown checklist for planning your award ceremony.', icon: '✅', fileType: 'PDF', fileSize: '2.4 MB', downloads: 8420, category: 'templates', tags: ['planning', 'checklist'] },
-  { slug: 'award-timeline-template', title: 'Award Timeline Template', description: 'Visual timeline template for mapping your entire award lifecycle from conception to ceremony.', icon: '📅', fileType: 'PDF', fileSize: '1.8 MB', downloads: 6340, category: 'templates', tags: ['timeline', 'planning'] },
-  { slug: 'sponsor-proposal-template', title: 'Sponsor Proposal Template', description: 'Professional pitch deck template for attracting sponsors to your award program.', icon: '💼', fileType: 'PPTX', fileSize: '5.2 MB', downloads: 4210, category: 'templates', tags: ['sponsors', 'pitch'] },
-  { slug: 'judge-evaluation-form', title: 'Judge Evaluation Form', description: 'Standardized scoring form with weighted criteria for consistent judge evaluation.', icon: '📝', fileType: 'XLSX', fileSize: '890 KB', downloads: 3890, category: 'templates', tags: ['judges', 'scoring'] },
-  { slug: 'marketing-toolkit', title: 'Marketing Toolkit', description: 'Email templates, social media copy, and press release templates for promoting your awards.', icon: '📣', fileType: 'ZIP', fileSize: '12.5 MB', downloads: 5670, category: 'templates', tags: ['marketing', 'promotion'] },
-  { slug: 'social-media-kit', title: 'Social Media Kit', description: 'Ready-to-post graphics, stories, and video templates for all major social platforms.', icon: '📱', fileType: 'ZIP', fileSize: '28.3 MB', downloads: 7890, category: 'templates', tags: ['social-media', 'graphics'] },
+  { slug: 'event-planning-checklist', title: 'Event Planning Checklist', description: 'A comprehensive 90-day countdown checklist for planning your award ceremony.', fileType: 'PDF', fileSize: '2.4 MB', downloads: 8420, category: 'templates', tags: ['planning', 'checklist'] },
+  { slug: 'award-timeline-template', title: 'Award Timeline Template', description: 'Visual timeline template for mapping your entire award lifecycle from conception to ceremony.', fileType: 'PDF', fileSize: '1.8 MB', downloads: 6340, category: 'templates', tags: ['timeline', 'planning'] },
+  { slug: 'sponsor-proposal-template', title: 'Sponsor Proposal Template', description: 'Professional pitch deck template for attracting sponsors to your award program.', fileType: 'PPTX', fileSize: '5.2 MB', downloads: 4210, category: 'templates', tags: ['sponsors', 'pitch'] },
+  { slug: 'judge-evaluation-form', title: 'Judge Evaluation Form', description: 'Standardized scoring form with weighted criteria for consistent judge evaluation.', fileType: 'XLSX', fileSize: '890 KB', downloads: 3890, category: 'templates', tags: ['judges', 'scoring'] },
+  { slug: 'marketing-toolkit', title: 'Marketing Toolkit', description: 'Email templates, social media copy, and press release templates for promoting your awards.', fileType: 'ZIP', fileSize: '12.5 MB', downloads: 5670, category: 'templates', tags: ['marketing', 'promotion'] },
+  { slug: 'social-media-kit', title: 'Social Media Kit', description: 'Ready-to-post graphics, stories, and video templates for all major social platforms.', fileType: 'ZIP', fileSize: '28.3 MB', downloads: 7890, category: 'templates', tags: ['social-media', 'graphics'] },
 ];
 
 // ─── Best Practices ────────────────────────────────────────────────────────
 export const bestPractices: BestPractice[] = [
-  { slug: 'increasing-nominations', title: 'Increasing Nominations', description: 'Strategies to attract more high-quality nominations for your award program.', icon: '📝', tips: ['Open nominations early (3-6 months before ceremony)', 'Simplify the nomination form to under 5 minutes', 'Allow self-nominations to increase participation', 'Promote across multiple channels simultaneously', 'Highlight past winners to demonstrate prestige'], category: 'best-practices' },
-  { slug: 'boosting-voter-engagement', title: 'Boosting Voter Engagement', description: 'Proven tactics to maximize voter participation and create excitement.', icon: '🗳️', tips: ['Use countdown timers to create urgency', 'Send reminder emails at strategic intervals', 'Enable social sharing for each nominee', 'Create a live leaderboard visible to all voters', 'Offer incentives for voter participation'], category: 'best-practices' },
-  { slug: 'managing-judges-effectively', title: 'Managing Judges Effectively', description: 'Best practices for recruiting, briefing, and coordinating your judging panel.', icon: '⚖️', tips: ['Recruit judges 2-3 months before scoring begins', 'Provide clear criteria and scoring rubrics', 'Set expectations for response times', 'Use Awardly\'s conflict detection system', 'Send regular reminders during the scoring window'], category: 'best-practices' },
-  { slug: 'preventing-vote-fraud', title: 'Preventing Vote Fraud', description: 'How to maintain voting integrity while keeping the process accessible.', icon: '🔒', tips: ['Enable device fingerprinting in Awardly settings', 'Set reasonable rate limits (e.g., 5 votes per category per day)', 'Monitor real-time analytics for suspicious patterns', 'Require account verification for high-stakes categories', 'Publish your anti-fraud policy for transparency'], category: 'best-practices' },
-  { slug: 'attracting-sponsors', title: 'Attracting Sponsors', description: 'How to build compelling sponsorship packages that attract quality partners.', icon: '🤝', tips: ['Create tiered packages with clear ROI metrics', 'Offer exclusive access to audience demographics', 'Provide branded touchpoints throughout the event', 'Share real-time engagement data during voting', 'Deliver post-event impact reports within 48 hours'], category: 'best-practices' },
-  { slug: 'marketing-your-awards', title: 'Marketing Your Awards', description: 'A comprehensive marketing playbook for maximizing awareness and participation.', icon: '📢', tips: ['Start marketing 3 months before nominations open', 'Leverage past winners as brand ambassadors', 'Create shareable nominee announcement content', 'Use email sequences with clear CTAs', 'Partner with media outlets for coverage'], category: 'best-practices' },
+  { slug: 'increasing-nominations', title: 'Increasing Nominations', description: 'Strategies to attract more high-quality nominations for your award program.', tips: ['Open nominations early (3-6 months before ceremony)', 'Simplify the nomination form to under 5 minutes', 'Allow self-nominations to increase participation', 'Promote across multiple channels simultaneously', 'Highlight past winners to demonstrate prestige'], category: 'best-practices' },
+  { slug: 'boosting-voter-engagement', title: 'Boosting Voter Engagement', description: 'Proven tactics to maximize voter participation and create excitement.', tips: ['Use countdown timers to create urgency', 'Send reminder emails at strategic intervals', 'Enable social sharing for each nominee', 'Create a live leaderboard visible to all voters', 'Offer incentives for voter participation'], category: 'best-practices' },
+  { slug: 'managing-judges-effectively', title: 'Managing Judges Effectively', description: 'Best practices for recruiting, briefing, and coordinating your judging panel.', tips: ['Recruit judges 2-3 months before scoring begins', 'Provide clear criteria and scoring rubrics', 'Set expectations for response times', 'Use Awardly\'s conflict detection system', 'Send regular reminders during the scoring window'], category: 'best-practices' },
+  { slug: 'preventing-vote-fraud', title: 'Preventing Vote Fraud', description: 'How to maintain voting integrity while keeping the process accessible.', tips: ['Enable device fingerprinting in Awardly settings', 'Set reasonable rate limits (e.g., 5 votes per category per day)', 'Monitor real-time analytics for suspicious patterns', 'Require account verification for high-stakes categories', 'Publish your anti-fraud policy for transparency'], category: 'best-practices' },
+  { slug: 'attracting-sponsors', title: 'Attracting Sponsors', description: 'How to build compelling sponsorship packages that attract quality partners.', tips: ['Create tiered packages with clear ROI metrics', 'Offer exclusive access to audience demographics', 'Provide branded touchpoints throughout the event', 'Share real-time engagement data during voting', 'Deliver post-event impact reports within 48 hours'], category: 'best-practices' },
+  { slug: 'marketing-your-awards', title: 'Marketing Your Awards', description: 'A comprehensive marketing playbook for maximizing awareness and participation.', tips: ['Start marketing 3 months before nominations open', 'Leverage past winners as brand ambassadors', 'Create shareable nominee announcement content', 'Use email sequences with clear CTAs', 'Partner with media outlets for coverage'], category: 'best-practices' },
 ];
 
 // ─── FAQs ──────────────────────────────────────────────────────────────────

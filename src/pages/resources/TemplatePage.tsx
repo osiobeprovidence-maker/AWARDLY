@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, ChevronRight, Download, FileText, Share2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Download, FileText, Share2, ClipboardList, Clock, Briefcase, Megaphone, Tag } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
 import { PublicNav } from '../../components/navigation/PublicNav';
@@ -44,7 +44,9 @@ export function TemplatePage() {
           {/* Template Card */}
           <Card className="border-white/10 mb-8">
             <CardContent className="p-8 sm:p-10 text-center">
-              <div className="h-20 w-20 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-4xl mx-auto mb-6">{template.icon}</div>
+              <div className="h-20 w-20 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center mx-auto mb-6">
+                {(() => { const icons: Record<string, React.ElementType> = { 'event-planning-checklist': ClipboardList, 'award-timeline-template': Clock, 'sponsor-proposal-template': Briefcase, 'judge-evaluation-form': FileText, 'marketing-toolkit': Megaphone, 'social-media-kit': Tag }; const Icon = icons[template.slug] || FileText; return <Icon className="h-8 w-8 text-gold-500" />; })()}
+              </div>
               <h1 className="text-2xl sm:text-3xl font-serif text-white italic mb-3">{template.title}</h1>
               <p className="text-dark-400 text-sm leading-relaxed max-w-lg mx-auto mb-6">{template.description}</p>
               <div className="flex items-center justify-center gap-4 text-[10px] text-dark-500 mb-8">

@@ -8,12 +8,46 @@ import {
   Search, BookOpen, Play, Clock, Eye, Download, ChevronDown, ChevronUp,
   ChevronLeft, ChevronRight, ArrowRight, FileText, Star, Users, Zap,
   Shield, BarChart3, Code, Mail, CheckCircle2, Bookmark, BookmarkCheck,
-  PlayCircle, ExternalLink, Tag, TrendingUp, Award
+  PlayCircle, ExternalLink, Tag, TrendingUp, Award, Briefcase,
+  BadgeCheck, Wallet, ShieldCheck, Puzzle, ClipboardList, Trophy,
+  Handshake, Megaphone, Lock, Lightbulb, MessageSquare
 } from 'lucide-react';
 import {
   categories, articles, videos, caseStudies, templates, bestPractices, faqs,
   searchResources, type ResourceCategory
 } from '../data/resources';
+
+// ─── Icon Map ──────────────────────────────────────────────────────────────
+const categoryIcons: Record<ResourceCategory, React.ElementType> = {
+  documentation: BookOpen,
+  tutorials: PlayCircle,
+  'case-studies': Briefcase,
+  templates: FileText,
+  'best-practices': BadgeCheck,
+  monetization: Wallet,
+  community: Users,
+  security: ShieldCheck,
+  analytics: BarChart3,
+  api: Puzzle,
+};
+
+const templateIcons: Record<string, React.ElementType> = {
+  'event-planning-checklist': ClipboardList,
+  'award-timeline-template': Clock,
+  'sponsor-proposal-template': Briefcase,
+  'judge-evaluation-form': FileText,
+  'marketing-toolkit': Megaphone,
+  'social-media-kit': Tag,
+};
+
+const bestPracticeIcons: Record<string, React.ElementType> = {
+  'increasing-nominations': FileText,
+  'boosting-voter-engagement': TrendingUp,
+  'managing-judges-effectively': BadgeCheck,
+  'preventing-vote-fraud': ShieldCheck,
+  'attracting-sponsors': Handshake,
+  'marketing-your-awards': Megaphone,
+};
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function difficultyColor(d: string) {
@@ -195,7 +229,7 @@ export function Resources() {
                     onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
                     className={`text-left p-4 rounded-xl border transition-all ${activeCategory === cat.id ? 'bg-gold-500/10 border-gold-500/20' : 'bg-white/[0.02] border-white/5 hover:border-gold-500/20'}`}
                   >
-                    <span className="text-2xl block mb-2">{cat.icon}</span>
+                    {(() => { const Icon = categoryIcons[cat.id]; return Icon ? <Icon className="h-5 w-5 text-gold-500 mb-3" /> : null; })()}
                     <p className="text-xs font-bold text-white mb-0.5">{cat.label}</p>
                     <p className="text-[9px] text-dark-500">{cat.count} resources</p>
                   </motion.button>
@@ -300,7 +334,7 @@ export function Resources() {
                           </div>
                           <CardContent className="p-5 sm:p-6 flex-1 space-y-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-xl">{cs.logo}</span>
+                              <Trophy className="h-5 w-5 text-gold-500" />
                               <span className="text-[9px] font-bold text-dark-500 uppercase tracking-widest">{cs.organization}</span>
                             </div>
                             <h3 className="text-base font-bold text-white group-hover:text-gold-500 transition-colors">{cs.title}</h3>
@@ -334,7 +368,9 @@ export function Resources() {
                         <Link to={`/resources/templates/${t.slug}`}>
                           <Card className="border-white/5 hover:border-gold-500/20 transition-all group">
                             <CardContent className="p-4 flex items-center gap-4">
-                              <div className="h-12 w-12 rounded-xl bg-gold-500/5 border border-gold-500/10 flex items-center justify-center text-xl shrink-0">{t.icon}</div>
+                              <div className="h-12 w-12 rounded-xl bg-gold-500/5 border border-gold-500/10 flex items-center justify-center shrink-0">
+                                {(() => { const Icon = templateIcons[t.slug] || FileText; return <Icon className="h-5 w-5 text-gold-500" />; })()}
+                              </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-white group-hover:text-gold-500 transition-colors truncate">{t.title}</p>
                                 <p className="text-[10px] text-dark-500 mt-0.5 line-clamp-1">{t.description}</p>
@@ -362,7 +398,7 @@ export function Resources() {
                         <Card className="border-white/5 hover:border-gold-500/20 transition-all group">
                           <CardContent className="p-5">
                             <div className="flex items-start gap-3 mb-3">
-                              <span className="text-xl">{bp.icon}</span>
+                              {(() => { const Icon = bestPracticeIcons[bp.slug] || BadgeCheck; return <Icon className="h-5 w-5 text-gold-500 shrink-0 mt-0.5" />; })()}
                               <div>
                                 <p className="text-sm font-bold text-white group-hover:text-gold-500 transition-colors">{bp.title}</p>
                                 <p className="text-[10px] text-dark-500 mt-0.5">{bp.description}</p>

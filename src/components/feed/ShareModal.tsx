@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Link2, CheckCircle2 } from 'lucide-react';
+import { X, Link2, CheckCircle2, MessageCircle, Globe, Send, Users, Mail } from 'lucide-react';
 import { showToast } from '../../lib/feedData';
 
 interface ShareModalProps {
@@ -10,12 +10,12 @@ interface ShareModalProps {
 }
 
 const shareOptions = [
-  { label: 'Copy Link', icon: '🔗', color: 'text-white', action: 'copy' },
-  { label: 'WhatsApp', icon: '💬', color: 'text-green-500', action: 'whatsapp' },
-  { label: 'Facebook', icon: '📘', color: 'text-blue-500', action: 'facebook' },
-  { label: 'X (Twitter)', icon: '🐦', color: 'text-white', action: 'twitter' },
-  { label: 'LinkedIn', icon: '💼', color: 'text-blue-400', action: 'linkedin' },
-  { label: 'Email', icon: '✉️', color: 'text-dark-400', action: 'email' },
+  { label: 'Copy Link', icon: Link2, color: 'text-white', action: 'copy' },
+  { label: 'WhatsApp', icon: MessageCircle, color: 'text-green-500', action: 'whatsapp' },
+  { label: 'Facebook', icon: Globe, color: 'text-blue-500', action: 'facebook' },
+  { label: 'X (Twitter)', icon: Send, color: 'text-white', action: 'twitter' },
+  { label: 'LinkedIn', icon: Users, color: 'text-blue-400', action: 'linkedin' },
+  { label: 'Email', icon: Mail, color: 'text-dark-400', action: 'email' },
 ];
 
 export function ShareModal({ open, onClose, title }: ShareModalProps) {
@@ -52,7 +52,7 @@ export function ShareModal({ open, onClose, title }: ShareModalProps) {
             <div className="p-5 space-y-2">
               {shareOptions.map(opt => (
                 <button key={opt.action} onClick={() => handleShare(opt.action)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group">
-                  <span className="text-xl">{opt.icon}</span>
+                  <opt.icon className="h-5 w-5 shrink-0" />
                   <span className="text-[12px] font-medium text-dark-300 group-hover:text-white transition-colors">{opt.label}</span>
                   {opt.action === 'copy' && copied && <CheckCircle2 className="h-4 w-4 text-emerald-500 ml-auto" />}
                 </button>

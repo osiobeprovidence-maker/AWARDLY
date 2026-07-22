@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, ChevronRight, Share2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Share2, Trophy } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent } from '../../components/ui/Card';
 import { PublicNav } from '../../components/navigation/PublicNav';
@@ -42,7 +42,9 @@ export function CaseStudyPage() {
 
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">{cs.logo}</span>
+            <div className="h-12 w-12 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center shrink-0">
+              <Trophy className="h-6 w-6 text-gold-500" />
+            </div>
             <div>
               <p className="text-[9px] font-bold text-dark-500 uppercase tracking-widest">{cs.organization}</p>
               <h1 className="text-2xl sm:text-3xl font-serif text-white italic">{cs.title}</h1>
