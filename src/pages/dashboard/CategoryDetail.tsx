@@ -1,11 +1,11 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import {
+import { 
   ArrowLeft, LayoutDashboard, FileText, Users, Target, Palette, Settings2, Activity,
   TrendingUp, Award, BarChart3, Star, Clock, ChevronRight, Eye, EyeOff, GripVertical,
   Plus, Edit3, Save, CheckCircle2, Vote, Zap, Globe, Lock, Hash, ArrowUpRight,
-  MessageSquare, Shield, Flame, Image, Bell
+  MessageSquare, Shield, Flame, Image, Bell, Search, ChevronDown, Check
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -61,6 +61,25 @@ export function CategoryDetail() {
     maxNominees: 20,
   });
 
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = React.useState(false);
+  const [categorySearch, setCategorySearch] = React.useState('');
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const filteredCategories = mockCategories.filter(c =>
+    c.name.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setCategoryDropdownOpen(false);
+        setCategorySearch('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (!category) {
     return (
       <div className="max-w-6xl mx-auto space-y-8">
@@ -99,15 +118,77 @@ export function CategoryDetail() {
           </Button>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Award className="h-4 w-4 text-gold-500" />
-              <span className="text-[10px] font-bold text-gold-500 uppercase tracking-widest">Category Detail</span>
+              <Award className="h-3.5 w-3.5 text-gold-500" />
+              <span className="text-[9px] font-bold text-gold-500 uppercase tracking-[0.2em]">Category Detail</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-serif text-white tracking-tight italic">
+            <h1 className="text-xl md:text-2xl font-serif text-white tracking-tight italic">
               {category.name}
             </h1>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Category Selector Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+              className="flex items-center gap-2 h-9 px-3 rounded-lg bg-white/5 border border-white/10 hover:border-gold-500/30 transition-colors text-sm text-white"
+            >
+              <Award className="h-3.5 w-3.5 text-gold-500" />
+              <span className="max-w-[140px] truncate">{category.name}</span>
+              <ChevronDown className={`h-3.5 w-3.5 text-dark-400 transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            <AnimatePresence>
+              {categoryDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 top-full mt-2 w-64 bg-dark-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                >
+                  <div className="p-2 border-b border-white/5">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-dark-500" />
+                      <input
+                        type="text"
+                        placeholder="Search categories..."
+                        value={categorySearch}
+                        onChange={(e) => setCategorySearch(e.target.value)}
+                        className="w-full h-8 bg-dark-950 border border-white/5 rounded-lg pl-8 pr-3 text-xs text-white placeholder:text-dark-500 outline-none focus:border-gold-500/30"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto p-1">
+                    {filteredCategories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => {
+                          navigate(`/dashboard/events/${cat.eventId}/categories/${cat.id}`);
+                          setCategoryDropdownOpen(false);
+                          setCategorySearch('');
+                        }}
+                        className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-colors ${
+                          cat.id === category.id
+                            ? 'bg-gold-500/10 text-gold-500'
+                            : 'text-dark-300 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        <Award className="h-3 w-3 shrink-0" />
+                        <span className="truncate flex-1 text-left">{cat.name}</span>
+                        {cat.id === category.id && <Check className="h-3 w-3 shrink-0" />}
+                      </button>
+                    ))}
+                    {filteredCategories.length === 0 && (
+                      <p className="text-xs text-dark-500 text-center py-4">No categories found</p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <div className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
             category.rulesSource === 'custom'
               ? 'bg-gold-500/10 border-gold-500/20 text-gold-500'
