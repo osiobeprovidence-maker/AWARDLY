@@ -38,6 +38,7 @@ import { AwardDetails } from './pages/AwardDetails';
 import { AwardPortal } from './pages/AwardPortal';
 import { EventHub } from './pages/EventHub';
 import { EventDetails } from './pages/org/EventDetails';
+import { LiveFeed } from './pages/LiveFeed';
 import { CreateOrg } from './pages/onboarding/CreateOrg';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/awards/:awardId" element={<AwardDetails />} />
             <Route path="/awards/:awardId/portal" element={<AwardPortal />} />
             <Route path="/events/:eventId" element={<EventHub />} />
+            <Route path="/events/:eventId/live" element={<LiveFeed />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/resources" element={<Resources />} />
             
