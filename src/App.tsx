@@ -36,7 +36,7 @@ import { Discover } from './pages/Discover';
 import { EventDetails } from './pages/org/EventDetails';
 import { CreateOrg } from './pages/onboarding/CreateOrg';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { MobileNav } from './components/navigation/MobileNav';
+
 import { ToastProvider } from './lib/toast';
 
 export default function App() {
@@ -92,7 +92,6 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-          <MobileNav />
         </div>
       </ToastProvider>
     </BrowserRouter>

@@ -281,7 +281,7 @@ export function Monetization() {
   );
 
   return (
-    <div className="space-y-8 pb-24 relative">
+    <div className="space-y-8 relative">
       {/* Breadcrumbs */}
       <Breadcrumbs />
       <div className="fixed top-8 right-8 z-[100] flex flex-col gap-3 pointer-events-none">

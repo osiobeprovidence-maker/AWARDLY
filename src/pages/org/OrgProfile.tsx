@@ -84,7 +84,7 @@ export function OrgProfile() {
         <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/20 to-transparent" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-20 sm:-mt-24 pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-20 sm:-mt-24">
         {/* Profile Header */}
         <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-8 group">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">

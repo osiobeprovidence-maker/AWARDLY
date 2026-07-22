@@ -15,7 +15,7 @@ export function CategoryNominees() {
   const nominees = mockNominees.filter(n => n.categoryId === categoryId);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-24">
+    <div className="max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="flex items-center gap-4">

@@ -63,7 +63,7 @@ export function CategoryDetail() {
 
   if (!category) {
     return (
-      <div className="max-w-6xl mx-auto space-y-8 pb-24">
+      <div className="max-w-6xl mx-auto space-y-8">
         <Breadcrumbs />
         <Card className="border-dashed border-2 border-white/5 bg-dark-900/40">
           <CardContent className="p-16 flex flex-col items-center justify-center text-center space-y-6">
