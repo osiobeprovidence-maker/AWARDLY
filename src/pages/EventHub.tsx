@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../components/ui/Button';
@@ -8,7 +8,7 @@ import {
   Trophy, Calendar, Clock, MapPin, Users, Vote, Award, Target, CheckCircle2,
   ArrowRight, Share2, Bookmark, ExternalLink, ChevronDown, ChevronUp,
   Globe, Star, TrendingUp, Play, Image as ImageIcon, X,
-  Newspaper, Radio, Zap
+  Newspaper, Radio, Zap, Link2, CalendarPlus, Flag, Timer, ChevronLeft, ChevronRight, Copy
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -57,6 +57,16 @@ interface EventData {
   sponsors: Array<{ name: string; tier: string }>;
   faq: Array<{ question: string; answer: string }>;
   relatedEvents: Array<{ id: string; title: string; image: string; date: string }>;
+  broadcast?: {
+    youtubeVideoId?: string;
+    status: 'live' | 'upcoming' | 'replay' | 'none';
+    startedAt?: string;
+    scheduledAt?: string;
+    viewerCount: number;
+    duration?: string;
+    description: string;
+    relatedVideos: Array<{ title: string; youtubeVideoId: string; duration: string; status: string }>;
+  };
   liveActivity: {
     votesToday: number;
     trendingNominees: string[];
@@ -146,6 +156,21 @@ const eventsData: Record<string, EventData> = {
       { id: 'evt2', title: 'Headies Next Rated 2026', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=400', date: '2026-10-15' },
       { id: 'evt3', title: 'Global Music Festival', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80&w=400', date: '2026-12-20' },
     ],
+    broadcast: {
+      youtubeVideoId: 'dQw4w9WgXcQ',
+      status: 'live',
+      startedAt: '2026-07-22T18:00:00Z',
+      viewerCount: 12483,
+      duration: '2h 14m',
+      description: 'Live from Lagos, Nigeria — The 17th Headies celebrating the best in African music.',
+      relatedVideos: [
+        { title: 'Opening Ceremony', youtubeVideoId: 'dQw4w9WgXcQ', duration: '24:10', status: 'Upcoming' },
+        { title: 'Red Carpet Highlights', youtubeVideoId: 'dQw4w9WgXcQ', duration: '18:35', status: 'Upcoming' },
+        { title: 'Best New Artist', youtubeVideoId: 'dQw4w9WgXcQ', duration: '12:22', status: 'Upcoming' },
+        { title: 'Closing Ceremony', youtubeVideoId: 'dQw4w9WgXcQ', duration: '31:45', status: 'Upcoming' },
+        { title: 'Winner Highlights', youtubeVideoId: 'dQw4w9WgXcQ', duration: '15:20', status: 'Upcoming' },
+      ],
+    },
     liveActivity: { votesToday: 2341, trendingNominees: ['Burna Boy', 'Wizkid', 'Asake'], recentVotes: 45, remainingTime: '42d 8h' },
   },
   evt2: {
@@ -190,6 +215,13 @@ const eventsData: Record<string, EventData> = {
     sponsors: [{ name: 'Coca-Cola', tier: 'Platinum' }],
     faq: [{ question: 'When do nominations open?', answer: 'Nominations open on July 1, 2026.' }],
     relatedEvents: [{ id: 'evt1', title: 'The 17th Headies 2026', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=400', date: '2026-09-04' }],
+    broadcast: {
+      status: 'upcoming',
+      scheduledAt: '2026-10-15T19:00:00Z',
+      viewerCount: 0,
+      description: 'The Headies Next Rated spotlight — live from the Federal Palace Hotel.',
+      relatedVideos: [],
+    },
     liveActivity: { votesToday: 0, trendingNominees: [], recentVotes: 0, remainingTime: '68d' },
   },
   evt3: {
@@ -234,6 +266,12 @@ const eventsData: Record<string, EventData> = {
     sponsors: [{ name: 'MTN', tier: 'Platinum' }],
     faq: [{ question: 'How many days is the festival?', answer: 'The festival runs for 3 days from December 18-20, 2026.' }],
     relatedEvents: [{ id: 'evt1', title: 'The 17th Headies 2026', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=400', date: '2026-09-04' }],
+    broadcast: {
+      status: 'none',
+      viewerCount: 0,
+      description: 'The broadcast will be available closer to the event date.',
+      relatedVideos: [],
+    },
     liveActivity: { votesToday: 0, trendingNominees: [], recentVotes: 0, remainingTime: '150d' },
   },
 };
@@ -613,8 +651,225 @@ function RelatedEventsSection({ event }: { event: EventData }) {
   );
 }
 
+function getBroadcastStatusInfo(status: 'live' | 'upcoming' | 'replay' | 'none', scheduledAt?: string) {
+  switch (status) {
+    case 'live':
+      return { label: 'LIVE NOW', color: 'bg-red-500', textColor: 'text-red-500', ringColor: 'border-red-500/20', bg: 'bg-red-500/10', pulse: true };
+    case 'upcoming': {
+      const diff = scheduledAt ? Math.max(0, Math.ceil((new Date(scheduledAt).getTime() - Date.now()) / 86400000)) : null;
+      return { label: diff ? `Starts in ${diff} Day${diff === 1 ? '' : 's'}` : 'Coming Soon', color: 'bg-gold-500', textColor: 'text-gold-500', ringColor: 'border-gold-500/20', bg: 'bg-gold-500/10', pulse: false };
+    }
+    case 'replay':
+      return { label: 'Replay Available', color: 'bg-purple-500', textColor: 'text-purple-500', ringColor: 'border-purple-500/20', bg: 'bg-purple-500/10', pulse: false };
+    default:
+      return { label: 'Not Available', color: 'bg-dark-600', textColor: 'text-dark-500', ringColor: 'border-white/10', bg: 'bg-white/5', pulse: false };
+  }
+}
+
+function RelatedVideoCard({ video, onClick }: { video: { title: string; youtubeVideoId: string; duration: string; status: string }; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="shrink-0 w-64 sm:w-72 group">
+      <div className="aspect-video rounded-xl overflow-hidden relative bg-dark-800 border border-white/5 group-hover:border-gold-500/30 transition-all">
+        <img
+          src={`https://img.youtube.com/vi/${video.youtubeVideoId}/mqdefault.jpg`}
+          alt={video.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          referrerPolicy="no-referrer"
+        />
+        <div className="absolute inset-0 bg-dark-950/0 group-hover:bg-dark-950/40 transition-colors flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border border-white/20">
+            <Play className="h-4 w-4 text-white ml-0.5" />
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-dark-950/90 to-transparent p-3">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-bold text-dark-300 bg-dark-950/80 backdrop-blur-sm rounded px-1.5 py-0.5">{video.duration}</span>
+            {video.status === 'Live' && <span className="text-[8px] font-bold text-red-500 bg-red-500/10 rounded px-1.5 py-0.5 flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" /> LIVE</span>}
+          </div>
+        </div>
+      </div>
+      <p className="text-[11px] text-dark-300 mt-2 truncate group-hover:text-gold-500 transition-colors font-medium">{video.title}</p>
+    </button>
+  );
+}
+
+function BroadcastSection({ event, onFullscreen }: { event: EventData; onFullscreen: () => void }) {
+  const bc = event.broadcast;
+  if (!bc) return <Card className="p-12 text-center border-dashed border-white/10"><Radio className="h-12 w-12 text-dark-600 mx-auto mb-4 opacity-20" /><h3 className="text-xl text-white font-serif mb-2">No Broadcast</h3><p className="text-dark-500 text-sm">Broadcast details will appear here when available.</p></Card>;
+
+  const statusInfo = getBroadcastStatusInfo(bc.status, bc.scheduledAt);
+  const relatedScrollRef = useRef<HTMLDivElement>(null);
+  const [copiedLink, setCopiedLink] = React.useState(false);
+
+  const scrollRelated = useCallback((dir: 'left' | 'right') => {
+    if (relatedScrollRef.current) {
+      relatedScrollRef.current.scrollBy({ left: dir === 'left' ? -290 : 290, behavior: 'smooth' });
+    }
+  }, []);
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const addToCalendar = () => {
+    const date = bc.scheduledAt ? new Date(bc.scheduledAt) : new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const icsDate = `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+    const ics = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${icsDate}\nSUMMARY:${event.title} - Live Broadcast\nDESCRIPTION:${bc.description}\nEND:VEVENT\nEND:VCALENDAR`;
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${event.title.replace(/\s+/g, '-')}-broadcast.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Main Player */}
+      <div id="broadcast-player" className="space-y-4">
+        <div className="relative w-full rounded-2xl overflow-hidden border border-white/10 bg-dark-900" style={{ aspectRatio: '16/9' }}>
+          {bc.youtubeVideoId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${bc.youtubeVideoId}?rel=0&modestbranding=1&playsinline=1`}
+              title={`${event.title} Live Broadcast`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
+              <div className="h-16 w-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-5">
+                <Radio className="h-8 w-8 text-dark-600" />
+              </div>
+              <h3 className="text-lg font-serif text-white italic mb-2">Broadcast Coming Soon</h3>
+              <p className="text-dark-500 text-sm max-w-sm">The live stream for this event is not available yet. Please check back closer to the event date.</p>
+              {bc.scheduledAt && (
+                <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-gold-500 uppercase tracking-widest">
+                  <Timer className="h-3.5 w-3.5" />
+                  <span>Starts {formatDate(bc.scheduledAt)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Live Badge */}
+        <div className="flex items-center gap-3">
+          <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${statusInfo.bg} ${statusInfo.textColor} ${statusInfo.ringColor}`}>
+            {statusInfo.pulse && <span className="relative flex h-2 w-2"><span className={`absolute inline-flex h-full w-full rounded-full ${statusInfo.color} opacity-75 animate-ping`} /><span className={`relative inline-flex h-2 w-2 rounded-full ${statusInfo.color}`} /></span>}
+            {!statusInfo.pulse && bc.status === 'replay' && <CheckCircle2 className="h-3 w-3" />}
+            {!statusInfo.pulse && bc.status === 'upcoming' && <Clock className="h-3 w-3" />}
+            {statusInfo.label}
+          </span>
+          {bc.duration && <span className="text-[10px] text-dark-500 font-medium">{bc.duration}</span>}
+        </div>
+
+        {/* Event Info */}
+        <div className="space-y-1">
+          <h2 className="text-xl sm:text-2xl font-serif text-white italic">{event.title}</h2>
+          <p className="text-sm text-dark-400">{bc.description}</p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-[11px] text-dark-500">
+            <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3 text-gold-500" /> {event.city}, {event.country}</span>
+            {bc.startedAt && <span className="flex items-center gap-1.5"><Clock className="h-3 w-3 text-gold-500" /> Started {Math.max(0, Math.floor((Date.now() - new Date(bc.startedAt).getTime()) / 60000))} minutes ago</span>}
+            {bc.scheduledAt && bc.status === 'upcoming' && <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3 text-gold-500" /> {formatDate(bc.scheduledAt)}</span>}
+            <span className="flex items-center gap-1.5"><Users className="h-3 w-3 text-gold-500" /> {bc.viewerCount.toLocaleString()} Watching</span>
+            {bc.status === 'live' && <span className="flex items-center gap-1.5"><Radio className="h-3 w-3 text-red-500 animate-pulse" /> Stream Active</span>}
+          </div>
+        </div>
+
+        {/* Broadcast Controls */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
+          <Button variant="ghost" className="h-9 px-3 text-[10px] font-bold uppercase tracking-widest" onClick={() => { navigator.share ? navigator.share({ title: event.title, url: window.location.href }) : copyLink(); }}>
+            <Share2 className="h-3.5 w-3.5 mr-1.5" /> Share
+          </Button>
+          <Button variant="ghost" className="h-9 px-3 text-[10px] font-bold uppercase tracking-widest" onClick={copyLink}>
+            {copiedLink ? <><CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-500" /> Copied!</> : <><Link2 className="h-3.5 w-3.5 mr-1.5" /> Copy Link</>}
+          </Button>
+          {bc.youtubeVideoId && (
+            <Button variant="ghost" className="h-9 px-3 text-[10px] font-bold uppercase tracking-widest" onClick={onFullscreen}>
+              <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Watch Full Screen
+            </Button>
+          )}
+          <Button variant="ghost" className="h-9 px-3 text-[10px] font-bold uppercase tracking-widest" onClick={addToCalendar}>
+            <CalendarPlus className="h-3.5 w-3.5 mr-1.5" /> Add to Calendar
+          </Button>
+          <Button variant="ghost" className="h-9 px-3 text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-400 hover:bg-red-500/10">
+            <Flag className="h-3.5 w-3.5 mr-1.5" /> Report Stream
+          </Button>
+        </div>
+      </div>
+
+      {/* Related Videos Carousel */}
+      {bc.relatedVideos.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-serif text-white italic">Related Broadcasts</h3>
+            <div className="flex gap-1.5">
+              <button onClick={() => scrollRelated('left')} className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"><ChevronLeft className="h-4 w-4 text-dark-400" /></button>
+              <button onClick={() => scrollRelated('right')} className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"><ChevronRight className="h-4 w-4 text-dark-400" /></button>
+            </div>
+          </div>
+          <div ref={relatedScrollRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+            {bc.relatedVideos.map((v, i) => (
+              <RelatedVideoCard key={i} video={v} onClick={() => {}} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FloatingMiniPlayer({ event, visible, onClose }: { event: EventData; visible: boolean; onClose: () => void }) {
+  const bc = event.broadcast;
+  if (!bc || !bc.youtubeVideoId || !visible) return null;
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          className="fixed bottom-6 right-6 z-50 w-80 sm:w-96"
+        >
+          <Card className="border-white/10 bg-dark-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 overflow-hidden">
+            <div className="relative aspect-video">
+              <iframe
+                src={`https://www.youtube.com/embed/${bc.youtubeVideoId}?rel=0&modestbranding=1&playsinline=1&controls=1`}
+                title={`${event.title} Mini Player`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+              <button
+                onClick={onClose}
+                className="absolute top-2 right-2 h-7 w-7 rounded-full bg-dark-950/80 backdrop-blur-sm flex items-center justify-center hover:bg-dark-950 transition-colors border border-white/10"
+              >
+                <X className="h-3.5 w-3.5 text-white" />
+              </button>
+              <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" /></span>
+                <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest">Live</span>
+              </div>
+            </div>
+            <div className="px-3 py-2.5 border-t border-white/5">
+              <p className="text-[11px] text-white font-medium truncate">{event.title}</p>
+              <p className="text-[9px] text-dark-500 mt-0.5">{bc.viewerCount.toLocaleString()} watching</p>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────
-const tabs = ['Overview', 'Timeline', 'Categories', 'Nominees', 'Voting', 'Schedule', 'Judges', 'Gallery', 'Sponsors', 'FAQ'] as const;
+const tabs = ['Overview', 'Timeline', 'Categories', 'Nominees', 'Voting', 'Broadcast', 'Schedule', 'Judges', 'Gallery', 'Sponsors', 'FAQ'] as const;
 type Tab = typeof tabs[number];
 
 export function EventHub() {
@@ -622,6 +877,21 @@ export function EventHub() {
   const event = eventsData[eventId || ''];
   const [activeTab, setActiveTab] = React.useState<Tab>('Overview');
   const [lightbox, setLightbox] = React.useState<{ url: string; caption: string } | null>(null);
+  const [showMiniPlayer, setShowMiniPlayer] = React.useState(false);
+
+  useEffect(() => {
+    if (!event.broadcast?.youtubeVideoId || activeTab !== 'Broadcast') {
+      setShowMiniPlayer(false);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowMiniPlayer(!entry.isIntersecting),
+      { threshold: 0.3 }
+    );
+    const el = document.getElementById('broadcast-player');
+    if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, [event.broadcast?.youtubeVideoId, activeTab]);
 
   if (!event) {
     return (
@@ -647,6 +917,7 @@ export function EventHub() {
       case 'Categories': return <CategoriesSection event={event} />;
       case 'Nominees': return <NomineesSection event={event} />;
       case 'Voting': return <VotingSection event={event} />;
+      case 'Broadcast': return <BroadcastSection event={event} onFullscreen={() => { if (event.broadcast?.youtubeVideoId) window.open(`https://www.youtube.com/watch?v=${event.broadcast.youtubeVideoId}`, '_blank'); }} />;
       case 'Schedule': return <ScheduleSection event={event} />;
       case 'Judges': return <JudgesSection event={event} />;
       case 'Gallery': return <GallerySection event={event} onImageClick={(u, c) => setLightbox({ url: u, caption: c })} />;
@@ -797,6 +1068,13 @@ export function EventHub() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Mini Player */}
+      <FloatingMiniPlayer
+        event={event}
+        visible={showMiniPlayer}
+        onClose={() => setShowMiniPlayer(false)}
+      />
     </div>
   );
 }
