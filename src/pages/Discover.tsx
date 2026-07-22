@@ -65,21 +65,63 @@ export function Discover() {
         </div>
 
         {/* Global Live Bar */}
-        <div className="mb-10 sm:mb-16 bg-white/5 border border-white/5 rounded-2xl sm:rounded-[32px] p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
-           <div className="flex items-center gap-3 px-4 sm:px-6 py-2.5 bg-red-600/10 border border-red-600/20 rounded-xl sm:rounded-[24px] shrink-0">
-              <Radio className="h-4 w-4 text-red-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">3 Live</span>
-           </div>
-           <div className="flex-1 px-3 sm:px-4 overflow-hidden min-h-[28px] flex items-center">
-              <div className="flex gap-8 animate-[marquee_20s_linear_infinite] whitespace-nowrap">
-                 {[1,2,3,4].map(i => (
-                    <span key={i} className="text-[11px] sm:text-xs text-dark-300 font-medium whitespace-nowrap inline-block mr-8">
-                       <span className="text-gold-500">HEADIES 2026:</span> Main Stage in 12m • <span className="text-white">OSCARS:</span> Voting ends today
-                    </span>
-                 ))}
+        <div className="mb-10 sm:mb-16 bg-dark-900/60 border border-white/5 rounded-2xl sm:rounded-[32px] overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-stretch">
+            {/* Live Header */}
+            <div className="flex items-center gap-3 px-5 sm:px-6 py-3 sm:py-0 sm:h-14 bg-red-600/10 border-b sm:border-b-0 sm:border-r border-red-600/20 shrink-0">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+              <span className="text-[10px] font-black text-red-500 uppercase tracking-[0.2em]">Live</span>
+              <span className="h-3 w-px bg-red-500/20" />
+              <span className="text-[10px] font-bold text-dark-400 uppercase tracking-widest">3 Events</span>
+            </div>
+
+            {/* Scrolling Ticker */}
+            <div className="flex-1 overflow-hidden min-h-[44px] sm:min-h-[48px] flex items-center relative">
+              <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-r from-dark-900/80 to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-l from-dark-900/80 to-transparent z-10 pointer-events-none" />
+              <div className="flex animate-ticker whitespace-nowrap">
+                {[
+                  { event: 'HEADIES 2026', text: 'nominations close in 12 minutes' },
+                  { event: 'OSCARS', text: 'public voting ends today' },
+                  { event: 'TECH EXCELLENCE', text: 'voting is now open' },
+                  { event: 'GRAMMY FAN CHOICE', text: 'has reached 2M votes' },
+                  { event: 'CORPORATE AWARDS', text: 'finalists announced' },
+                ].map((item, i) => (
+                  <span key={i} className="inline-flex items-center text-[11px] sm:text-xs text-dark-300 font-medium">
+                    <span className="text-gold-500 font-bold">{item.event}</span>
+                    <span className="mx-1.5 text-dark-600">•</span>
+                    <span>{item.text}</span>
+                    <span className="mx-4 sm:mx-6 text-dark-700">|</span>
+                  </span>
+                ))}
+                {[
+                  { event: 'HEADIES 2026', text: 'nominations close in 12 minutes' },
+                  { event: 'OSCARS', text: 'public voting ends today' },
+                  { event: 'TECH EXCELLENCE', text: 'voting is now open' },
+                  { event: 'GRAMMY FAN CHOICE', text: 'has reached 2M votes' },
+                  { event: 'CORPORATE AWARDS', text: 'finalists announced' },
+                ].map((item, i) => (
+                  <span key={`dup-${i}`} className="inline-flex items-center text-[11px] sm:text-xs text-dark-300 font-medium">
+                    <span className="text-gold-500 font-bold">{item.event}</span>
+                    <span className="mx-1.5 text-dark-600">•</span>
+                    <span>{item.text}</span>
+                    <span className="mx-4 sm:mx-6 text-dark-700">|</span>
+                  </span>
+                ))}
               </div>
-           </div>
-           <Button variant="ghost" className="px-6 sm:px-8 rounded-xl sm:rounded-[24px] text-[10px] font-bold uppercase tracking-widest hidden sm:flex shrink-0">View Schedule</Button>
+            </div>
+
+            {/* View Schedule */}
+            <div className="flex items-center px-4 sm:px-6 py-3 sm:py-0 sm:h-14 border-t sm:border-t-0 sm:border-l border-white/5 shrink-0">
+              <button className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-dark-400 hover:text-gold-500 transition-colors group">
+                View Schedule
+                <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Search & Selection */}
