@@ -183,9 +183,9 @@ export function Discover() {
                    <span className="px-2 sm:px-3 py-1 bg-gold-500 text-dark-950 text-[8px] font-black uppercase tracking-widest rounded mb-2 sm:mb-4 inline-block">Featured</span>
                    <h3 className="text-xl sm:text-2xl lg:text-4xl font-serif text-white italic mb-1 sm:mb-2">The 17th Headies</h3>
                    <p className="text-dark-300 text-xs sm:text-sm max-w-md hidden sm:block">Global recognition for the brightest stars in African music. Voting is now live.</p>
-                   <Link to="/org/headies">
-                      <Button className="mt-3 sm:mt-6 px-6 sm:px-10 h-10 sm:h-12 rounded-xl uppercase text-[10px] font-black tracking-widest">Enter Portal</Button>
-                   </Link>
+                    <Link to="/awards/headies/portal">
+                       <Button className="mt-3 sm:mt-6 px-6 sm:px-10 h-10 sm:h-12 rounded-xl uppercase text-[10px] font-black tracking-widest">Enter Portal</Button>
+                    </Link>
                 </div>
              </Card>
           </div>
