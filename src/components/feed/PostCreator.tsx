@@ -32,7 +32,7 @@ export function PostCreator({ onPostCreated }: PostCreatorProps) {
 
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'members_only' | 'judges_only' | 'staff_only'>('public');
-  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [storageIds, setStorageIds] = useState<string[]>([]);
   const [showMediaUpload, setShowMediaUpload] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
@@ -47,6 +47,14 @@ export function PostCreator({ onPostCreated }: PostCreatorProps) {
   const [publishing, setPublishing] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
+  const resolvedUrls = useQuery(
+    api.storage.queries.getUrls,
+    storageIds.length > 0 ? { storageIds } : 'skip'
+  );
+  const mediaUrls = resolvedUrls
+    ? Object.values(resolvedUrls).filter((url): url is string => url !== null)
+    : [];
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!currentOrg || !user) return null;
@@ -60,7 +68,7 @@ export function PostCreator({ onPostCreated }: PostCreatorProps) {
 
     setUploading(true);
     try {
-      const newUrls: string[] = [];
+      const newIds: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const uploadUrl = await generateUploadUrl();
@@ -70,10 +78,9 @@ export function PostCreator({ onPostCreated }: PostCreatorProps) {
           body: file,
         });
         const { storageId } = await result.json();
-        const url = `https://${(window as any).__CONVEX_SITE_URL__ ?? 'uncommon-bat-916.eu-west-1.convex.cloud'}/api/storage/${storageId}`;
-        newUrls.push(url);
+        if (storageId) newIds.push(storageId);
       }
-      setMediaUrls(prev => [...prev, ...newUrls]);
+      setStorageIds(prev => [...prev, ...newIds]);
     } catch (error) {
       toast('Upload failed', 'error');
     } finally {
@@ -131,7 +138,7 @@ export function PostCreator({ onPostCreated }: PostCreatorProps) {
 
       toast(scheduledAt ? 'Post scheduled!' : 'Post published!', 'success');
       setContent('');
-      setMediaUrls([]);
+      setStorageIds([]);
       setShowPollCreator(false);
       setPollQuestion('');
       setPollOptions([{ id: '1', label: '' }, { id: '2', label: '' }]);
@@ -168,7 +175,7 @@ export function PostCreator({ onPostCreated }: PostCreatorProps) {
       });
       toast('Draft saved', 'success');
       setContent('');
-      setMediaUrls([]);
+      setStorageIds([]);
       setExpanded(false);
     } catch (error: any) {
       toast(error.message || 'Failed to save draft', 'error');
@@ -219,7 +226,7 @@ export function PostCreator({ onPostCreated }: PostCreatorProps) {
               <div key={i} className="relative rounded-xl overflow-hidden aspect-video bg-dark-800 group">
                 <img src={url} className="w-full h-full object-cover" alt="upload" referrerPolicy="no-referrer" />
                 <button
-                  onClick={() => setMediaUrls(prev => prev.filter((_, idx) => idx !== i))}
+                  onClick={() => setStorageIds(prev => prev.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 h-6 w-6 rounded-full bg-dark-950/80 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <X className="h-3 w-3" />
