@@ -6,7 +6,7 @@ import { Input } from '../../components/ui/Input';
 import {
   DollarSign, Wallet, TrendingUp, Calendar, CreditCard, Plus, Loader2,
   ArrowDownRight, ArrowUpRight, Clock, CheckCircle, XCircle, AlertTriangle,
-  Building2, Trash2, Edit2, Info,
+  Building2, Trash2, Edit2, Info, Trophy, ExternalLink, ChevronRight,
 } from 'lucide-react';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useToast } from '../../lib/toast';
@@ -63,6 +63,11 @@ export function Monetization() {
 
   const transactions = useQuery(
     api.transactions.queries.getByOrg,
+    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  ) ?? [];
+
+  const events = useQuery(
+    api.events.queries.getByOrg,
     currentOrg ? { orgId: currentOrg.id as any } : 'skip'
   ) ?? [];
 
@@ -218,6 +223,78 @@ export function Monetization() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Your Events ───────────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">Your Events</CardTitle>
+            <CardDescription>Manage monetization for each event.</CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/events/create')}>
+            <Plus className="h-4 w-4 mr-1" /> Create Event
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {events.length === 0 ? (
+            <div className="text-center py-8">
+              <Trophy className="h-10 w-10 text-dark-600 mx-auto mb-3" />
+              <p className="text-sm text-dark-400 mb-1">No events created yet</p>
+              <p className="text-xs text-dark-500 mb-4">Create your first event to start earning from votes and tickets.</p>
+              <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/events/create')}>
+                <Plus className="h-3.5 w-3.5 mr-1.5" /> Create Event
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {events.map((event) => (
+                <div
+                  key={event._id}
+                  className="p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors cursor-pointer"
+                  onClick={() => navigate(`/dashboard/events/${event._id}`)}
+                >
+                  <div className="flex items-center gap-4">
+                    {event.bannerUrl ? (
+                      <img src={event.bannerUrl} className="h-12 w-16 rounded-lg object-cover shrink-0" alt="" />
+                    ) : (
+                      <div className="h-12 w-16 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: (event.themeColor || '#c68a35') + '20' }}>
+                        <Trophy className="h-5 w-5" style={{ color: event.themeColor || '#c68a35' }} />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-white truncate">{event.title}</p>
+                        <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
+                          event.status === 'published' ? 'bg-emerald-500/10 text-emerald-500'
+                          : event.status === 'live' ? 'bg-gold-500/10 text-gold-500'
+                          : event.status === 'draft' ? 'bg-white/5 text-dark-400'
+                          : event.status === 'closed' ? 'bg-red-500/10 text-red-500'
+                          : 'bg-white/5 text-dark-400'
+                        }`}>
+                          {event.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        {event.date && (
+                          <span className="text-xs text-dark-400">
+                            {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </span>
+                        )}
+                        {event.votingType && (
+                          <span className="text-[10px] text-dark-500 uppercase tracking-widest">
+                            {event.votingType === 'both' ? 'Public + Judge' : event.votingType} voting
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-dark-600 shrink-0" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {availableBalance === 0 && transactions.length === 0 ? (
         /* ── Empty State ──────────────────────────────────────────── */

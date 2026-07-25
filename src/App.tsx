@@ -16,11 +16,15 @@ import { DashboardEvents } from './pages/dashboard/Events';
 import { DashboardVoting } from './pages/dashboard/Voting';
 import { Monetization } from './pages/dashboard/Monetization';
 import { NominationSettings } from './pages/dashboard/NominationSettings';
+import { NominationReview } from './pages/dashboard/NominationReview';
 import { DashboardLive } from './pages/dashboard/Live';
 import { DashboardMedia } from './pages/dashboard/Media';
 import { DashboardAnalytics } from './pages/dashboard/Analytics';
 import { DashboardSettings } from './pages/dashboard/Settings';
 import { Billing } from './pages/dashboard/Billing';
+import { Partners } from './pages/dashboard/Partners';
+import { Sponsors } from './pages/dashboard/SponsorsPage';
+import { BrandAssets } from './pages/dashboard/BrandAssets';
 import { SearchPage } from './pages/dashboard/Search';
 import { AwardCeremony } from './pages/dashboard/AwardCeremony';
 import { TicketingLayout, TicketingDashboard, TicketingEvents, CreateTicket, TicketOrders, TicketCustomers, CheckIn, TicketDiscounts, TicketingAnalytics, TicketingSettings } from './pages/dashboard/ticketing';
@@ -54,6 +58,7 @@ import { Schedule } from './pages/Schedule';
 import { AwardDetails } from './pages/AwardDetails';
 import { AwardPortal } from './pages/AwardPortal';
 import { EventHub } from './pages/EventHub';
+import { NominationPortal } from './pages/NominationPortal';
 import { EventDetails } from './pages/org/EventDetails';
 import { LiveFeed } from './pages/LiveFeed';
 import { ShareView } from './pages/ShareView';
@@ -78,6 +83,7 @@ export default function App() {
               <Route path="/awards/:awardId" element={<AwardDetails />} />
               <Route path="/awards/:awardId/portal" element={<AwardPortal />} />
               <Route path="/events/:eventId" element={<EventHub />} />
+              <Route path="/nominate/:eventId" element={<NominationPortal />} />
               <Route path="/events/:eventId/live" element={<LiveFeed />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/resources" element={<Resources />} />
@@ -112,7 +118,11 @@ export default function App() {
                 <Route path="team" element={<TeamManagement />} />
                 <Route path="judges" element={<JudgeManagement />} />
                 <Route path="voting" element={<DashboardVoting />} />
+                <Route path="nomination-review" element={<NominationReview />} />
                 <Route path="monetization" element={<Monetization />} />
+                <Route path="partners" element={<Partners />} />
+                <Route path="sponsors" element={<Sponsors />} />
+                <Route path="brand-assets" element={<BrandAssets />} />
                 <Route path="voting/settings" element={<NominationSettings />} />
                 <Route path="live" element={<DashboardLive />} />
                 <Route path="media" element={<DashboardMedia />} />

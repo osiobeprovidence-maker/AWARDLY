@@ -997,9 +997,17 @@ export function EventHub() {
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif text-white italic leading-[1] tracking-tighter">{event.title}</h1>
               <p className="text-dark-300 text-sm sm:text-base max-w-xl">{event.description}</p>
               <div className="flex flex-wrap gap-3 mt-2">
-                <Button variant="primary" className="h-11 px-6 text-[11px] font-bold uppercase tracking-widest">
-                  <ctaIcon className="h-4 w-4 mr-2" />{cta.label}
-                </Button>
+                {event.status === 'Nominations Open' ? (
+                  <Link to={`/nominate/${event.id}`}>
+                    <Button variant="primary" className="h-11 px-6 text-[11px] font-bold uppercase tracking-widest">
+                      <ctaIcon className="h-4 w-4 mr-2" />{cta.label}
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button variant="primary" className="h-11 px-6 text-[11px] font-bold uppercase tracking-widest">
+                    <ctaIcon className="h-4 w-4 mr-2" />{cta.label}
+                  </Button>
+                )}
                 <Link to={`/org/${event.orgId}`}>
                   <Button variant="glass" className="h-11 px-5 text-[11px] font-bold uppercase tracking-widest">
                     <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Visit Org

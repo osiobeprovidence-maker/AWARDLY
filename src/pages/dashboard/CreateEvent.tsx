@@ -46,6 +46,14 @@ const THEME_COLORS = [
   { name: 'Orange', hex: '#f97316' },
 ];
 
+interface VotingPackage {
+  id: string;
+  name: string;
+  votes: number;
+  price: number;
+  description: string;
+}
+
 interface EventData {
   title: string;
   description: string;
@@ -63,6 +71,7 @@ interface EventData {
   votingStart: string;
   votingEnd: string;
   paidVoting: boolean;
+  votingPackages: VotingPackage[];
   awardFormat: 'online' | 'physical' | 'hybrid' | '';
   ceremony: {
     venueName: string;
@@ -103,6 +112,7 @@ const DEFAULT_DATA: EventData = {
   votingStart: '',
   votingEnd: '',
   paidVoting: false,
+  votingPackages: [],
   awardFormat: '',
   ceremony: {
     venueName: '',
@@ -237,6 +247,7 @@ export function CreateEvent() {
       votingEnd: data.votingEnd || undefined,
       awardFormat: data.awardFormat || undefined,
       ceremony: ceremonyData,
+      firebaseUid: user?.id || undefined,
     };
   };
 
@@ -277,7 +288,7 @@ export function CreateEvent() {
           rulesSource: cat.rulesSource,
         });
       }
-      await publishEvent({ eventId: eventId as any });
+      await publishEvent({ eventId: eventId as any, firebaseUid: user?.id });
       toast('Event published!', 'success');
       setPublished(true);
       setStep(8);
@@ -724,6 +735,27 @@ export function CreateEvent() {
     </div>
   );
 
+  const addVotingPackage = () => {
+    const pkg: VotingPackage = {
+      id: Date.now().toString(),
+      name: '',
+      votes: 10,
+      price: 0,
+      description: '',
+    };
+    update({ votingPackages: [...data.votingPackages, pkg] });
+  };
+
+  const updateVotingPackage = (id: string, patch: Partial<VotingPackage>) => {
+    update({
+      votingPackages: data.votingPackages.map(p => p.id === id ? { ...p, ...patch } : p),
+    });
+  };
+
+  const removeVotingPackage = (id: string) => {
+    update({ votingPackages: data.votingPackages.filter(p => p.id !== id) });
+  };
+
   const renderMonetization = () => (
     <div className="space-y-6">
       <Card>
@@ -734,37 +766,118 @@ export function CreateEvent() {
             </div>
             Monetization
           </CardTitle>
-          <CardDescription>Optionally enable paid voting packages for supporters.</CardDescription>
+          <CardDescription>Set up paid voting packages for supporters to boost their favourite nominees.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="space-y-6">
+          <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-4">
+            {data.bannerUrl ? (
+              <img src={data.bannerUrl} className="h-14 w-20 rounded-lg object-cover" alt="" />
+            ) : (
+              <div className="h-14 w-20 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: data.themeColor + '20' }}>
+                <Trophy className="h-6 w-6" style={{ color: data.themeColor }} />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate">{data.title || 'Untitled Event'}</p>
+              <div className="flex items-center gap-3 mt-1">
+                {data.date && (
+                  <span className="text-xs text-dark-400">
+                    {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </span>
+                )}
+                <span className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">
+                  {data.categories.length} {data.categories.length === 1 ? 'category' : 'categories'}
+                </span>
+              </div>
+            </div>
+          </div>
+
           <Toggle
             label="Paid Voting"
-            description="Require supporters to purchase voting packages"
+            description="Require supporters to purchase voting packages before voting"
             enabled={data.paidVoting}
             onChange={v => update({ paidVoting: v })}
           />
 
           {data.paidVoting && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-6">
-              <div className="p-8 rounded-2xl bg-white/5 border border-white/5 text-center">
-                <CreditCard className="h-10 w-10 text-dark-600 mx-auto mb-3" />
-                <h4 className="text-white font-medium mb-1">No voting packages yet</h4>
-                <p className="text-xs text-dark-500 mb-4">Create voting packages before enabling paid voting.</p>
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-white">Voting Packages</h4>
+                <Button variant="outline" size="sm" onClick={addVotingPackage} className="border-white/10 hover:bg-white/5">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Package
+                </Button>
               </div>
 
-              <Button
-                variant="outline"
-                className="w-full border-white/10 hover:bg-white/5"
-                onClick={() => navigate('/dashboard/monetization')}
-              >
-                <CreditCard className="h-4 w-4 mr-2" /> Configure Packages
-              </Button>
+              {data.votingPackages.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-white/5 border border-white/5 text-center">
+                  <CreditCard className="h-10 w-10 text-dark-600 mx-auto mb-3" />
+                  <h4 className="text-white font-medium mb-1">No voting packages yet</h4>
+                  <p className="text-xs text-dark-500 mb-4">Add voting packages so supporters can purchase votes for their favourite nominees.</p>
+                  <Button variant="outline" size="sm" onClick={addVotingPackage} className="border-white/10 hover:bg-white/5">
+                    <Plus className="h-3.5 w-3.5 mr-1.5" /> Create First Package
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {data.votingPackages.map((pkg) => (
+                    <motion.div
+                      key={pkg.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 rounded-xl bg-white/[0.03] border border-white/5"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 space-y-3">
+                          <input
+                            placeholder="Package name (e.g. Bronze Pack)"
+                            value={pkg.name}
+                            onChange={e => updateVotingPackage(pkg.id, { name: e.target.value })}
+                            className="w-full bg-dark-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-dark-600 focus:ring-1 focus:ring-gold-500 outline-none"
+                          />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[10px] font-bold text-dark-500 uppercase tracking-widest mb-1 block">Votes</label>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={pkg.votes}
+                                onChange={e => updateVotingPackage(pkg.id, { votes: parseInt(e.target.value) || 1 })}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-bold text-dark-500 uppercase tracking-widest mb-1 block">Price (₦)</label>
+                              <Input
+                                type="number"
+                                min="0"
+                                value={pkg.price}
+                                onChange={e => updateVotingPackage(pkg.id, { price: parseFloat(e.target.value) || 0 })}
+                              />
+                            </div>
+                          </div>
+                          <input
+                            placeholder="Short description (optional)"
+                            value={pkg.description}
+                            onChange={e => updateVotingPackage(pkg.id, { description: e.target.value })}
+                            className="w-full bg-dark-900 border border-white/10 rounded-lg px-3 py-2 text-xs text-dark-300 placeholder:text-dark-600 focus:ring-1 focus:ring-gold-500 outline-none"
+                          />
+                        </div>
+                        <button
+                          onClick={() => removeVotingPackage(pkg.id)}
+                          className="h-8 w-8 rounded-lg flex items-center justify-center text-dark-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all shrink-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
 
               <div className="p-4 rounded-xl bg-white/5 border border-white/5 flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-gold-500 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm text-white font-medium">Payment Gateway Setup</p>
-                  <p className="text-xs text-dark-400 mt-1">Connect your Stripe or Paystack account to start accepting payments. Revenue reports are available in the monetization dashboard.</p>
+                  <p className="text-xs text-dark-400 mt-1">Connect your Stripe or Paystack account in the Revenue dashboard to start accepting payments. You can manage packages in detail after publishing.</p>
                 </div>
               </div>
             </motion.div>

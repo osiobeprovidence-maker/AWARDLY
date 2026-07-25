@@ -277,6 +277,48 @@ export default defineSchema({
     .index('by_orgId', ['orgId'])
     .index('by_categoryId_isDeleted', ['categoryId', 'isDeleted']),
 
+  // ─── Nominations (Public Submissions) ──────────────────────────────────
+  nominations: defineTable({
+    eventId: v.id('events'),
+    categoryId: v.id('categories'),
+    orgId: v.id('organizations'),
+    submitterId: v.optional(v.id('users')),
+    submitterEmail: v.string(),
+    isSelfNomination: v.boolean(),
+    nomineeName: v.string(),
+    nomineeEmail: v.optional(v.string()),
+    nomineeOrganization: v.optional(v.string()),
+    nomineeTitle: v.optional(v.string()),
+    nomineeBio: v.string(),
+    nomineeAvatarUrl: v.optional(v.string()),
+    nomineeLinks: v.optional(v.object({
+      website: v.optional(v.string()),
+      twitter: v.optional(v.string()),
+      instagram: v.optional(v.string()),
+      linkedin: v.optional(v.string()),
+      youtube: v.optional(v.string()),
+    })),
+    supportingLinks: v.optional(v.array(v.string())),
+    achievementSummary: v.string(),
+    whyNominated: v.string(),
+    status: v.union(
+      v.literal('pending'), v.literal('approved'),
+      v.literal('rejected'), v.literal('shortlisted'),
+    ),
+    reviewNotes: v.optional(v.string()),
+    reviewedBy: v.optional(v.id('users')),
+    reviewedAt: v.optional(v.string()),
+    nomineeId: v.optional(v.id('nominees')),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index('by_eventId', ['eventId'])
+    .index('by_categoryId', ['categoryId'])
+    .index('by_orgId', ['orgId'])
+    .index('by_status', ['status'])
+    .index('by_eventId_status', ['eventId', 'status'])
+    .index('by_submitterId', ['submitterId']),
+
   // ─── Votes ──────────────────────────────────────────────────────────────
   votes: defineTable({
     userId: v.id('users'),

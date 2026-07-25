@@ -38,9 +38,11 @@ export const create = mutation({
       livestreamUrl: v.optional(v.string()),
       winnerAnnouncementDate: v.optional(v.string()),
     })),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const { firebaseUid, ...insertData } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
     await requirePermission(ctx, user._id, args.orgId, 'manageEvents');
 
     // Check slug uniqueness within the org
@@ -55,7 +57,7 @@ export const create = mutation({
     const now = new Date().toISOString();
 
     const eventId = await ctx.db.insert('events', {
-      ...args,
+      ...insertData,
       status: 'draft',
       isVotingActive: false,
       categoryCount: 0,
@@ -94,15 +96,16 @@ export const update = mutation({
     timezone: v.optional(v.string()),
     youtubeVideoId: v.optional(v.string()),
     muxPlaybackId: v.optional(v.string()),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
-    const event = await ctx.db.get(args.eventId);
+    const { eventId, firebaseUid, ...updates } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
+    const event = await ctx.db.get(eventId);
     if (!event) throw new Error('Event not found');
 
     await requirePermission(ctx, user._id, event.orgId, 'manageEvents');
 
-    const { eventId, ...updates } = args;
     const filtered = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
     );
@@ -112,9 +115,12 @@ export const update = mutation({
 });
 
 export const publish = mutation({
-  args: { eventId: v.id('events') },
+  args: {
+    eventId: v.id('events'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const event = await ctx.db.get(args.eventId);
     if (!event) throw new Error('Event not found');
 
@@ -130,9 +136,12 @@ export const publish = mutation({
 });
 
 export const goLive = mutation({
-  args: { eventId: v.id('events') },
+  args: {
+    eventId: v.id('events'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const event = await ctx.db.get(args.eventId);
     if (!event) throw new Error('Event not found');
 
@@ -146,9 +155,12 @@ export const goLive = mutation({
 });
 
 export const close = mutation({
-  args: { eventId: v.id('events') },
+  args: {
+    eventId: v.id('events'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const event = await ctx.db.get(args.eventId);
     if (!event) throw new Error('Event not found');
 
@@ -163,9 +175,12 @@ export const close = mutation({
 });
 
 export const softDelete = mutation({
-  args: { eventId: v.id('events') },
+  args: {
+    eventId: v.id('events'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const event = await ctx.db.get(args.eventId);
     if (!event) throw new Error('Event not found');
 
@@ -184,9 +199,10 @@ export const toggleVoting = mutation({
   args: {
     eventId: v.id('events'),
     isActive: v.boolean(),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const event = await ctx.db.get(args.eventId);
     if (!event) throw new Error('Event not found');
 
@@ -233,9 +249,10 @@ export const updateJudgingRules = mutation({
       allowDraftSaving: v.boolean(),
     }),
     judgingDeadline: v.optional(v.string()),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const event = await ctx.db.get(args.eventId);
     if (!event) throw new Error('Event not found');
     await requirePermission(ctx, user._id, event.orgId, 'manageJudges');
@@ -252,9 +269,10 @@ export const updateJudgingGuidelines = mutation({
   args: {
     eventId: v.id('events'),
     judgingGuidelines: v.string(),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const event = await ctx.db.get(args.eventId);
     if (!event) throw new Error('Event not found');
     await requirePermission(ctx, user._id, event.orgId, 'manageJudges');

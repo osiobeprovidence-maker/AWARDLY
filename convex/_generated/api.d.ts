@@ -47,6 +47,8 @@ import type * as mediaShares_mutations from "../mediaShares/mutations.js";
 import type * as mediaShares_queries from "../mediaShares/queries.js";
 import type * as moderations_mutations from "../moderations/mutations.js";
 import type * as moderations_queries from "../moderations/queries.js";
+import type * as nominations_mutations from "../nominations/mutations.js";
+import type * as nominations_queries from "../nominations/queries.js";
 import type * as nominees_mutations from "../nominees/mutations.js";
 import type * as nominees_queries from "../nominees/queries.js";
 import type * as notifications_mutations from "../notifications/mutations.js";
@@ -123,6 +125,8 @@ declare const fullApi: ApiFromModules<{
   "mediaShares/queries": typeof mediaShares_queries;
   "moderations/mutations": typeof moderations_mutations;
   "moderations/queries": typeof moderations_queries;
+  "nominations/mutations": typeof nominations_mutations;
+  "nominations/queries": typeof nominations_queries;
   "nominees/mutations": typeof nominees_mutations;
   "nominees/queries": typeof nominees_queries;
   "notifications/mutations": typeof notifications_mutations;
