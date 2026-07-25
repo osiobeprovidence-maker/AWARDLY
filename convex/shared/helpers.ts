@@ -2,40 +2,69 @@ import { QueryCtx, MutationCtx } from '../_generated/server';
 import { Id } from '../_generated/dataModel';
 
 /**
- * Get the current authenticated user from Convex by Firebase UID.
- * Throws if not authenticated or user not found.
+ * Get the current authenticated user from Convex.
+ * Uses Convex JWT auth if available, otherwise accepts firebaseUid arg.
  */
-export async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
+export async function getAuthenticatedUser(
+  ctx: QueryCtx | MutationCtx,
+  firebaseUid?: string
+) {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error('Not authenticated');
+  if (identity) {
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_firebaseUid', (q) => q.eq('firebaseUid', identity.subject))
+      .unique();
+    if (!user) {
+      console.error('[getAuthenticatedUser] JWT user not found in DB', { subject: identity.subject });
+      throw new Error('User not found in database. Please re-login.');
+    }
+    return user;
   }
 
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_firebaseUid', (q) => q.eq('firebaseUid', identity.subject))
-    .unique();
-
-  if (!user) {
-    throw new Error('User not found in database');
+  // Fallback: accept firebaseUid from caller (for when JWT auth is not configured)
+  if (firebaseUid) {
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_firebaseUid', (q) => q.eq('firebaseUid', firebaseUid))
+      .unique();
+    if (!user) {
+      console.error('[getAuthenticatedUser] Fallback user not found', { firebaseUid });
+      throw new Error('User not found for provided credentials. Please re-login.');
+    }
+    return user;
   }
 
-  return user;
+  console.error('[getAuthenticatedUser] No identity and no firebaseUid provided');
+  throw new Error('Not authenticated. Please login and try again.');
 }
 
 /**
- * Get the current user or return null if not authenticated.
+ * Get the current user or return null.
+ * Uses Convex JWT auth if available, otherwise accepts firebaseUid arg.
  */
-export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
+export async function getCurrentUser(
+  ctx: QueryCtx | MutationCtx,
+  firebaseUid?: string
+) {
   const identity = await ctx.auth.getUserIdentity();
-  if (!identity) return null;
+  if (identity) {
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_firebaseUid', (q) => q.eq('firebaseUid', identity.subject))
+      .unique();
+    return user ?? null;
+  }
 
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_firebaseUid', (q) => q.eq('firebaseUid', identity.subject))
-    .unique();
+  if (firebaseUid) {
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_firebaseUid', (q) => q.eq('firebaseUid', firebaseUid))
+      .unique();
+    return user ?? null;
+  }
 
-  return user ?? null;
+  return null;
 }
 
 /**
@@ -68,42 +97,42 @@ export async function checkPermission(
     owner: {
       manageOrg: true, manageEvents: true, manageCategories: true, manageVoting: true,
       manageTeam: true, manageBilling: true, manageBranding: true, viewAnalytics: true,
-      broadcast: true, moderateContent: true, manageJudges: true,
+      broadcast: true, moderateContent: true, manageJudges: true, manageMedia: true,
     },
     admin: {
       manageOrg: true, manageEvents: true, manageCategories: true, manageVoting: true,
       manageTeam: true, manageBilling: false, manageBranding: true, viewAnalytics: true,
-      broadcast: true, moderateContent: true, manageJudges: true,
+      broadcast: true, moderateContent: true, manageJudges: true, manageMedia: true,
     },
     event_manager: {
       manageOrg: false, manageEvents: true, manageCategories: true, manageVoting: true,
       manageTeam: false, manageBilling: false, manageBranding: false, viewAnalytics: true,
-      broadcast: false, moderateContent: false, manageJudges: false,
+      broadcast: false, moderateContent: false, manageJudges: false, manageMedia: true,
     },
     judge: {
       manageOrg: false, manageEvents: false, manageCategories: false, manageVoting: true,
       manageTeam: false, manageBilling: false, manageBranding: false, viewAnalytics: false,
-      broadcast: false, moderateContent: false, manageJudges: false,
+      broadcast: false, moderateContent: false, manageJudges: false, manageMedia: false,
     },
     moderator: {
       manageOrg: false, manageEvents: false, manageCategories: false, manageVoting: false,
       manageTeam: false, manageBilling: false, manageBranding: false, viewAnalytics: false,
-      broadcast: false, moderateContent: true, manageJudges: false,
+      broadcast: false, moderateContent: true, manageJudges: false, manageMedia: true,
     },
     finance: {
       manageOrg: false, manageEvents: false, manageCategories: false, manageVoting: false,
       manageTeam: false, manageBilling: true, manageBranding: false, viewAnalytics: true,
-      broadcast: false, moderateContent: false, manageJudges: false,
+      broadcast: false, moderateContent: false, manageJudges: false, manageMedia: false,
     },
     content_editor: {
       manageOrg: false, manageEvents: false, manageCategories: false, manageVoting: false,
       manageTeam: false, manageBilling: false, manageBranding: true, viewAnalytics: false,
-      broadcast: false, moderateContent: true, manageJudges: false,
+      broadcast: false, moderateContent: true, manageJudges: false, manageMedia: true,
     },
     viewer: {
       manageOrg: false, manageEvents: false, manageCategories: false, manageVoting: false,
       manageTeam: false, manageBilling: false, manageBranding: false, viewAnalytics: false,
-      broadcast: false, moderateContent: false, manageJudges: false,
+      broadcast: false, moderateContent: false, manageJudges: false, manageMedia: false,
     },
   };
 
@@ -170,7 +199,7 @@ export async function createNotification(
   userId: Id<'users'>,
   type: 'vote' | 'comment' | 'mention' | 'org_invite' | 'event_reminder' |
         'broadcast_starting' | 'judge_invite' | 'admin_announcement' | 'follow' |
-        'nomination' | 'verification',
+        'nomination' | 'verification' | 'like',
   title: string,
   body: string,
   link?: string,

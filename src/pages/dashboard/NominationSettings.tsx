@@ -111,7 +111,7 @@ export function NominationSettings() {
              <CardContent className="pt-6">
                 <Users className="h-8 w-8 text-gold-500 mb-4" />
                 <h4 className="text-white font-medium mb-1">Moderation Queue</h4>
-                <p className="text-xs text-dark-400 leading-relaxed mb-4">You have 128 nominations waiting for approval before they appear on the public voting list.</p>
+                <p className="text-xs text-dark-400 leading-relaxed mb-4">No nominations pending review. Submissions will appear here for approval.</p>
                 <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('/dashboard/voting')}>View Queue</Button>
              </CardContent>
           </Card>

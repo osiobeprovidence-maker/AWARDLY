@@ -3,63 +3,64 @@
  * Wraps Convex queries/mutations for event operations.
  */
 import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 
 export function useEventById(eventId: string | undefined) {
-  return useQuery('events:getById', eventId ? { eventId: eventId as any } : 'skip');
+  return useQuery(api.events.queries.getById, eventId ? { eventId: eventId as any } : 'skip');
 }
 
 export function useEventBySlug(slug: string) {
-  return useQuery('events:getBySlug', { slug });
+  return useQuery(api.events.queries.getBySlug, { slug });
 }
 
 export function useEventsByOrg(orgId: string | undefined) {
-  return useQuery('events:getByOrg', orgId ? { orgId: orgId as any } : 'skip');
+  return useQuery(api.events.queries.getByOrg, orgId ? { orgId: orgId as any } : 'skip');
 }
 
 export function usePublishedEvents() {
-  return useQuery('events:getPublished');
+  return useQuery(api.events.queries.getPublished);
 }
 
 export function useLiveEvents() {
-  return useQuery('events:getLive');
+  return useQuery(api.events.queries.getLive);
 }
 
 export function useEventWithOrg(eventId: string | undefined) {
-  return useQuery('events:getWithOrg', eventId ? { eventId: eventId as any } : 'skip');
+  return useQuery(api.events.queries.getWithOrg, eventId ? { eventId: eventId as any } : 'skip');
 }
 
 // ─── Mutations ──────────────────────────────────────────────────────────────
 
 export function useCreateEvent() {
-  return useMutation('events:create');
+  return useMutation(api.events.mutations.create);
 }
 
 export function useUpdateEvent() {
-  return useMutation('events:update');
+  return useMutation(api.events.mutations.update);
 }
 
 export function usePublishEvent() {
-  return useMutation('events:publish');
+  return useMutation(api.events.mutations.publish);
 }
 
 export function useGoLiveEvent() {
-  return useMutation('events:goLive');
+  return useMutation(api.events.mutations.goLive);
 }
 
 export function useCloseEvent() {
-  return useMutation('events:close');
+  return useMutation(api.events.mutations.close);
 }
 
 export function useDeleteEvent() {
-  return useMutation('events:softDelete');
+  return useMutation(api.events.mutations.softDelete);
 }
 
 export function useToggleVoting() {
-  return useMutation('events:toggleVoting');
+  return useMutation(api.events.mutations.toggleVoting);
 }
 
 export function useIncrementEventViews() {
-  return useMutation('events:incrementViewCount');
+  return useMutation(api.events.mutations.incrementViewCount);
 }

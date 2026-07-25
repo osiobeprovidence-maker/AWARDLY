@@ -65,6 +65,10 @@ function buildBreadcrumbs(pathname: string): BreadcrumbItem[] {
       crumbs.push({ label: 'Monetization', to: '/dashboard/monetization' });
       continue;
     }
+    if (seg === 'billing') {
+      crumbs.push({ label: 'Billing', to: '/dashboard/billing' });
+      continue;
+    }
     if (seg === 'live') {
       crumbs.push({ label: 'Live Broadcasts', to: '/dashboard/live' });
       continue;
@@ -83,6 +87,10 @@ function buildBreadcrumbs(pathname: string): BreadcrumbItem[] {
     }
     if (seg === 'settings') {
       crumbs.push({ label: 'Settings', to: '/dashboard/settings' });
+      continue;
+    }
+    if (seg === 'judges') {
+      crumbs.push({ label: 'Judge Management', to: '/dashboard/judges' });
       continue;
     }
     if (seg === 'events' && segments[i - 1] !== 'dashboard') {

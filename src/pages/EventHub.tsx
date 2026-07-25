@@ -9,8 +9,9 @@ import {
   Trophy, Calendar, Clock, MapPin, Users, Vote, Award, Target, CheckCircle2,
   ArrowRight, Share2, Bookmark, ExternalLink, ChevronDown, ChevronUp,
   Globe, Star, TrendingUp, Play, Image as ImageIcon, X,
-  Newspaper, Radio, Zap, Link2, CalendarPlus, Flag, Timer, ChevronLeft, ChevronRight, Copy
+  Newspaper, Radio, Zap, Link2, CalendarPlus, Flag, Timer, ChevronLeft, ChevronRight, Copy, Ticket
 } from 'lucide-react';
+import { TicketingCard } from '../components/ui/TicketingCard';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 type EventStatus = 'Nominations Open' | 'Voting Live' | 'Judging' | 'Winners Announced' | 'Upcoming' | 'Live';
@@ -322,7 +323,7 @@ function formatDate(d: string) {
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────
-function FAQItem({ question, answer }: { question: string; answer: string }) {
+function FAQItem({ question, answer }: { key?: React.Key; question: string; answer: string }) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="border-b border-white/5 last:border-0">
@@ -667,7 +668,7 @@ function getBroadcastStatusInfo(status: 'live' | 'upcoming' | 'replay' | 'none',
   }
 }
 
-function RelatedVideoCard({ video, onClick }: { video: { title: string; youtubeVideoId: string; duration: string; status: string }; onClick: () => void }) {
+function RelatedVideoCard({ video, onClick }: { key?: React.Key; video: { title: string; youtubeVideoId: string; duration: string; status: string }; onClick: () => void }) {
   return (
     <button onClick={onClick} className="shrink-0 w-64 sm:w-72 group">
       <div className="aspect-video rounded-xl overflow-hidden relative bg-dark-800 border border-white/5 group-hover:border-gold-500/30 transition-all">
@@ -871,7 +872,7 @@ function FloatingMiniPlayer({ event, visible, onClose }: { event: EventData; vis
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────
-const tabs = ['Overview', 'Timeline', 'Categories', 'Nominees', 'Voting', 'Broadcast', 'Schedule', 'Judges', 'Gallery', 'Sponsors', 'FAQ'] as const;
+const tabs = ['Overview', 'Timeline', 'Categories', 'Nominees', 'Voting', 'Broadcast', 'Schedule', 'Judges', 'Gallery', 'Sponsors', 'Ticketing', 'FAQ'] as const;
 type Tab = typeof tabs[number];
 
 export function EventHub() {
@@ -924,6 +925,14 @@ export function EventHub() {
       case 'Judges': return <JudgesSection event={event} />;
       case 'Gallery': return <GallerySection event={event} onImageClick={(u, c) => setLightbox({ url: u, caption: c })} />;
       case 'Sponsors': return <SponsorsSection event={event} />;
+      case 'Ticketing': return (
+        <div className="max-w-lg mx-auto">
+          <TicketingCard
+            connected={false}
+            variant="full"
+          />
+        </div>
+      );
       case 'FAQ': return <FAQSection event={event} />;
       default: return null;
     }
@@ -1046,6 +1055,7 @@ export function EventHub() {
                   ))}
                 </CardContent>
               </Card>
+              <TicketingCard connected={false} variant="compact" />
             </div>
           </aside>
         </div>

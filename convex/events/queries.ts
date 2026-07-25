@@ -90,3 +90,31 @@ export const getWithOrg = query({
     return { event, org };
   },
 });
+
+export const getByOrgWithCategories = query({
+  args: { orgId: v.id('organizations') },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query('events')
+      .withIndex('by_orgId', (q) => q.eq('orgId', args.orgId))
+      .filter((q) => q.eq(q.field('isDeleted'), false))
+      .collect();
+
+    const result = [];
+    for (const event of events) {
+      const categories = await ctx.db
+        .query('categories')
+        .withIndex('by_eventId', (q) => q.eq('eventId', event._id))
+        .collect();
+      result.push({
+        ...event,
+        categories: categories.map((c) => ({
+          _id: c._id,
+          name: c.name,
+          nomineeCount: c.nomineeCount,
+        })),
+      });
+    }
+    return result;
+  },
+});

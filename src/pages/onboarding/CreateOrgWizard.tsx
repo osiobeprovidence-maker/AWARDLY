@@ -32,7 +32,7 @@ function slugify(s: string) {
 
 export function CreateOrgWizard() {
   const navigate = useNavigate();
-  const createOrgMutation = useMutation(api.organizations.create);
+  const createOrgMutation = useMutation(api.organizations.mutations.create);
   const [draft, setDraft] = useState<OrgWizardDraft>(() => {
     try {
       const saved = localStorage.getItem(DRAFT_KEY);

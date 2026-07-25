@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Upload, X, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -13,30 +13,6 @@ interface ImageUploadProps {
   className?: string;
 }
 
-async function uploadToConvexStorage(file: File): Promise<string | null> {
-  const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
-  if (!CONVEX_URL) throw new Error('Convex URL not configured');
-
-  console.log('Uploading image...', { filename: file.name, size: file.size });
-
-  const response = await fetch(`${CONVEX_URL}/upload`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': file.type || 'application/octet-stream',
-    },
-    body: file,
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: 'Upload failed' }));
-    throw new Error(err.error || `Upload failed: ${response.statusText}`);
-  }
-
-  const result = await response.json();
-  console.log('Upload complete: storageId:', result.storageId);
-  return result.storageId;
-}
-
 export function ImageUpload({
   onImageSelect,
   value,
@@ -44,13 +20,31 @@ export function ImageUpload({
   aspectRatio = 'video',
   className = ''
 }: ImageUploadProps) {
+  const generateUploadUrl = useMutation(api.storage.mutations.generateUploadUrl);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [uploadedStorageId, setUploadedStorageId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const displayUrl = localPreview || value || null;
+  // Resolve the Convex storage URL once we have a storageId
+  const resolvedUrl = useQuery(
+    api.storage.queries.getUrl,
+    uploadedStorageId ? { storageId: uploadedStorageId } : 'skip'
+  );
+
+  const displayUrl = localPreview || resolvedUrl || value || null;
+
+  // When the resolved URL comes back from Convex after upload, pass it to the parent
+  const lastNotifiedUrl = useRef<string | null>(null);
+  React.useEffect(() => {
+    if (resolvedUrl && resolvedUrl !== lastNotifiedUrl.current) {
+      lastNotifiedUrl.current = resolvedUrl;
+      setLocalPreview(null);
+      onImageSelect(resolvedUrl);
+    }
+  }, [resolvedUrl, onImageSelect]);
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -66,6 +60,7 @@ export function ImageUpload({
     setError(null);
     setIsUploading(true);
 
+    // Show local preview immediately via FileReader
     const reader = new FileReader();
     reader.onloadend = () => {
       setLocalPreview(reader.result as string);
@@ -73,43 +68,32 @@ export function ImageUpload({
     reader.readAsDataURL(file);
 
     try {
-      const storageId = await uploadToConvexStorage(file);
-      if (!storageId) throw new Error('No storage ID returned');
+      // Step 1: Get a signed upload URL from Convex
+      const uploadUrl = await generateUploadUrl();
 
-      const resolvedUrl = await resolveStorageUrl(storageId);
-      if (!resolvedUrl) throw new Error('Failed to resolve uploaded image URL');
+      // Step 2: Upload the file using the global fetch()
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
 
-      console.log('Resolved URL:', resolvedUrl);
-      setLocalPreview(null);
-      onImageSelect(resolvedUrl);
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      const { storageId } = await response.json();
+      if (!storageId) throw new Error('No storage ID returned from upload');
+
+      // Step 3: Store the storageId — the useQuery above resolves the URL,
+      // and the useEffect above passes it to the parent
+      setUploadedStorageId(storageId);
     } catch (err: any) {
       console.error('Upload failed:', err);
       setError(err.message || 'Upload failed. Please try again.');
       setLocalPreview(null);
     } finally {
       setIsUploading(false);
-    }
-  };
-
-  const resolveStorageUrl = async (storageId: string): Promise<string | null> => {
-    try {
-      const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
-      if (!CONVEX_URL) return null;
-
-      const response = await fetch(`${CONVEX_URL}/api/query`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          path: 'storage:getUrl',
-          args: { storageId },
-        }),
-      });
-
-      if (!response.ok) return null;
-      const result = await response.json();
-      return result.value ?? null;
-    } catch {
-      return null;
     }
   };
 
@@ -132,7 +116,9 @@ export function ImageUpload({
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
     setLocalPreview(null);
+    setUploadedStorageId(null);
     setError(null);
+    lastNotifiedUrl.current = null;
     onImageSelect(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };

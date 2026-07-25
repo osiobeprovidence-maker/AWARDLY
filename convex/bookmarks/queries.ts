@@ -31,21 +31,21 @@ export const getUserBookmarks = query({
     const user = await getCurrentUser(ctx);
     if (!user) return [];
 
-    let query = ctx.db
-      .query('bookmarks')
-      .withIndex('by_userId', (q) => q.eq('userId', user._id))
-      .order('desc');
-
     if (args.targetType) {
-      query = ctx.db
+      return await ctx.db
         .query('bookmarks')
         .withIndex('by_userId_targetType', (q) =>
           q.eq('userId', user._id).eq('targetType', args.targetType!)
         )
-        .order('desc');
+        .order('desc')
+        .collect();
     }
 
-    return await query.collect();
+    return await ctx.db
+      .query('bookmarks')
+      .withIndex('by_userId', (q) => q.eq('userId', user._id))
+      .order('desc')
+      .collect();
   },
 });
 
@@ -54,10 +54,12 @@ export const getBookmarksByEvent = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query('bookmarks')
-      .withIndex('by_userId_targetType', (q) =>
-        q.eq('targetType', 'event')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('targetType'), 'event'),
+          q.eq(q.field('targetId'), args.eventId)
+        )
       )
-      .filter((q) => q.eq(q.field('targetId'), args.eventId))
       .order('desc')
       .collect();
   },
@@ -77,10 +79,12 @@ export const getBookmarkCounts = query({
     for (const id of args.targetIds) {
       const bookmarks = await ctx.db
         .query('bookmarks')
-        .withIndex('by_userId_targetType', (q) =>
-          q.eq('targetType', args.targetType)
+        .filter((q) =>
+          q.and(
+            q.eq(q.field('targetType'), args.targetType),
+            q.eq(q.field('targetId'), id)
+          )
         )
-        .filter((q) => q.eq(q.field('targetId'), id))
         .collect();
       counts[id] = bookmarks.length;
     }

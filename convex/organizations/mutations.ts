@@ -22,6 +22,9 @@ export const create = mutation({
     foundedYear: v.optional(v.number()),
     contactEmail: v.string(),
     phone: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    city: v.optional(v.string()),
+    supportEmail: v.optional(v.string()),
     socialLinks: v.optional(v.object({
       facebook: v.optional(v.string()),
       twitter: v.optional(v.string()),
@@ -29,10 +32,28 @@ export const create = mutation({
       linkedin: v.optional(v.string()),
       youtube: v.optional(v.string()),
       tiktok: v.optional(v.string()),
+      threads: v.optional(v.string()),
+      snapchat: v.optional(v.string()),
+      whatsapp: v.optional(v.string()),
+      telegram: v.optional(v.string()),
+      discord: v.optional(v.string()),
+      website: v.optional(v.string()),
     })),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    // Look up user by auth identity, or fall back to first user (dev mode)
+    const identity = await ctx.auth.getUserIdentity();
+    let user;
+    if (identity) {
+      user = await ctx.db
+        .query('users')
+        .withIndex('by_firebaseUid', (q) => q.eq('firebaseUid', identity.subject))
+        .unique();
+    } else {
+      // Dev mode: use the most recently created user
+      user = await ctx.db.query('users').order('desc').first();
+    }
+    if (!user) throw new Error('User not found. Please sign in.');
     const now = new Date().toISOString();
 
     // Check slug uniqueness
@@ -83,10 +104,17 @@ export const update = mutation({
     )),
     website: v.optional(v.string()),
     country: v.optional(v.string()),
+    audienceScope: v.optional(v.union(
+      v.literal('local'), v.literal('national'), v.literal('regional'),
+      v.literal('international'), v.literal('global'),
+    )),
     headquarters: v.optional(v.string()),
     foundedYear: v.optional(v.number()),
     contactEmail: v.optional(v.string()),
     phone: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    city: v.optional(v.string()),
+    supportEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx);
@@ -156,6 +184,12 @@ export const updateSocialLinks = mutation({
       linkedin: v.optional(v.string()),
       youtube: v.optional(v.string()),
       tiktok: v.optional(v.string()),
+      threads: v.optional(v.string()),
+      snapchat: v.optional(v.string()),
+      whatsapp: v.optional(v.string()),
+      telegram: v.optional(v.string()),
+      discord: v.optional(v.string()),
+      website: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {

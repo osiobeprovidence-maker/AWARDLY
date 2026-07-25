@@ -4,12 +4,11 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Mail, Lock, ArrowLeft, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInWithGoogle, signInWithEmail, sendMagicLink } from '../../lib/firebase';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '../../lib/convex-auth';
 
 export function Login() {
   const navigate = useNavigate();
-  const auth = useAuth();
+  const { signInWithGoogle, signInWithEmail } = useAuth();
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [showMagicLink, setShowMagicLink] = useState(false);
   const [email, setEmail] = useState('');
@@ -22,11 +21,8 @@ export function Login() {
     setLoading(true);
     setError('');
     try {
-      const user = await signInWithGoogle();
-      if (user) {
-        auth.signIn(user.email || '');
-        navigate('/dashboard');
-      }
+      await signInWithGoogle();
+      navigate('/auth/redirect');
     } catch (err: any) {
       setError(err.message || 'Google sign-in failed');
     } finally {
@@ -39,27 +35,10 @@ export function Login() {
     setLoading(true);
     setError('');
     try {
-      const user = await signInWithEmail(email, password);
-      if (user) {
-        auth.signIn(user.email || '');
-        navigate('/dashboard');
-      }
+      await signInWithEmail(email, password);
+      navigate('/auth/redirect');
     } catch (err: any) {
       setError(err.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      await sendMagicLink(email);
-      setMagicLinkSent(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to send magic link');
     } finally {
       setLoading(false);
     }
@@ -148,19 +127,6 @@ export function Login() {
                   Back to login
                 </Button>
               </div>
-            ) : showMagicLink ? (
-              <form onSubmit={handleMagicLink} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-dark-300 ml-1">Email Address</label>
-                  <Input type="email" icon={Mail} placeholder="name@organization.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                <Button type="submit" className="w-full mt-4" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Magic Link'}
-                </Button>
-                <button type="button" onClick={() => setShowMagicLink(false)} className="w-full text-center text-xs text-dark-400 hover:text-gold-500 transition-colors">
-                  Use password instead
-                </button>
-              </form>
             ) : (
               <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div className="space-y-1">
@@ -169,12 +135,7 @@ export function Login() {
                 </div>
                 
                 <div className="space-y-1">
-                  <div className="flex justify-between items-end mb-1">
-                    <label className="text-xs font-medium text-dark-300 ml-1">Password</label>
-                    <button type="button" onClick={() => setShowMagicLink(true)} className="text-xs text-gold-500 hover:text-gold-400 transition-colors">
-                      Use magic link
-                    </button>
-                  </div>
+                  <label className="text-xs font-medium text-dark-300 ml-1">Password</label>
                   <Input type="password" icon={Lock} placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
 

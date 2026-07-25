@@ -19,6 +19,14 @@ export const getById = query({
   },
 });
 
+export const getByIds = query({
+  args: { ids: v.array(v.id('organizations')) },
+  handler: async (ctx, args) => {
+    const orgs = await Promise.all(args.ids.map(id => ctx.db.get(id)));
+    return orgs.filter(Boolean);
+  },
+});
+
 export const getByOwner = query({
   args: { ownerId: v.id('users') },
   handler: async (ctx, args) => {

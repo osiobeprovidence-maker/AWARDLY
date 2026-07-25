@@ -54,6 +54,7 @@ export interface Template {
   downloads: number;
   category: ResourceCategory;
   tags: string[];
+  icon?: string;
 }
 
 export interface FAQ {

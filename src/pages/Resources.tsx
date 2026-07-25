@@ -65,7 +65,7 @@ function formatViews(n: number) {
 }
 
 // ─── FAQ Item ──────────────────────────────────────────────────────────────
-function FAQItem({ question, answer }: { question: string; answer: string }) {
+function FAQItem({ question, answer }: { key?: React.Key; question: string; answer: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-white/5 last:border-0">

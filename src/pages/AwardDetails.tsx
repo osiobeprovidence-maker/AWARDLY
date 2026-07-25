@@ -472,7 +472,7 @@ function Bell(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function FAQItem({ question, answer }: { question: string; answer: string }) {
+function FAQItem({ question, answer }: { key?: React.Key; question: string; answer: string }) {
   const [open, setOpen] = React.useState(false);
   return (
     <div className="border-b border-white/5 last:border-0">

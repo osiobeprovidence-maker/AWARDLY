@@ -15,14 +15,13 @@ export const markAsRead = mutation({
 });
 
 export const markAllAsRead = mutation({
-  args: { userId: v.id('users') },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
     const user = await getAuthenticatedUser(ctx);
-    if (user._id !== args.userId) throw new Error('Can only mark your own notifications');
 
     const unread = await ctx.db
       .query('notifications')
-      .withIndex('by_userId_isRead', (q) => q.eq('userId', args.userId).eq('isRead', false))
+      .withIndex('by_userId_isRead', (q) => q.eq('userId', user._id).eq('isRead', false))
       .collect();
 
     for (const n of unread) {

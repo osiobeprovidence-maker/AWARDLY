@@ -2,14 +2,23 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { Vote, Users, Search, Filter, ArrowUpRight, Trophy, CheckCircle } from 'lucide-react';
-import { mockNominees } from '../../data';
+import { Vote, Users, Search, Filter, Trophy, CheckCircle } from 'lucide-react';
+import { useAuth } from '../../lib/convex-auth';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { useToast } from '../../lib/toast';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 
 export function DashboardVoting() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentOrg } = useAuth();
+  const nominees = useQuery(
+    api.nominees.queries.getByOrg,
+    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  ) ?? [];
+  const sortedNominees = [...nominees].sort((a, b) => b.voteCount - a.voteCount);
+  const totalVotes = nominees.reduce((acc, n) => acc + n.voteCount, 0);
   return (
     <div className="space-y-8">
       <div>
@@ -21,7 +30,7 @@ export function DashboardVoting() {
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={() => navigate('/dashboard/voting/settings')}>Nomination Settings</Button>
-          <Button variant="outline" onClick={() => window.open('/org/headies/events/e1', '_blank')}>View Voting Page</Button>
+          <Button variant="outline" onClick={() => window.open(`/org/${currentOrg?.slug}`, '_blank')}>View Voting Page</Button>
           <Button onClick={() => navigate('/dashboard/monetization')}>Configure Packages</Button>
         </div>
         </div>
@@ -32,24 +41,19 @@ export function DashboardVoting() {
         <Card className="bg-gold-500/5 border-gold-500/20">
           <CardContent>
             <p className="text-dark-400 text-xs uppercase tracking-widest mb-2">Total Votes Cast</p>
-            <h3 className="text-4xl font-serif text-gold-400">2,452,109</h3>
-            <div className="mt-4 text-xs text-emerald-400 flex items-center">
-              <ArrowUpRight className="h-3 w-3 mr-1" /> +15.5% vs yesterday
-            </div>
+            <h3 className="text-4xl font-serif text-gold-400">{totalVotes.toLocaleString()}</h3>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
             <p className="text-dark-400 text-xs uppercase tracking-widest mb-2">Pending Nominations</p>
-            <h3 className="text-4xl font-serif text-white">128</h3>
-            <Button variant="ghost" size="sm" className="mt-4 p-0 h-auto text-gold-500">Review all →</Button>
+            <h3 className="text-4xl font-serif text-white">0</h3>
           </CardContent>
         </Card>
         <Card>
           <CardContent>
-            <p className="text-dark-400 text-xs uppercase tracking-widest mb-2">Verification Rate</p>
-            <h3 className="text-4xl font-serif text-white">99.2%</h3>
-            <p className="mt-4 text-xs text-dark-500">AI-powered anti-fraud active</p>
+            <p className="text-dark-400 text-xs uppercase tracking-widest mb-2">Total Nominees</p>
+            <h3 className="text-4xl font-serif text-white">{nominees.length}</h3>
           </CardContent>
         </Card>
       </div>
@@ -69,13 +73,13 @@ export function DashboardVoting() {
           </CardHeader>
           <CardContent className="p-0 px-4 pb-4">
              <div className="space-y-1">
-               {mockNominees.map((nominee, i) => (
-                 <div key={nominee.id} className="flex items-center p-4 hover:bg-white/5 transition-colors rounded-xl group cursor-pointer" onClick={() => toast(`Details for ${nominee.name}`, 'info')}>
+               {sortedNominees.map((nominee, i) => (
+                 <div key={nominee._id} className="flex items-center p-4 hover:bg-white/5 transition-colors rounded-xl group cursor-pointer" onClick={() => toast(`Details for ${nominee.name}`, 'info')}>
                    <div className="w-8 text-dark-500 font-serif text-lg">0{i+1}</div>
-                   <img src={nominee.imageUrl} className="h-12 w-12 rounded-lg object-cover" alt={nominee.name} referrerPolicy="no-referrer" />
-                   <div className="ml-4 flex-1">
-                      <h4 className="text-white font-medium text-sm">{nominee.name}</h4>
-                      <p className="text-[10px] text-dark-500 uppercase tracking-widest">Artiste of the Year</p>
+                   <img src={nominee.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${nominee.name}`} className="h-12 w-12 rounded-lg object-cover" alt={nominee.name} referrerPolicy="no-referrer" />
+                    <div className="ml-4 flex-1">
+                       <h4 className="text-white font-medium text-sm">{nominee.name}</h4>
+                       <p className="text-[10px] text-dark-500 uppercase tracking-widest">Nominee</p>
                    </div>
                    <div className="text-right">
                       <div className="text-white font-medium">{nominee.voteCount.toLocaleString()}</div>
@@ -95,21 +99,26 @@ export function DashboardVoting() {
                <CardTitle className="text-lg">Category Pulse</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-               {[
-                 { label: 'Next Rated', votes: '450k', fill: 85 },
-                 { label: 'Artiste of the Year', votes: '1.2M', fill: 95 },
-                 { label: 'Rookie of the Year', votes: '120k', fill: 45 },
-               ].map((item) => (
-                  <div key={item.label} className="space-y-2 group cursor-pointer" onClick={() => toast(`Managing category: ${item.label}`, 'info')}>
-                   <div className="flex justify-between text-xs transition-colors group-hover:text-gold-500">
-                     <span className="text-dark-300 group-hover:text-gold-400 transition-colors">{item.label}</span>
-                     <span className="text-white">{item.votes}</span>
-                   </div>
-                   <div className="h-1.5 w-full bg-dark-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gold-500 rounded-full transition-all group-hover:bg-gold-400" style={{ width: `${item.fill}%` }} />
-                   </div>
+               {sortedNominees.length === 0 ? (
+                 <div className="text-center py-4">
+                   <p className="text-sm text-dark-500">No nominees to display</p>
                  </div>
-               ))}
+               ) : (
+                 sortedNominees.slice(0, 3).map((nominee) => {
+                   const fill = totalVotes > 0 ? Math.round((nominee.voteCount / totalVotes) * 100) : 0;
+                   return (
+                     <div key={nominee._id} className="space-y-2 group cursor-pointer">
+                      <div className="flex justify-between text-xs transition-colors group-hover:text-gold-500">
+                        <span className="text-dark-300 group-hover:text-gold-400 transition-colors">{nominee.name}</span>
+                        <span className="text-white">{nominee.voteCount.toLocaleString()}</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-dark-800 rounded-full overflow-hidden">
+                         <div className="h-full bg-gold-500 rounded-full transition-all group-hover:bg-gold-400" style={{ width: `${fill}%` }} />
+                      </div>
+                     </div>
+                   );
+                 })
+               )}
             </CardContent>
           </Card>
 
@@ -119,8 +128,8 @@ export function DashboardVoting() {
                 <CheckCircle className="h-6 w-6 text-emerald-500" />
               </div>
               <div>
-                <h4 className="text-white font-medium text-sm">Payment Gateway Live</h4>
-                <p className="text-xs text-dark-400">Paystack & Flutterwave active</p>
+                <h4 className="text-white font-medium text-sm">Voting Active</h4>
+                <p className="text-xs text-dark-400">Configure payment gateways in Monetization</p>
               </div>
             </CardContent>
           </Card>

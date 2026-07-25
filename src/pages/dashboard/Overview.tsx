@@ -3,41 +3,49 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { 
-  Trophy, Users, Eye, ArrowUpRight, TrendingUp, DollarSign, 
-  MessageSquare, Heart, PlusCircle, Radio, Image, Send, LayoutGrid, Clock, Vote
+  Trophy, Users, Eye, ArrowUpRight, TrendingUp, 
+  MessageSquare, PlusCircle, Radio, Image, Send, LayoutGrid, Clock, Vote
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'motion/react';
 import { useToast } from '../../lib/toast';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
-import { useAuth } from '../../lib/auth';
-import { mockEvents } from '../../data';
-
-const engagementData = [
-  { name: 'Mon', votes: 4000, views: 2400 },
-  { name: 'Tue', votes: 3000, views: 1398 },
-  { name: 'Wed', votes: 2000, views: 9800 },
-  { name: 'Thu', votes: 2780, views: 3908 },
-  { name: 'Fri', votes: 1890, views: 4800 },
-  { name: 'Sat', votes: 2390, views: 3800 },
-  { name: 'Sun', votes: 3490, views: 4300 },
-];
-
-const recentActivity = [
-  { id: 1, type: 'nomination' as const, user: 'Sarah J.', event: 'Artiste of the Year', time: '2m ago' },
-  { id: 2, type: 'follow' as const, user: 'BigWiz Hub', event: null, time: '15m ago' },
-  { id: 3, type: 'vote' as const, user: 'Anonymous', event: 'Best Collaboration', time: '22m ago' },
-  { id: 4, type: 'payment' as const, user: 'Org Upgrade', event: 'Starter to Pro', time: '1h ago' },
-];
+import { useAuth } from '../../lib/convex-auth';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 export function DashboardOverview() {
   const navigate = useNavigate();
-  const [chartFilter, setChartFilter] = React.useState('Growth');
   const { toast } = useToast();
   const { currentOrg, user, currentRole, organizations } = useAuth();
 
-  const orgEvents = currentOrg ? mockEvents.filter(e => e.orgId === currentOrg.id) : [];
+  const orgEvents = useQuery(
+    api.events.queries.getByOrg,
+    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  ) ?? [];
   const activeEvent = orgEvents.find(e => e.isVotingActive);
+
+  const feedPostsResult = useQuery(
+    api.feeds.queries.getByOrg,
+    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  );
+  const feedPosts = Array.isArray(feedPostsResult) ? feedPostsResult : (feedPostsResult?.posts ?? []);
+
+  const orgMembers = useQuery(
+    api.organizationMembers.queries.getOrgMembers,
+    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  ) ?? [];
+
+  const totalVotes = orgEvents.reduce((s, e) => s + (e.totalVotes || 0), 0);
+  const activeEvents = orgEvents.filter(e => e.status === 'published').length;
+
+  // Build simple chart from event vote counts
+  const chartData = orgEvents.length > 0
+    ? orgEvents.slice(0, 7).map((e, i) => ({
+        name: e.title.length > 8 ? e.title.slice(0, 8) + '…' : e.title,
+        votes: e.totalVotes || 0,
+      }))
+    : [{ name: 'No events', votes: 0 }];
 
   if (!currentOrg) {
     return (
@@ -64,7 +72,7 @@ export function DashboardOverview() {
   return (
     <div className="space-y-10 pb-20">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
         <div>
            <Breadcrumbs />
            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
@@ -72,7 +80,7 @@ export function DashboardOverview() {
              <p className="text-dark-400 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-gold-500" />
                 {currentRole && <span className="text-gold-500 font-bold uppercase text-[10px] tracking-widest mr-2">{currentRole.replace('_', ' ')}</span>}
-                Your community hub is seeing 15% more engagement today.
+                {orgEvents.length} event{orgEvents.length !== 1 ? 's' : ''} across your hub.
              </p>
            </motion.div>
         </div>
@@ -93,10 +101,10 @@ export function DashboardOverview() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { title: 'Total Followers', value: currentOrg.followerCount.toLocaleString(), change: '+12.5%', icon: Users, color: 'text-blue-400' },
-          { title: 'Active Events', value: String(orgEvents.filter(e => e.status === 'published').length), change: `${orgEvents.length} total`, icon: Trophy, color: 'text-gold-500' },
-          { title: 'Team Members', value: String(currentOrg.memberCount), change: currentRole === 'owner' ? 'Manage' : 'View', icon: Users, color: 'text-emerald-400' },
-          { title: 'Total Votes', value: orgEvents.reduce((s, e) => s + (e.totalVotes || 0), 0).toLocaleString(), change: activeEvent ? 'Active' : 'None', icon: Vote, color: 'text-white' },
+          { title: 'Total Followers', value: currentOrg.followerCount.toLocaleString(), change: 'All time', icon: Users, color: 'text-blue-400' },
+          { title: 'Active Events', value: String(activeEvents), change: `${orgEvents.length} total`, icon: Trophy, color: 'text-gold-500' },
+          { title: 'Team Members', value: String(orgMembers.length), change: currentRole === 'owner' ? 'Manage' : 'View', icon: Users, color: 'text-emerald-400' },
+          { title: 'Total Votes', value: totalVotes.toLocaleString(), change: activeEvent ? 'Active' : 'None', icon: Vote, color: 'text-white' },
         ].map((stat, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <Card className="hover:border-gold-500/30 transition-all group overflow-hidden relative">
@@ -118,21 +126,16 @@ export function DashboardOverview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
            <Card className="bg-dark-900/40 border-white/5">
-              <CardHeader className="flex flex-row items-center justify-between">
-                 <div>
-                    <CardTitle className="font-serif text-xl">Engagement Analytics</CardTitle>
-                    <CardDescription>Real-time community interactions per day</CardDescription>
-                 </div>
-                 <div className="flex gap-2">
-                    {['Growth', 'Reach'].map(f => (
-                      <button key={f} onClick={() => setChartFilter(f)} className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest transition-all ${chartFilter === f ? 'bg-gold-500 text-dark-950 shadow-lg shadow-gold-500/20' : 'bg-white/5 border border-white/5 text-dark-400 hover:text-white'}`}>{f}</button>
-                    ))}
-                 </div>
-              </CardHeader>
+               <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                     <CardTitle className="font-serif text-xl">Engagement Analytics</CardTitle>
+                     <CardDescription>Votes per event</CardDescription>
+                  </div>
+               </CardHeader>
               <CardContent className="pt-6">
-                 <div className="h-[340px] w-full">
-                   <ResponsiveContainer width="100%" height="100%">
-                     <AreaChart data={engagementData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                 <div className="min-h-[340px] w-full">
+                   <ResponsiveContainer width="100%" height={340}>
+                      <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                        <defs>
                          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
                            <stop offset="5%" stopColor="#c68a35" stopOpacity={0.4}/>
@@ -143,9 +146,8 @@ export function DashboardOverview() {
                        <XAxis dataKey="name" stroke="#4f4f4f" fontSize={10} tickLine={false} axisLine={false} tick={{ transform: 'translate(0, 10)' }} />
                        <YAxis stroke="#4f4f4f" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `${value / 1000}k`} />
                        <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} itemStyle={{ color: '#fff', fontSize: '12px' }} cursor={{ stroke: 'rgba(198, 138, 53, 0.2)', strokeWidth: 20 }} />
-                       <Area type="monotone" dataKey={chartFilter === 'Growth' ? 'votes' : 'views'} stroke="#c68a35" strokeWidth={3} fillOpacity={1} fill="url(#chartGradient)" />
-                       <Area type="monotone" dataKey={chartFilter === 'Growth' ? 'views' : 'votes'} stroke="#4f4f4f" strokeWidth={2} fillOpacity={0} />
-                     </AreaChart>
+                        <Area type="monotone" dataKey="votes" stroke="#c68a35" strokeWidth={3} fillOpacity={1} fill="url(#chartGradient)" />
+                      </AreaChart>
                    </ResponsiveContainer>
                  </div>
               </CardContent>
@@ -243,24 +245,30 @@ export function DashboardOverview() {
                  </CardTitle>
                  <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-dark-500" onClick={() => navigate('/dashboard/analytics')}>Full Log</Button>
               </CardHeader>
-              <CardContent className="pt-6 space-y-6">
-                 {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex gap-4 group">
-                       <div className="h-2 w-2 rounded-full bg-gold-500/40 mt-1.5 group-hover:bg-gold-500 transition-colors" />
-                       <div className="flex-1">
-                          <p className="text-xs text-dark-300 leading-relaxed">
-                             <span className="text-white font-bold">{activity.user}</span> 
-                             {activity.type === 'nomination' && ' nominated a candidate in '}
-                             {activity.type === 'follow' && ' followed your hub.'}
-                             {activity.type === 'vote' && ' cast a vote for '}
-                             {activity.type === 'payment' && ' upgraded subscription: '}
-                             <span className="text-gold-500 italic font-serif ml-1">{activity.event}</span>
-                          </p>
-                          <span className="text-[10px] text-dark-500 font-bold uppercase tracking-widest mt-1 block">{activity.time}</span>
-                       </div>
+               <CardContent className="pt-6 space-y-6">
+                  {feedPosts.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageSquare className="h-8 w-8 text-dark-500 mx-auto mb-3" />
+                      <p className="text-dark-400 text-sm">No activity yet. Create your first post or event!</p>
                     </div>
-                 ))}
-              </CardContent>
+                  ) : (
+                    feedPosts.slice(0, 5).map((post) => (
+                      <div key={post._id} className="flex gap-4 group">
+                         <div className="h-2 w-2 rounded-full bg-gold-500/40 mt-1.5 group-hover:bg-gold-500 transition-colors" />
+                         <div className="flex-1">
+                            <p className="text-xs text-dark-300 leading-relaxed">
+                               <span className="text-white font-bold">{post.author?.name ?? 'Someone'}</span> 
+                               {' posted: '}
+                               <span className="text-gold-500 italic font-serif ml-1">{post.content?.slice(0, 60) ?? ''}{(post.content?.length ?? 0) > 60 ? '…' : ''}</span>
+                            </p>
+                            <span className="text-[10px] text-dark-500 font-bold uppercase tracking-widest mt-1 block">
+                              {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}
+                            </span>
+                         </div>
+                      </div>
+                    ))
+                  )}
+               </CardContent>
            </Card>
         </div>
       </div>

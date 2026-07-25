@@ -79,7 +79,7 @@ export const mockOrganizations: Organization[] = [
     name: 'Global Banking Awards',
     slug: 'bankingawards',
     description: 'Celebrating the brightest minds and most innovative institutions in global banking and finance.',
-    type: 'corporate',
+    type: 'company',
     logoUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=200&h=200&auto=format&fit=crop',
     coverUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200&h=400&auto=format&fit=crop',
     primaryColor: '#2563eb',

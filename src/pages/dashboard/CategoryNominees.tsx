@@ -6,13 +6,20 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { ImageUpload } from '../../components/ImageUpload';
-import { mockCategories, mockNominees } from '../../data';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 export function CategoryNominees() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
-  const category = mockCategories.find(c => c.id === categoryId) || mockCategories[0];
-  const nominees = mockNominees.filter(n => n.categoryId === categoryId);
+  const category = useQuery(
+    api.categories.queries.getById,
+    categoryId ? { categoryId: categoryId as any } : 'skip'
+  ) || { _id: '' as any, name: 'Loading...' };
+  const nominees = useQuery(
+    api.nominees.queries.getByCategory,
+    categoryId ? { categoryId: categoryId as any } : 'skip'
+  ) ?? [];
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -93,7 +100,7 @@ export function CategoryNominees() {
            <div className="grid gap-4">
               {nominees.map((nominee, i) => (
                 <motion.div
-                  key={nominee.id}
+                  key={nominee._id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}

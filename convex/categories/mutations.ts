@@ -81,3 +81,51 @@ export const softDelete = mutation({
     }
   },
 });
+
+export const updateBranding = mutation({
+  args: {
+    categoryId: v.id('categories'),
+    branding: v.object({
+      primaryColor: v.string(),
+      secondaryColor: v.string(),
+      accentColor: v.string(),
+      categoryIcon: v.string(),
+      font: v.string(),
+      bannerImage: v.optional(v.string()),
+      sponsorLogo: v.optional(v.string()),
+      tagline: v.optional(v.string()),
+      description: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+    const cat = await ctx.db.get(args.categoryId);
+    if (!cat) throw new Error('Category not found');
+
+    await requirePermission(ctx, user._id, cat.orgId, 'manageCategories');
+
+    await ctx.db.patch(args.categoryId, { branding: args.branding });
+  },
+});
+
+export const updateJudgingCriteria = mutation({
+  args: {
+    categoryId: v.id('categories'),
+    judgingCriteria: v.array(v.object({
+      id: v.string(),
+      label: v.string(),
+      description: v.optional(v.string()),
+      maxScore: v.number(),
+      weight: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+    const cat = await ctx.db.get(args.categoryId);
+    if (!cat) throw new Error('Category not found');
+
+    await requirePermission(ctx, user._id, cat.orgId, 'manageCategories');
+
+    await ctx.db.patch(args.categoryId, { judgingCriteria: args.judgingCriteria });
+  },
+});

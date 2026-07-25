@@ -35,8 +35,12 @@ export const create = mutation({
       content: args.content.trim(),
       parentCommentId: args.parentCommentId,
       likesCount: 0,
+      isPinned: false,
+      isHidden: false,
+      isFeatured: false,
       isDeleted: false,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
 
     await ctx.db.patch(args.postId, {
@@ -131,8 +135,12 @@ export const reply = mutation({
       content: args.content.trim(),
       parentCommentId: args.parentCommentId,
       likesCount: 0,
+      isPinned: false,
+      isHidden: false,
+      isFeatured: false,
       isDeleted: false,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
 
     await ctx.db.patch(args.postId, {

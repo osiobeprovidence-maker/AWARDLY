@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from 'convex/react';
 import { motion } from 'motion/react';
+import { api } from '../../../convex/_generated/api';
 import {
   Palette,
   Type,
@@ -19,6 +21,7 @@ import {
   Save,
   RotateCcw,
   X,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -50,7 +53,7 @@ const defaultBranding = {
   font: 'Serif',
   bannerImage: null as string | null,
   sponsorLogo: null as string | null,
-  tagline: 'Celebrating musical excellence',
+  tagline: '',
   description: '',
 };
 
@@ -59,12 +62,57 @@ export function CategoryBranding() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [branding, setBranding] = useState(defaultBranding);
+  const [saving, setSaving] = useState(false);
+
+  const category = useQuery(api.categories.queries.getById, categoryId ? { categoryId: categoryId as any } : 'skip');
+  const categoryName = category?.name ?? 'Category';
+  const updateBrandingMutation = useMutation(api.categories.mutations.updateBranding);
+
+  // Hydrate from Convex
+  useEffect(() => {
+    if (category?.branding) {
+      const b = category.branding as any;
+      setBranding({
+        primaryColor: b.primaryColor ?? '#c68a35',
+        secondaryColor: b.secondaryColor ?? '#1a1a1a',
+        accentColor: b.accentColor ?? '#10b981',
+        categoryIcon: (b.categoryIcon ?? 'Trophy') as IconName,
+        font: b.font ?? 'Serif',
+        bannerImage: b.bannerImage ?? null,
+        sponsorLogo: b.sponsorLogo ?? null,
+        tagline: b.tagline ?? '',
+        description: b.description ?? '',
+      });
+    }
+  }, [category]);
 
   const update = <K extends keyof typeof branding>(key: K, value: (typeof branding)[K]) =>
     setBranding((prev) => ({ ...prev, [key]: value }));
 
-  const handleSave = () => {
-    toast('Branding saved successfully!', 'success');
+  const handleSave = async () => {
+    if (!categoryId) return;
+    try {
+      setSaving(true);
+      await updateBrandingMutation({
+        categoryId: categoryId as any,
+        branding: {
+          primaryColor: branding.primaryColor,
+          secondaryColor: branding.secondaryColor,
+          accentColor: branding.accentColor,
+          categoryIcon: branding.categoryIcon,
+          font: branding.font,
+          bannerImage: branding.bannerImage ?? undefined,
+          sponsorLogo: branding.sponsorLogo ?? undefined,
+          tagline: branding.tagline || undefined,
+          description: branding.description || undefined,
+        },
+      });
+      toast('Branding saved successfully!', 'success');
+    } catch (error: any) {
+      toast(error.message || 'Failed to save branding', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleReset = () => {
@@ -91,8 +139,8 @@ export function CategoryBranding() {
               <Palette className="h-4 w-4 text-gold-500" />
               <span className="text-[10px] font-bold text-gold-500 uppercase tracking-widest">Visual Identity</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-serif text-white tracking-tight italic">
-              Artiste of the Year <span className="text-dark-500 not-italic">/ Branding</span>
+              <h1 className="text-3xl md:text-4xl font-serif text-white tracking-tight italic">
+                {categoryName} <span className="text-dark-500 not-italic">/ Branding</span>
             </h1>
           </div>
         </div>
@@ -192,9 +240,8 @@ export function CategoryBranding() {
                 <ImageUpload
                   label="Banner"
                   aspectRatio="video"
-                  onImageSelect={(file) => {
-                    if (file) {
-                      const url = URL.createObjectURL(file);
+                  onImageSelect={(url) => {
+                    if (url) {
                       update('bannerImage', url);
                     }
                   }}
@@ -207,9 +254,8 @@ export function CategoryBranding() {
                 <ImageUpload
                   label="Sponsor Logo"
                   aspectRatio="video"
-                  onImageSelect={(file) => {
-                    if (file) {
-                      const url = URL.createObjectURL(file);
+                  onImageSelect={(url) => {
+                    if (url) {
                       update('sponsorLogo', url);
                     }
                   }}
@@ -329,7 +375,7 @@ export function CategoryBranding() {
                           color: branding.primaryColor,
                         }}
                       >
-                        Artiste of the Year
+                        {categoryName}
                       </h3>
                       <p
                         className="text-xs opacity-70"
@@ -385,7 +431,7 @@ export function CategoryBranding() {
                         color: branding.primaryColor,
                       }}
                     >
-                      Artiste of the Year
+                      {categoryName}
                     </h4>
                     <p className="text-[10px] opacity-60 truncate" style={{ color: branding.primaryColor }}>
                       {branding.tagline}
@@ -410,8 +456,9 @@ export function CategoryBranding() {
           <Button variant="outline" onClick={handleReset}>
             <RotateCcw className="h-4 w-4 mr-2" /> Reset to Defaults
           </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" /> Save Branding
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            Save Branding
           </Button>
         </div>
       </div>

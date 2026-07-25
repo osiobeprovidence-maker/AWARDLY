@@ -8,6 +8,7 @@ import { Home } from './pages/Home';
 import { AuthLayout } from './layouts/AuthLayout';
 import { Login } from './pages/auth/Login';
 import { Signup } from './pages/auth/Signup';
+import { PostAuthRedirect } from './pages/auth/PostAuthRedirect';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { DashboardOverview } from './pages/dashboard/Overview';
 import { DashboardFeed } from './pages/dashboard/Feed';
@@ -19,6 +20,9 @@ import { DashboardLive } from './pages/dashboard/Live';
 import { DashboardMedia } from './pages/dashboard/Media';
 import { DashboardAnalytics } from './pages/dashboard/Analytics';
 import { DashboardSettings } from './pages/dashboard/Settings';
+import { Billing } from './pages/dashboard/Billing';
+import { SearchPage } from './pages/dashboard/Search';
+import { AwardCeremony } from './pages/dashboard/AwardCeremony';
 import { CreateEvent } from './pages/dashboard/CreateEvent';
 import { CategoryNominees } from './pages/dashboard/CategoryNominees';
 import { CategoryCriteria } from './pages/dashboard/CategoryCriteria';
@@ -29,6 +33,9 @@ import { ManageCriteria } from './pages/dashboard/ManageCriteria';
 import { CategoryBranding } from './pages/dashboard/CategoryBranding';
 import { Followers } from './pages/dashboard/Followers';
 import { TeamManagement } from './pages/dashboard/Team';
+import { JudgeManagement } from './pages/dashboard/JudgeManagement';
+import { NotificationsPage } from './pages/dashboard/Notifications';
+import { UserProfile } from './pages/profile/UserProfile';
 import { Pricing } from './pages/Pricing';
 import { Resources } from './pages/Resources';
 import { ArticlePage } from './pages/resources/ArticlePage';
@@ -44,11 +51,14 @@ import { AwardPortal } from './pages/AwardPortal';
 import { EventHub } from './pages/EventHub';
 import { EventDetails } from './pages/org/EventDetails';
 import { LiveFeed } from './pages/LiveFeed';
+import { ShareView } from './pages/ShareView';
 import { CreateOrgWizard } from './pages/onboarding/CreateOrgWizard';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { JudgePortalLayout } from './layouts/JudgePortalLayout';
+import { JudgeDashboard, AssignedCategories, NomineeReview, Scorecards, JudgeProgress, JudgeGuidelines, JudgeProfile, JudgeNotifications } from './pages/judge';
 
 import { ToastProvider } from './lib/toast';
-import { AuthProvider } from './lib/auth';
+import { AuthProvider } from './lib/convex-auth';
 
 export default function App() {
   return (
@@ -75,6 +85,7 @@ export default function App() {
               <Route path="/auth" element={<AuthLayout />}>
                 <Route path="login" element={<Login />} />
                 <Route path="signup" element={<Signup />} />
+                <Route path="redirect" element={<PostAuthRedirect />} />
               </Route>
 
               <Route path="/onboarding" element={<CreateOrgWizard />} />
@@ -94,12 +105,17 @@ export default function App() {
                 <Route path="events/:eventId/categories/:categoryId" element={<CategoryDetail />} />
                 <Route path="followers" element={<Followers />} />
                 <Route path="team" element={<TeamManagement />} />
+                <Route path="judges" element={<JudgeManagement />} />
                 <Route path="voting" element={<DashboardVoting />} />
                 <Route path="monetization" element={<Monetization />} />
                 <Route path="voting/settings" element={<NominationSettings />} />
                 <Route path="live" element={<DashboardLive />} />
                 <Route path="media" element={<DashboardMedia />} />
                 <Route path="analytics" element={<DashboardAnalytics />} />
+                <Route path="billing" element={<Billing />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="search" element={<SearchPage />} />
+                <Route path="ceremony/:eventId" element={<AwardCeremony />} />
                 <Route path="settings" element={<DashboardSettings />} />
               </Route>
 
@@ -109,8 +125,28 @@ export default function App() {
                 <Route path=":orgId/events/:eventId" element={<EventDetails />} />
               </Route>
 
+              {/* User Profiles */}
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/profile/:userId" element={<UserProfile />} />
+              <Route path="/u/:username" element={<UserProfile />} />
+
+              {/* Judge Portal */}
+              <Route path="/judge" element={<JudgePortalLayout />}>
+                <Route index element={<JudgeDashboard />} />
+                <Route path="categories" element={<AssignedCategories />} />
+                <Route path="nominees/:categoryId" element={<NomineeReview />} />
+                <Route path="scorecards" element={<Scorecards />} />
+                <Route path="progress" element={<JudgeProgress />} />
+                <Route path="guidelines" element={<JudgeGuidelines />} />
+                <Route path="notifications" element={<JudgeNotifications />} />
+                <Route path="profile" element={<JudgeProfile />} />
+              </Route>
+
               {/* Platform Admin */}
               <Route path="/admin" element={<AdminDashboard />} />
+
+              {/* Public Share View */}
+              <Route path="/share/:token" element={<ShareView />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

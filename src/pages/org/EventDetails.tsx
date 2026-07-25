@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { mockEvents, mockCategories, mockNominees, mockOrganizations } from '../../data';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { 
@@ -11,12 +12,24 @@ import {
 
 export function EventDetails() {
   const { eventId, orgId } = useParams();
-  const event = mockEvents.find(e => e.id === eventId) || mockEvents[0];
-  const org = mockOrganizations.find(o => o.slug === (orgId || '')) || mockOrganizations.find(o => o.id === (orgId || event.orgId));
-  const categories = mockCategories.filter(c => c.eventId === event.id);
+  const event = useQuery(
+    api.events.queries.getById,
+    eventId ? { eventId: eventId as any } : 'skip'
+  );
+  const org = useQuery(
+    api.organizations.queries.getBySlug,
+    orgId ? { slug: orgId } : 'skip'
+  );
+  const categories = useQuery(
+    api.categories.queries.getByEvent,
+    event ? { eventId: event._id } : 'skip'
+  ) ?? [];
 
-  const [activeCategory, setActiveCategory] = useState(categories[0]?.id);
-  const nominees = mockNominees.filter(n => n.categoryId === activeCategory);
+  const [activeCategory, setActiveCategory] = useState(categories[0]?._id);
+  const nominees = useQuery(
+    api.nominees.queries.getByCategory,
+    activeCategory ? { categoryId: activeCategory as any } : 'skip'
+  ) ?? [];
   
   const [selectedNominee, setSelectedNominee] = useState<string | null>(null);
   const [isVoting, setIsVoting] = useState(false);
@@ -62,7 +75,7 @@ export function EventDetails() {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
         
         <div className="absolute inset-0 max-w-7xl mx-auto px-6 h-full flex flex-col justify-end pb-16 z-10">
-          <Link to={`/org/${org?.slug || org?.id}`} className="inline-flex items-center text-xs font-bold uppercase tracking-[0.2em] text-dark-400 hover:text-white mb-8 transition-colors group">
+          <Link to={`/org/${org?.slug || org?._id}`} className="inline-flex items-center text-xs font-bold uppercase tracking-[0.2em] text-dark-400 hover:text-white mb-8 transition-colors group">
             <div className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mr-3 group-hover:bg-gold-500/10 transition-colors">
                <ArrowLeft className="h-4 w-4" />
             </div>
@@ -132,19 +145,19 @@ export function EventDetails() {
            <div className="space-y-2">
              {categories.map((cat) => (
                <button
-                 key={cat.id}
-                 onClick={() => {
-                   setActiveCategory(cat.id);
+                  key={cat._id}
+                  onClick={() => {
+                    setActiveCategory(cat._id);
                    setSelectedNominee(null);
                  }}
                  className={`group w-full text-left px-5 py-4 rounded-2xl text-[10px] uppercase font-bold tracking-[0.2em] transition-all duration-300 flex items-center justify-between ${
-                   activeCategory === cat.id 
+                   activeCategory === cat._id 
                      ? 'bg-gold-500 text-dark-950 shadow-xl shadow-gold-500/10' 
                      : 'text-dark-400 hover:text-white hover:bg-white/5 border border-transparent'
                  }`}
                >
                  {cat.name}
-                 <ChevronRight className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${activeCategory === cat.id ? 'opacity-100' : 'opacity-0'}`} />
+                 <ChevronRight className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${activeCategory === cat._id ? 'opacity-100' : 'opacity-0'}`} />
                </button>
              ))}
            </div>
@@ -167,10 +180,10 @@ export function EventDetails() {
           <div className="lg:hidden -mx-4 px-4 overflow-x-auto scrollbar-hide py-2 flex gap-3 sticky top-16 bg-dark-950/80 backdrop-blur-xl z-20 border-b border-white/5">
              {categories.map((cat) => (
                <button
-                 key={cat.id}
-                 onClick={() => setActiveCategory(cat.id)}
+                  key={cat._id}
+                 onClick={() => setActiveCategory(cat._id)}
                  className={`whitespace-nowrap px-6 py-3 rounded-full text-[10px] uppercase font-bold tracking-widest transition-all ${
-                   activeCategory === cat.id 
+                   activeCategory === cat._id 
                      ? 'bg-gold-500 text-dark-950' 
                      : 'bg-white/5 text-dark-400 border border-white/10'
                  }`}
@@ -183,7 +196,7 @@ export function EventDetails() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
                <span className="text-gold-500/50 text-[10px] font-bold uppercase tracking-[0.4em] block mb-2">Currently Voting</span>
-               <h2 className="text-4xl font-serif text-white italic">{categories.find(c => c.id === activeCategory)?.name}</h2>
+               <h2 className="text-4xl font-serif text-white italic">{categories.find(c => c._id === activeCategory)?.name}</h2>
             </div>
             <div className="flex items-center gap-4">
                <div className="flex -space-x-3">
@@ -198,15 +211,15 @@ export function EventDetails() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-20">
             {nominees.map((nominee, idx) => (
               <motion.div 
-                key={nominee.id}
+                key={nominee._id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                onClick={() => setSelectedNominee(nominee.id)}
+                onClick={() => setSelectedNominee(nominee._id)}
                 className="group relative"
               >
-                <div className={`absolute -inset-[2px] rounded-3xl bg-gradient-to-br from-gold-500/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 ${selectedNominee === nominee.id ? 'opacity-100' : 'group-hover:opacity-30'}`} />
-                <Card className={`relative h-full border-white/5 bg-dark-900 group-hover:bg-dark-900/100 transition-all duration-300 p-0 overflow-hidden cursor-pointer rounded-3xl ${selectedNominee === nominee.id ? 'ring-2 ring-gold-500/50' : ''}`}>
+                <div className={`absolute -inset-[2px] rounded-3xl bg-gradient-to-br from-gold-500/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 ${selectedNominee === nominee._id ? 'opacity-100' : 'group-hover:opacity-30'}`} />
+                <Card className={`relative h-full border-white/5 bg-dark-900 group-hover:bg-dark-900/100 transition-all duration-300 p-0 overflow-hidden cursor-pointer rounded-3xl ${selectedNominee === nominee._id ? 'ring-2 ring-gold-500/50' : ''}`}>
                    <div className="flex flex-col sm:flex-row">
                       <div className="w-full sm:w-32 aspect-square relative shrink-0">
                          <img src={nominee.imageUrl} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={nominee.name} />
@@ -242,8 +255,8 @@ export function EventDetails() {
                    </div>
                    
                    {/* Selection Indicator Overlay */}
-                   <div className={`absolute top-4 right-4 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedNominee === nominee.id ? 'bg-gold-500 border-gold-500' : 'border-white/10 group-hover:border-white/30'}`}>
-                      {selectedNominee === nominee.id && <Sparkles className="h-3 w-3 text-dark-950" />}
+                   <div className={`absolute top-4 right-4 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedNominee === nominee._id ? 'bg-gold-500 border-gold-500' : 'border-white/10 group-hover:border-white/30'}`}>
+                      {selectedNominee === nominee._id && <Sparkles className="h-3 w-3 text-dark-950" />}
                    </div>
                 </Card>
               </motion.div>
@@ -271,7 +284,7 @@ export function EventDetails() {
                          </div>
                          <div>
                             <span className="text-[8px] md:text-[10px] font-bold text-gold-500 uppercase tracking-[0.4em] block mb-1">Confirming Vote</span>
-                            <h3 className="text-lg md:text-2xl font-serif text-white italic">Casting support for {nominees.find(n => n.id === selectedNominee)?.name}</h3>
+                            <h3 className="text-lg md:text-2xl font-serif text-white italic">Casting support for {nominees.find(n => n._id === selectedNominee)?.name}</h3>
                          </div>
                       </div>
 

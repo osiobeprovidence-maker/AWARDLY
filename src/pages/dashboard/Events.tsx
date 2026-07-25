@@ -1,28 +1,42 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Plus, Search, Calendar, Users, Trophy, ExternalLink, MoreVertical, Trash2, Edit3, X, AlertTriangle } from 'lucide-react';
-import { mockEvents, mockOrganizations } from '../../data';
+import { Plus, Search, Trophy, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '../../lib/convex-auth';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 export function DashboardEvents() {
   const { currentOrg } = useAuth();
-  const allOrgEvents = currentOrg ? mockEvents.filter(e => e.orgId === currentOrg.id) : mockEvents;
-  const [events, setEvents] = React.useState(allOrgEvents);
-  const [deleteId, setDeleteId] = React.useState<string | null>(null);
+  const events = useQuery(
+    api.events.queries.getByOrg,
+    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  ) ?? [];
 
-  React.useEffect(() => {
-    setEvents(currentOrg ? mockEvents.filter(e => e.orgId === currentOrg.id) : mockEvents);
-  }, [currentOrg]);
+  const categories = useQuery(
+    api.categories.queries.getByEvent,
+    events.length > 0 ? { eventId: events[0]?._id } : 'skip'
+  ) ?? [];
+
+  const nominees = useQuery(
+    api.nominees.queries.getByOrg,
+    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  ) ?? [];
+
+  const [deleteId, setDeleteId] = React.useState<string | null>(null);
 
   const handleDelete = () => {
     if (deleteId) {
-      setEvents(events.filter(e => e.id !== deleteId));
       setDeleteId(null);
     }
+  };
+
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   return (
@@ -53,79 +67,98 @@ export function DashboardEvents() {
             </select>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-xs font-medium text-dark-500 uppercase tracking-widest border-b border-white/5">
-                  <th className="px-4 py-4">Event Details</th>
-                  <th className="px-4 py-4">Status</th>
-                  <th className="px-4 py-4">Voting</th>
-                  <th className="px-4 py-4">Date</th>
-                  <th className="px-4 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {events.map((event) => (
-                  <tr key={event.id} className="group hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-5">
-                      <div className="flex items-center gap-4">
-                        <img 
-                          src={event.coverUrl} 
-                          className="h-12 w-20 rounded-lg object-cover" 
-                          alt="cover" 
-                          referrerPolicy="no-referrer"
-                        />
-                        <div>
-                          <h4 className="text-white font-medium text-sm mb-1">{event.title}</h4>
-                          <div className="flex items-center text-xs text-dark-500">
-                            <Trophy className="h-3 w-3 mr-1 text-gold-500" /> 12 Categories • 84 Nominees
+          {events.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                <Trophy className="h-10 w-10 text-dark-600" />
+              </div>
+              <h3 className="text-xl font-serif text-white mb-2">No events yet</h3>
+              <p className="text-sm text-dark-500 max-w-sm mb-6">Create your first award event to start managing categories and nominees.</p>
+              <Link to="/dashboard/events/create">
+                <Button><Plus className="h-4 w-4 mr-2" /> Create Your First Event</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-xs font-medium text-dark-500 uppercase tracking-widest border-b border-white/5">
+                    <th className="px-4 py-4">Event Details</th>
+                    <th className="px-4 py-4">Status</th>
+                    <th className="px-4 py-4">Voting</th>
+                    <th className="px-4 py-4">Date</th>
+                    <th className="px-4 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {events.map((event: any) => (
+                    <tr key={event._id} className="group hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-5">
+                        <div className="flex items-center gap-4">
+                          <img 
+                            src={event.coverUrl} 
+                            className="h-12 w-20 rounded-lg object-cover" 
+                            alt="cover" 
+                            referrerPolicy="no-referrer"
+                          />
+                          <div>
+                            <h4 className="text-white font-medium text-sm mb-1">{event.title}</h4>
+                            <div className="flex items-center text-xs text-dark-500">
+                              <Trophy className="h-3 w-3 mr-1 text-gold-500" /> {categories.length} Categories • {nominees.length} Nominees
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-5 font-serif">
-                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                         event.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-dark-800 text-dark-400 border-white/5'
-                       }`}>
-                         {event.status}
-                       </span>
-                    </td>
-                    <td className="px-4 py-5">
-                       <span className={`text-xs font-medium ${event.isVotingActive ? 'text-emerald-400' : 'text-dark-500'}`}>
-                         {event.isVotingActive ? 'Active' : 'Disabled'}
-                       </span>
-                    </td>
-                    <td className="px-4 py-5">
-                       <div className="text-sm text-dark-300">Sept 4, 2026</div>
-                       <div className="text-xs text-dark-500">18:00 UTC</div>
-                    </td>
-                    <td className="px-4 py-5 text-right">
-                       <div className="flex items-center justify-end gap-2">
-                         <Link to={`/dashboard/events/${event.id}/manage`}>
-                           <Button variant="glass" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider px-3 bg-white/5 hover:bg-white/10">
-                             Manage
+                      </td>
+                      <td className="px-4 py-5 font-serif">
+                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                           event.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-dark-800 text-dark-400 border-white/5'
+                         }`}>
+                           {event.status}
+                         </span>
+                      </td>
+                      <td className="px-4 py-5">
+                         <span className={`text-xs font-medium ${event.isVotingActive ? 'text-emerald-400' : 'text-dark-500'}`}>
+                           {event.isVotingActive ? 'Active' : 'Disabled'}
+                         </span>
+                      </td>
+                      <td className="px-4 py-5">
+                         {event.startDate ? (
+                           <>
+                             <div className="text-sm text-dark-300">{formatDate(event.startDate)}</div>
+                             <div className="text-xs text-dark-500">{event.startTime || ''}</div>
+                           </>
+                         ) : (
+                           <div className="text-sm text-dark-500">Not set</div>
+                         )}
+                      </td>
+                      <td className="px-4 py-5 text-right">
+                         <div className="flex items-center justify-end gap-2">
+                           <Link to={`/dashboard/events/${event._id}/manage`}>
+                             <Button variant="glass" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider px-3 bg-white/5 hover:bg-white/10">
+                               Manage
+                             </Button>
+                           </Link>
+                            <Link to={`/org/${currentOrg?.slug || event.orgId}/events/${event._id}`} target="_blank">
+                             <Button variant="ghost" size="icon" className="h-8 w-8 text-dark-500 hover:text-white">
+                               <ExternalLink className="h-4 w-4" />
+                             </Button>
+                           </Link>
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             onClick={() => setDeleteId(event._id)}
+                             className="h-8 w-8 text-dark-500 hover:text-rose-500 hover:bg-rose-500/10"
+                           >
+                             <Trash2 className="h-4 w-4" />
                            </Button>
-                         </Link>
-                          <Link to={`/org/${currentOrg?.slug || event.orgId}/events/${event.id}`} target="_blank">
-                           <Button variant="ghost" size="icon" className="h-8 w-8 text-dark-500 hover:text-white">
-                             <ExternalLink className="h-4 w-4" />
-                           </Button>
-                         </Link>
-                         <Button 
-                           variant="ghost" 
-                           size="icon" 
-                           onClick={() => setDeleteId(event.id)}
-                           className="h-8 w-8 text-dark-500 hover:text-rose-500 hover:bg-rose-500/10"
-                         >
-                           <Trash2 className="h-4 w-4" />
-                         </Button>
-                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                         </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -9,7 +9,8 @@ import {
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
-import { mockCategories } from '../../data';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 const SECTIONS = [
   { id: 'voting-limits', label: 'Voting Limits', icon: Target },
@@ -22,7 +23,10 @@ const SECTIONS = [
 export function CategoryCriteria() {
   const { categoryId } = useParams();
   const navigate = useNavigate();
-  const category = mockCategories.find(c => c.id === categoryId) || mockCategories[0];
+  const category = useQuery(
+    api.categories.queries.getById,
+    categoryId ? { categoryId: categoryId as any } : 'skip'
+  ) || { _id: '' as any, name: 'Loading...', eventId: '' as any, rulesSource: 'global' as const, description: '' };
   
   const [activeSection, setActiveSection] = React.useState('voting-limits');
   const [hasChanges, setHasChanges] = React.useState(false);
@@ -125,7 +129,7 @@ export function CategoryCriteria() {
                   <h3 className="text-white font-medium">Real-time Insights</h3>
                </div>
                <p className="text-[10px] text-dark-400 leading-relaxed relative z-10 uppercase tracking-wider font-medium">Estimated Category Reach</p>
-               <div className="mt-2 text-2xl font-serif text-white italic relative z-10">245k+ <span className="text-dark-500 text-sm not-italic">Voters</span></div>
+               <div className="mt-2 text-2xl font-serif text-white italic relative z-10">0 <span className="text-dark-500 text-sm not-italic">Voters</span></div>
             </div>
 
             <Card className="border-white/5 bg-dark-900/40">

@@ -2,7 +2,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, Plus, ChevronRight, X, CheckCircle2 } from 'lucide-react';
-import { useAuth } from '../../lib/auth';
+import { Button } from '../ui/Button';
+import { useAuth } from '../../lib/convex-auth';
 import type { Organization } from '../../types';
 
 type OrgSelectorProps = {

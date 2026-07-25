@@ -8,15 +8,17 @@ import {
   Globe, Edit3, Settings, Check, ChevronRight, PartyPopper,
   Vote, DollarSign, Eye, ArrowRight, Palette, Tag, BarChart3,
   CreditCard, Sparkles, ExternalLink, LayoutGrid, Home, Star,
-  Clock, Users, ShieldCheck, Megaphone,
+  Clock, Users, ShieldCheck, Megaphone, MapPin, Ticket, Link as LinkIcon,
+  Building2, Mic, Shirt, Car, Accessibility, Video, Zap,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ImageUpload } from '../../components/ImageUpload';
 import { Category, VotingRules } from '../../types';
-import { mockEvents } from '../../data';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useToast } from '../../lib/toast';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '../../lib/convex-auth';
 
 interface StepDef {
   label: string;
@@ -29,6 +31,8 @@ const STEPS: StepDef[] = [
   { label: 'Categories', icon: Trophy },
   { label: 'Voting', icon: Vote },
   { label: 'Monetize', icon: DollarSign },
+  { label: 'Ceremony', icon: Building2 },
+  { label: 'Ticketing', icon: Ticket },
   { label: 'Review', icon: Eye },
   { label: 'Publish', icon: PartyPopper },
 ];
@@ -59,6 +63,27 @@ interface EventData {
   votingStart: string;
   votingEnd: string;
   paidVoting: boolean;
+  awardFormat: 'online' | 'physical' | 'hybrid' | '';
+  ceremony: {
+    venueName: string;
+    venueAddress: string;
+    date: string;
+    time: string;
+    host: string;
+    dressCode: string;
+    capacity: string;
+    parkingInfo: string;
+    accessibilityNotes: string;
+    description: string;
+    livestreamUrl: string;
+    winnerAnnouncementDate: string;
+  };
+  ticketing: {
+    connected: boolean;
+    ticketEventId: string;
+    ticketUrl: string;
+    eventName: string;
+  };
 }
 
 const DEFAULT_DATA: EventData = {
@@ -69,11 +94,7 @@ const DEFAULT_DATA: EventData = {
   bannerUrl: '',
   themeColor: '#c68a35',
   tagline: '',
-  categories: [
-    { id: '1', eventId: 'e1', name: 'Artiste of the Year', rulesSource: 'global' },
-    { id: '2', eventId: 'e1', name: 'Best Innovation', rulesSource: 'custom', customRules: { title: 'Expert Jury', description: '', eligibility: 'Judges Only', dailyLimit: 0, isPaid: false, verificationRequired: true, duplicatePolicy: '', fraudPrevention: '', startDate: '', endDate: '', terms: '' } },
-    { id: '3', eventId: 'e1', name: 'Rookie of the Year', rulesSource: 'global' },
-  ],
+  categories: [],
   votingEnabled: true,
   publicVoting: true,
   judgeVoting: false,
@@ -82,12 +103,36 @@ const DEFAULT_DATA: EventData = {
   votingStart: '',
   votingEnd: '',
   paidVoting: false,
+  awardFormat: '',
+  ceremony: {
+    venueName: '',
+    venueAddress: '',
+    date: '',
+    time: '',
+    host: '',
+    dressCode: '',
+    capacity: '',
+    parkingInfo: '',
+    accessibilityNotes: '',
+    description: '',
+    livestreamUrl: '',
+    winnerAnnouncementDate: '',
+  },
+  ticketing: {
+    connected: false,
+    ticketEventId: '',
+    ticketUrl: '',
+    eventName: '',
+  },
 };
 
 export function CreateEvent() {
   const navigate = useNavigate();
   const { eventId } = useParams();
-  const existingEvent = eventId ? mockEvents.find(e => e.id === eventId) : null;
+  const existingEvent = useQuery(
+    api.events.queries.getById,
+    eventId ? { eventId: eventId as any } : 'skip'
+  );
   const { toast } = useToast();
   const { currentOrg } = useAuth();
 
@@ -116,7 +161,7 @@ export function CreateEvent() {
     return Object.keys(e).length === 0;
   }, [data]);
 
-  const next = () => { if (validate(step) && step < 6) setStep(step + 1); };
+  const next = () => { if (validate(step) && step < 8) setStep(step + 1); };
   const prev = () => { if (step > 0) setStep(step - 1); };
   const goTo = (s: number) => { setStep(s); };
 
@@ -148,7 +193,7 @@ export function CreateEvent() {
   const publish = () => {
     toast('Event published!', 'success');
     setPublished(true);
-    setStep(6);
+    setStep(8);
   };
 
   const stepValid = (s: number) => {
@@ -158,6 +203,8 @@ export function CreateEvent() {
     if (s === 3) return !data.votingEnabled || (!!data.votingStart && !!data.votingEnd);
     if (s === 4) return true;
     if (s === 5) return true;
+    if (s === 6) return true;
+    if (s === 7) return true;
     return true;
   };
 
@@ -212,7 +259,7 @@ export function CreateEvent() {
   );
 
   const renderStep = () => {
-    if (published && step === 6) return renderPublishSuccess();
+    if (published && step === 8) return renderPublishSuccess();
     return (
       <AnimatePresence mode="wait">
         <motion.div
@@ -227,7 +274,9 @@ export function CreateEvent() {
           {step === 2 && renderCategories()}
           {step === 3 && renderVoting()}
           {step === 4 && renderMonetization()}
-          {step === 5 && renderReview()}
+          {step === 5 && renderCeremony()}
+          {step === 6 && renderTicketing()}
+          {step === 7 && renderReview()}
         </motion.div>
       </AnimatePresence>
     );
@@ -304,7 +353,7 @@ export function CreateEvent() {
         <CardContent className="space-y-8">
           <ImageUpload
             label="Event Banner"
-            onImageSelect={(file) => update({ bannerUrl: URL.createObjectURL(file) })}
+            onImageSelect={(url) => url && update({ bannerUrl: url })}
           />
           <div className="space-y-4">
             <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Theme Color</label>
@@ -605,18 +654,10 @@ export function CreateEvent() {
 
           {data.paidVoting && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-6">
-              <div className="grid md:grid-cols-3 gap-4">
-                {[
-                  { name: 'Fan Starter', price: '$5', votes: '10 Votes', color: 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/20' },
-                  { name: 'Mega Supporter', price: '$20', votes: '50 Votes', color: 'from-gold-500/10 to-gold-500/5 border-gold-500/20' },
-                  { name: 'Elite Bundle', price: '$50', votes: '150 Votes', color: 'from-violet-500/10 to-violet-500/5 border-violet-500/20' },
-                ].map(pkg => (
-                  <div key={pkg.name} className={`p-5 rounded-2xl bg-gradient-to-br ${pkg.color} border`}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-dark-400 mb-2">{pkg.name}</p>
-                    <p className="text-2xl font-serif text-white">{pkg.price}</p>
-                    <p className="text-xs text-dark-400 mt-1">{pkg.votes}</p>
-                  </div>
-                ))}
+              <div className="p-8 rounded-2xl bg-white/5 border border-white/5 text-center">
+                <CreditCard className="h-10 w-10 text-dark-600 mx-auto mb-3" />
+                <h4 className="text-white font-medium mb-1">No voting packages yet</h4>
+                <p className="text-xs text-dark-500 mb-4">Create voting packages before enabling paid voting.</p>
               </div>
 
               <Button
@@ -635,6 +676,264 @@ export function CreateEvent() {
                 </div>
               </div>
             </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderCeremony = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gold-500/10 flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-gold-500" />
+            </div>
+            Award Ceremony
+          </CardTitle>
+          <CardDescription>Configure your ceremony format and venue details.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-8">
+          <div className="space-y-4">
+            <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Award Format</label>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { value: 'online', label: 'Online', icon: Video, desc: 'Virtual ceremony only' },
+                { value: 'physical', label: 'Physical', icon: MapPin, desc: 'In-person ceremony' },
+                { value: 'hybrid', label: 'Hybrid', icon: Zap, desc: 'Online + In-person' },
+              ].map((fmt) => (
+                <button
+                  key={fmt.value}
+                  onClick={() => update({ awardFormat: fmt.value as any })}
+                  className={`p-5 rounded-2xl border-2 text-left transition-all ${
+                    data.awardFormat === fmt.value
+                      ? 'border-gold-500 bg-gold-500/10'
+                      : 'border-white/10 hover:border-white/20 bg-white/[0.02]'
+                  }`}
+                >
+                  <fmt.icon className={`h-6 w-6 mb-3 ${data.awardFormat === fmt.value ? 'text-gold-500' : 'text-dark-500'}`} />
+                  <p className={`text-sm font-bold ${data.awardFormat === fmt.value ? 'text-gold-500' : 'text-white'}`}>{fmt.label}</p>
+                  <p className="text-[11px] text-dark-500 mt-1">{fmt.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {(data.awardFormat === 'online' || data.awardFormat === 'hybrid') && (
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <Video className="h-4 w-4 text-gold-500" /> Online Configuration
+              </h4>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Livestream URL (optional)</label>
+                <Input
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={data.ceremony.livestreamUrl}
+                  onChange={e => update({ ceremony: { ...data.ceremony, livestreamUrl: e.target.value } })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Winner Announcement Date</label>
+                <Input
+                  type="date"
+                  value={data.ceremony.winnerAnnouncementDate}
+                  onChange={e => update({ ceremony: { ...data.ceremony, winnerAnnouncementDate: e.target.value } })}
+                />
+              </div>
+            </div>
+          )}
+
+          {(data.awardFormat === 'physical' || data.awardFormat === 'hybrid') && (
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 space-y-6">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-gold-500" /> Venue Details
+              </h4>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Venue Name</label>
+                  <Input
+                    placeholder="e.g. Lagos Continental Hotel"
+                    value={data.ceremony.venueName}
+                    onChange={e => update({ ceremony: { ...data.ceremony, venueName: e.target.value } })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Venue Address</label>
+                  <Input
+                    placeholder="e.g. 52 Kofo Abayomi St, Victoria Island"
+                    value={data.ceremony.venueAddress}
+                    onChange={e => update({ ceremony: { ...data.ceremony, venueAddress: e.target.value } })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Date</label>
+                  <Input
+                    type="date"
+                    value={data.ceremony.date}
+                    onChange={e => update({ ceremony: { ...data.ceremony, date: e.target.value } })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Time</label>
+                  <Input
+                    type="time"
+                    value={data.ceremony.time}
+                    onChange={e => update({ ceremony: { ...data.ceremony, time: e.target.value } })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Host / MC</label>
+                  <Input
+                    placeholder="e.g. Basketmouth"
+                    value={data.ceremony.host}
+                    onChange={e => update({ ceremony: { ...data.ceremony, host: e.target.value } })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Dress Code</label>
+                  <Input
+                    placeholder="e.g. Black Tie"
+                    value={data.ceremony.dressCode}
+                    onChange={e => update({ ceremony: { ...data.ceremony, dressCode: e.target.value } })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Capacity</label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 500"
+                    value={data.ceremony.capacity}
+                    onChange={e => update({ ceremony: { ...data.ceremony, capacity: e.target.value } })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Ceremony Description</label>
+                <textarea
+                  className="w-full min-h-[100px] bg-dark-900 border border-white/10 rounded-lg p-4 text-white text-sm outline-none focus:ring-1 focus:ring-gold-500 resize-none"
+                  placeholder="Describe the ceremony experience..."
+                  value={data.ceremony.description}
+                  onChange={e => update({ ceremony: { ...data.ceremony, description: e.target.value } })}
+                />
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Parking Information</label>
+                  <Input
+                    placeholder="e.g. Free valet parking"
+                    value={data.ceremony.parkingInfo}
+                    onChange={e => update({ ceremony: { ...data.ceremony, parkingInfo: e.target.value } })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-dark-500 uppercase tracking-widest">Accessibility Notes</label>
+                  <Input
+                    placeholder="e.g. Wheelchair accessible"
+                    value={data.ceremony.accessibilityNotes}
+                    onChange={e => update({ ceremony: { ...data.ceremony, accessibilityNotes: e.target.value } })}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!data.awardFormat && (
+            <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
+              <Building2 className="h-10 w-10 text-dark-700 mx-auto mb-3" />
+              <p className="text-dark-400 text-sm">Select an award format above to configure ceremony details</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderTicketing = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gold-500/10 flex items-center justify-center">
+              <Ticket className="h-5 w-5 text-gold-500" />
+            </div>
+            Ticketing
+            <span className="ml-auto text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-gold-500/10 text-gold-500 border border-gold-500/20">
+              Powered by MyInvite
+            </span>
+          </CardTitle>
+          <CardDescription>Sell tickets for your award ceremony without leaving Awardly.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {(data.awardFormat === 'online') ? (
+            <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
+              <Video className="h-10 w-10 text-dark-700 mx-auto mb-3" />
+              <p className="text-dark-400 text-sm font-medium">Ticketing not available for online-only events</p>
+              <p className="text-dark-600 text-[11px] mt-1">Ticketing is available for physical and hybrid ceremonies</p>
+            </div>
+          ) : !data.ticketing.connected ? (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-dark-800/60 border border-white/5">
+                <div className="h-3 w-3 rounded-full bg-dark-600" />
+                <div>
+                  <p className="text-xs font-bold text-dark-400 uppercase tracking-widest">Status</p>
+                  <p className="text-sm text-white">Not Connected</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button className="p-6 rounded-2xl bg-gold-500/10 border border-gold-500/20 text-left hover:bg-gold-500/15 transition-all group">
+                  <Ticket className="h-8 w-8 text-gold-500 mb-3" />
+                  <p className="text-sm font-bold text-white">Create Ticket Event</p>
+                  <p className="text-[11px] text-dark-400 mt-1">Set up a new ticketing event on MyInvite</p>
+                </button>
+                <button className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 text-left hover:bg-white/[0.06] transition-all group">
+                  <LinkIcon className="h-8 w-8 text-dark-500 mb-3 group-hover:text-gold-500 transition-colors" />
+                  <p className="text-sm font-bold text-white">Connect Existing Event</p>
+                  <p className="text-[11px] text-dark-400 mt-1">Link an existing MyInvite event</p>
+                </button>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3">
+                <ShieldCheck className="h-5 w-5 text-gold-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm text-white font-medium">Secure event registration powered by MyInvite</p>
+                  <p className="text-xs text-dark-400 mt-1">Handle ticket sales, attendee registration, QR check-in, and guest management — all within Awardly.</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-gold-500/10 border border-gold-500/20">
+                <div className="h-3 w-3 rounded-full bg-emerald-500" />
+                <div>
+                  <p className="text-xs font-bold text-gold-500 uppercase tracking-widest">Status</p>
+                  <p className="text-sm text-white font-medium">Connected</p>
+                </div>
+                <span className="ml-auto text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  MyInvite ✓
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <p className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">Event Name</p>
+                  <p className="text-sm text-white mt-1">{data.ticketing.eventName || 'Not set'}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <p className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">Tickets Sold</p>
+                  <p className="text-sm text-white mt-1">0</p>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                  <p className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">Revenue</p>
+                  <p className="text-sm text-white mt-1">Managed by MyInvite</p>
+                </div>
+              </div>
+
+              <Button variant="outline" className="w-full border-white/10 hover:bg-white/5">
+                <ExternalLink className="h-4 w-4 mr-2" /> Manage Event
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -690,6 +989,21 @@ export function CreateEvent() {
 
         <ReviewSection title="Monetization" onEdit={() => goTo(4)}>
           <ReviewRow label="Paid Voting" value={data.paidVoting ? 'Enabled' : 'Disabled'} />
+        </ReviewSection>
+
+        <ReviewSection title="Award Ceremony" onEdit={() => goTo(5)}>
+          <ReviewRow label="Format" value={data.awardFormat ? data.awardFormat.charAt(0).toUpperCase() + data.awardFormat.slice(1) : 'Not set'} />
+          {data.awardFormat !== 'online' && data.ceremony.venueName && (
+            <ReviewRow label="Venue" value={data.ceremony.venueName} />
+          )}
+          {data.ceremony.livestreamUrl && (
+            <ReviewRow label="Livestream" value="Configured" />
+          )}
+        </ReviewSection>
+
+        <ReviewSection title="Ticketing" onEdit={() => goTo(6)}>
+          <ReviewRow label="Status" value={data.ticketing.connected ? 'Connected (MyInvite)' : 'Not Connected'} />
+          {data.ticketing.connected && <ReviewRow label="Event" value={data.ticketing.eventName} />}
         </ReviewSection>
       </CardContent>
     </Card>
@@ -767,7 +1081,7 @@ export function CreateEvent() {
     </motion.div>
   );
 
-  const showActions = step < 6 && !published;
+  const showActions = step < 8 && !published;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-32">
@@ -782,7 +1096,7 @@ export function CreateEvent() {
             {eventId ? `Manage Event` : 'Create New Event'}
           </h1>
           <p className="text-dark-400 text-sm">
-            Step {Math.min(step + 1, 7)} of 7 — {STEPS[Math.min(step, 6)].label}
+            Step {Math.min(step + 1, 9)} of 9 — {STEPS[Math.min(step, 8)].label}
           </p>
         </div>
       </div>
@@ -808,7 +1122,7 @@ export function CreateEvent() {
               <Button variant="outline" onClick={saveDraft} className="border-white/10 hover:bg-white/5">
                 <Save className="h-4 w-4 mr-2" /> Save Draft
               </Button>
-              {step < 5 ? (
+              {step < 7 ? (
                 <Button onClick={next} className="bg-gold-500 hover:bg-gold-600 text-dark-950">
                   Next <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>

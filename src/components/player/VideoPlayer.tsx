@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import YouTube, { YouTubeEvent } from 'react-youtube';
 import { motion, AnimatePresence } from 'motion/react';
+import { Play } from 'lucide-react';
 import { ProgressBar } from './ProgressBar';
 import { PlayerControls } from './PlayerControls';
 import { LiveBadge } from './LiveBadge';
@@ -12,7 +13,7 @@ interface VideoPlayerProps {
   viewerCount: number;
   title: string;
   org?: string;
-  scheduledAt?: number;
+  scheduledAt?: string | number;
   className?: string;
 }
 
@@ -215,7 +216,7 @@ export function VideoPlayer({ videoId, status, viewerCount, title, org, schedule
   };
 
   if (status === 'upcoming' && !videoId) {
-    const diff = scheduledAt ? Math.max(0, Math.ceil((scheduledAt - Date.now()) / 86400000)) : null;
+    const diff = scheduledAt ? Math.max(0, Math.ceil((new Date(scheduledAt).getTime() - Date.now()) / 86400000)) : null;
     return (
       <div className={`relative bg-dark-900 rounded-2xl overflow-hidden border border-white/10 ${theatre ? 'max-w-6xl mx-auto' : ''} ${className}`} style={{ aspectRatio: '16/9' }}>
         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">

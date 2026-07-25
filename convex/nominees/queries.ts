@@ -23,6 +23,17 @@ export const getByEvent = query({
   },
 });
 
+export const getByOrg = query({
+  args: { orgId: v.id('organizations') },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('nominees')
+      .withIndex('by_orgId', (q) => q.eq('orgId', args.orgId))
+      .filter((q) => q.eq(q.field('isDeleted'), false))
+      .collect();
+  },
+});
+
 export const getById = query({
   args: { nomineeId: v.id('nominees') },
   handler: async (ctx, args) => {

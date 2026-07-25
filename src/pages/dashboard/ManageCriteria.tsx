@@ -18,13 +18,7 @@ interface Criterion {
   description: string;
 }
 
-const DEFAULT_CRITERIA: Criterion[] = [
-  { id: '1', name: 'Innovation', weight: 25, maxScore: 10, description: 'Novelty and creativity of the work' },
-  { id: '2', name: 'Popularity', weight: 20, maxScore: 10, description: 'Public reception and audience engagement' },
-  { id: '3', name: 'Performance', weight: 20, maxScore: 10, description: 'Quality of live/recorded performances' },
-  { id: '4', name: 'Originality', weight: 20, maxScore: 10, description: 'Authenticity and unique artistic voice' },
-  { id: '5', name: 'Impact', weight: 15, maxScore: 10, description: 'Cultural influence and industry significance' },
-];
+const DEFAULT_CRITERIA: Criterion[] = [];
 
 export function ManageCriteria() {
   const { eventId, categoryId } = useParams();

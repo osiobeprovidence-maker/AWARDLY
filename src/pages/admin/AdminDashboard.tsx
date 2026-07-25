@@ -61,8 +61,9 @@ export function AdminDashboard() {
                  <CardTitle>Global Revenue & Ecosystem Growth</CardTitle>
                  <CardDescription>Tracking platform-wide transaction volume and organization onboardings.</CardDescription>
               </CardHeader>
-              <CardContent className="h-[350px] mt-8">
-                <ResponsiveContainer width="100%" height="100%">
+               <CardContent className="mt-8">
+                <div className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height={350}>
                     <AreaChart data={platformData}>
                       <defs>
                         <linearGradient id="ecosystem" x1="0" y1="0" x2="0" y2="1">
@@ -80,7 +81,8 @@ export function AdminDashboard() {
                       <Area type="monotone" dataKey="rev" stroke="#6366f1" strokeWidth={3} fill="url(#ecosystem)" />
                     </AreaChart>
                 </ResponsiveContainer>
-              </CardContent>
+                </div>
+               </CardContent>
            </Card>
 
            {/* Top Performing Orgs */}

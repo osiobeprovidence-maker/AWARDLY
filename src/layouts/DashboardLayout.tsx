@@ -3,25 +3,31 @@ import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
 import { 
   Building2, LayoutDashboard, Radio, Trophy, Users, 
   Settings, Image, Vote, Presentation, TrendingUp, LogOut, Menu, X, DollarSign,
-  Bell, Search, PlusCircle, ChevronDown
+  Bell, Search, PlusCircle, ChevronDown, CreditCard, Gavel, Ticket
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { NotificationPopover } from '../components/dashboard/NotificationPopover';
+import { NotificationsDropdown } from '../components/feed/NotificationsDropdown';
 import { useToast } from '../lib/toast';
-import { useAuth } from '../lib/auth';
+import { useAuth } from '../lib/convex-auth';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', to: '/dashboard' },
+  { icon: Search, label: 'Search', to: '/dashboard/search' },
   { icon: Presentation, label: 'Community Feed', to: '/dashboard/feed' },
   { icon: Trophy, label: 'Events & Awards', to: '/dashboard/events' },
   { icon: Vote, label: 'Nominations & Voting', to: '/dashboard/voting' },
   { icon: Users, label: 'Team', to: '/dashboard/team' },
+  { icon: Gavel, label: 'Judges', to: '/dashboard/judges' },
   { icon: DollarSign, label: 'Monetization', to: '/dashboard/monetization' },
+  { icon: Ticket, label: 'Ceremony', to: '/dashboard/ceremony' },
+  { icon: CreditCard, label: 'Billing', to: '/dashboard/billing' },
   { icon: Radio, label: 'Live Broadcasts', to: '/dashboard/live' },
   { icon: Image, label: 'Media Center', to: '/dashboard/media' },
   { icon: TrendingUp, label: 'Analytics', to: '/dashboard/analytics' },
+  { icon: Bell, label: 'Notifications', to: '/dashboard/notifications' },
   { icon: Settings, label: 'Settings', to: '/dashboard/settings' },
 ];
 
@@ -218,9 +224,9 @@ export function DashboardLayout() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
         <header className="h-20 hidden md:flex items-center justify-between px-10 border-b border-white/5 bg-dark-950/40 backdrop-blur-xl sticky top-0 z-20">
             <div className="flex items-center gap-4 text-dark-400">
-               <div
-                 onClick={() => toast('Search functionality coming soon.', 'info')}
-                 className="h-10 w-96 rounded-2xl bg-white/5 border border-white/5 flex items-center px-4 gap-3 focus-within:border-gold-500/50 transition-all cursor-text group hover:border-white/10"
+               <Link
+                 to="/dashboard/search"
+                 className="h-10 w-96 rounded-2xl bg-white/5 border border-white/5 flex items-center px-4 gap-3 focus-within:border-gold-500/50 transition-all cursor-pointer group hover:border-white/10"
                >
                   <Search className="h-4 w-4 text-dark-500 group-hover:text-gold-500 transition-colors" />
                   <span className="text-xs font-medium">Search anything...</span>
@@ -228,7 +234,7 @@ export function DashboardLayout() {
                      <kbd className="px-1.5 py-0.5 rounded bg-dark-800 text-[10px] border border-white/10">⌘</kbd>
                      <kbd className="px-1.5 py-0.5 rounded bg-dark-800 text-[10px] border border-white/10">K</kbd>
                   </div>
-               </div>
+               </Link>
             </div>
             
             <div className="flex items-center gap-6">
@@ -242,9 +248,13 @@ export function DashboardLayout() {
                   </button>
                   <NotificationPopover isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
                </div>
-               <div className="h-10 w-10 rounded-xl bg-gold-500 flex items-center justify-center text-dark-950 font-bold border-2 border-white/10">
-                  {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
-               </div>
+               <Link to="/profile" className="h-10 w-10 rounded-xl bg-gold-500 flex items-center justify-center text-dark-950 font-bold border-2 border-white/10 hover:border-white/20 transition-all overflow-hidden">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                  ) : (
+                    user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'
+                  )}
+               </Link>
             </div>
         </header>
 

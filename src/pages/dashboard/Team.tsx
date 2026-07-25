@@ -4,59 +4,85 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useToast } from '../../lib/toast';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '../../lib/convex-auth';
 import { ROLE_LABELS, ROLE_PERMISSIONS, type MemberRole } from '../../types';
-import { mockUsers } from '../../data';
-import { Users, Plus, Shield, Trash2, ChevronDown, X, Search, UserPlus, Crown, Settings } from 'lucide-react';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { Users, Plus, Shield, Trash2, ChevronDown, X, Search, UserPlus, Crown, Settings, Loader2 } from 'lucide-react';
 
 const ALL_ROLES: MemberRole[] = ['owner', 'admin', 'event_manager', 'judge', 'moderator', 'finance', 'content_editor'];
 
 export function TeamManagement() {
-  const { currentOrg, members, currentRole, addMember, removeMember, updateMemberRole } = useAuth();
+  const { currentOrg, currentRole } = useAuth();
   const { toast } = useToast();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<MemberRole>('event_manager');
   const [showPermissions, setShowPermissions] = useState<string | null>(null);
+  const [pendingMemberId, setPendingMemberId] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<'remove' | 'role' | null>(null);
 
   const isOwner = currentRole === 'owner';
   const isAdmin = currentRole === 'admin' || isOwner;
 
-  const getMemberInfo = (userId: string) => mockUsers.find(u => u.id === userId);
+  const inviteMember = useMutation(api.organizationMembers.mutations.invite);
+  const removeMember = useMutation(api.organizationMembers.mutations.remove);
+  const changeRole = useMutation(api.organizationMembers.mutations.changeRole);
 
-  const handleInvite = () => {
-    const user = mockUsers.find(u => u.email === inviteEmail);
-    if (!user) {
-      toast('No user found with that email. In production, an invite would be sent.', 'info');
-      return;
+  const orgMembers = useQuery(
+    api.organizationMembers.queries.getOrgMembers,
+    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  ) ?? [];
+
+  const handleInvite = async () => {
+    if (!currentOrg) return;
+    try {
+      setPendingAction('remove');
+      setPendingMemberId('invite');
+      await inviteMember({
+        orgId: currentOrg.id as any,
+        email: inviteEmail,
+        role: inviteRole,
+      });
+      toast(`Invitation sent to ${inviteEmail}!`, 'success');
+      setInviteEmail('');
+      setInviteRole('event_manager');
+      setShowInvite(false);
+    } catch (error: any) {
+      toast(error.message || 'Failed to invite member', 'error');
+    } finally {
+      setPendingMemberId(null);
+      setPendingAction(null);
     }
-    if (members.some(m => m.userId === user.id)) {
-      toast('This user is already a team member.', 'info');
-      return;
-    }
-    addMember({
-      id: `mem_${Date.now()}`,
-      userId: user.id,
-      orgId: currentOrg!.id,
-      role: inviteRole,
-      invitedBy: 'current',
-      joinedAt: new Date().toISOString(),
-    });
-    toast(`${user.name} has been added as ${ROLE_LABELS[inviteRole]}!`, 'success');
-    setInviteEmail('');
-    setInviteRole('event_manager');
-    setShowInvite(false);
   };
 
-  const handleRemove = (memberId: string, name: string) => {
+  const handleRemove = async (memberId: string, name: string) => {
     if (!confirm(`Remove ${name} from this organization?`)) return;
-    removeMember(memberId);
-    toast(`${name} has been removed from the team.`, 'success');
+    try {
+      setPendingAction('remove');
+      setPendingMemberId(memberId);
+      await removeMember({ memberId: memberId as any });
+      toast(`${name} has been removed from the team.`, 'success');
+    } catch (error: any) {
+      toast(error.message || 'Failed to remove member', 'error');
+    } finally {
+      setPendingMemberId(null);
+      setPendingAction(null);
+    }
   };
 
-  const handleRoleChange = (memberId: string, newRole: MemberRole, name: string) => {
-    updateMemberRole(memberId, newRole);
-    toast(`${name}'s role changed to ${ROLE_LABELS[newRole]}.`, 'success');
+  const handleRoleChange = async (memberId: string, newRole: MemberRole, name: string) => {
+    try {
+      setPendingAction('role');
+      setPendingMemberId(memberId);
+      await changeRole({ memberId: memberId as any, role: newRole });
+      toast(`${name}'s role changed to ${ROLE_LABELS[newRole]}.`, 'success');
+    } catch (error: any) {
+      toast(error.message || 'Failed to change role', 'error');
+    } finally {
+      setPendingMemberId(null);
+      setPendingAction(null);
+    }
   };
 
   if (!currentOrg) {
@@ -81,7 +107,7 @@ export function TeamManagement() {
       {/* Role Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {(['owner', 'admin', 'event_manager', 'moderator'] as MemberRole[]).map(role => {
-          const count = members.filter(m => m.role === role).length;
+          const count = orgMembers.filter(m => m.role === role).length;
           return (
             <Card key={role} className="hover:border-gold-500/20 transition-all">
               <CardContent className="p-4">
@@ -102,22 +128,23 @@ export function TeamManagement() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Team Members</CardTitle>
-              <CardDescription>{members.length} member{members.length !== 1 ? 's' : ''} in this organization</CardDescription>
+              <CardDescription>{orgMembers.length} member{orgMembers.length !== 1 ? 's' : ''} in this organization</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-1">
-          {members.length === 0 ? (
+          {orgMembers.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-12 w-12 text-dark-500 mx-auto mb-4" />
               <p className="text-dark-400">No team members yet</p>
             </div>
           ) : (
-            members.map(member => {
-              const info = getMemberInfo(member.userId);
+            orgMembers.map(member => {
+              const info = member.user;
               if (!info) return null;
+              const isLoading = pendingMemberId === member._id;
               return (
-                <div key={member.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-white/[0.02] rounded-xl transition-colors border-b border-white/5 last:border-0 gap-4">
+                <div key={member._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-white/[0.02] rounded-xl transition-colors border-b border-white/5 last:border-0 gap-4">
                   <div className="flex items-center gap-4">
                     <div className="h-11 w-11 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-xs font-bold text-gold-500 shrink-0">
                       {info.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -132,6 +159,8 @@ export function TeamManagement() {
                   </div>
 
                   <div className="flex items-center gap-3 ml-15 sm:ml-0">
+                    {isLoading && <Loader2 className="h-3.5 w-3.5 text-gold-500 animate-spin" />}
+
                     {/* Role badge / changer */}
                     {isAdmin && member.role !== 'owner' ? (
                       <div className="relative group">
@@ -143,7 +172,7 @@ export function TeamManagement() {
                           {ALL_ROLES.filter(r => r !== 'owner').map(r => (
                             <button
                               key={r}
-                              onClick={() => handleRoleChange(member.id, r, info.name)}
+                              onClick={() => handleRoleChange(member._id, r, info.name)}
                               className={`w-full text-left px-3 py-2 text-xs transition-colors ${
                                 r === member.role ? 'text-gold-500 bg-gold-500/10' : 'text-dark-300 hover:bg-white/5 hover:text-white'
                               } first:rounded-t-xl last:rounded-b-xl`}
@@ -163,7 +192,7 @@ export function TeamManagement() {
 
                     {/* Remove */}
                     {isAdmin && member.role !== 'owner' && (
-                      <button onClick={() => handleRemove(member.id, info.name)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-rose-500/10 text-dark-500 hover:text-rose-400 transition-colors">
+                      <button onClick={() => handleRemove(member._id, info.name)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-rose-500/10 text-dark-500 hover:text-rose-400 transition-colors">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -244,7 +273,7 @@ export function TeamManagement() {
               </div>
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" className="flex-1" onClick={() => setShowInvite(false)}>Cancel</Button>
-                <Button className="flex-1" onClick={handleInvite}>
+                <Button className="flex-1" onClick={handleInvite} disabled={!inviteEmail}>
                   <UserPlus className="h-4 w-4 mr-2" /> Send Invite
                 </Button>
               </div>

@@ -3,16 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ArrowLeft, LayoutDashboard, FileText, Users, Target, Palette, Settings2, Activity,
-  TrendingUp, Award, BarChart3, Star, Clock, ChevronRight, Eye, EyeOff, GripVertical,
-  Plus, Edit3, Save, CheckCircle2, Vote, Zap, Globe, Lock, Hash, ArrowUpRight,
-  MessageSquare, Shield, Flame, Image, Bell, Search, ChevronDown, Check
+  TrendingUp, Award, Star, ChevronRight, Eye, EyeOff, GripVertical,
+  Plus, Edit3, Save, CheckCircle2, Vote, Globe, ArrowUpRight,
+  Search, ChevronDown, Check, Shield, Hash, Clock, Flame
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Tabs';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useToast } from '../../lib/toast';
-import { mockCategories, mockNominees } from '../../data';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -21,37 +22,25 @@ const TABS = [
   { id: 'criteria', label: 'Criteria', icon: Target },
   { id: 'branding', label: 'Branding', icon: Palette },
   { id: 'settings', label: 'Settings', icon: Settings2 },
-  { id: 'activity', label: 'Activity', icon: Activity },
 ] as const;
-
-const MOCK_CRITERIA = [
-  { name: 'Innovation', weight: 25, description: 'Uniqueness and creative vision of the work.', maxScore: 10 },
-  { name: 'Popularity', weight: 20, description: 'Public reception, streaming numbers, and cultural buzz.', maxScore: 10 },
-  { name: 'Performance', weight: 20, description: 'Overall quality of live performances and delivery.', maxScore: 10 },
-  { name: 'Originality', weight: 20, description: 'Authenticity and departure from existing trends.', maxScore: 10 },
-  { name: 'Impact', weight: 15, description: 'Cultural and social influence of the work.', maxScore: 10 },
-];
-
-const MOCK_ACTIVITY_LOG = [
-  { id: '1', action: 'Nominee Added', detail: 'Burna Boy was added to the category.', time: '2 hours ago', icon: Plus, color: 'text-emerald-500' },
-  { id: '2', action: 'Rules Updated', detail: 'Voting method changed from "Public Only" to "Hybrid".', time: '5 hours ago', icon: Edit3, color: 'text-blue-500' },
-  { id: '3', action: 'Votes Cast', detail: '12,450 new votes were recorded in the last 24h.', time: '1 day ago', icon: Vote, color: 'text-gold-500' },
-  { id: '4', action: 'Branding Changed', detail: 'Category banner was updated by the admin.', time: '2 days ago', icon: Image, color: 'text-purple-500' },
-  { id: '5', action: 'Criteria Modified', detail: 'Weight for "Impact" increased from 10% to 15%.', time: '3 days ago', icon: Target, color: 'text-rose-500' },
-  { id: '6', action: 'Category Created', detail: 'This category was created for the event.', time: '5 days ago', icon: Award, color: 'text-gold-500' },
-  { id: '7', action: 'Nominee Removed', detail: 'A placeholder nominee was removed.', time: '6 days ago', icon: Shield, color: 'text-rose-500' },
-  { id: '8', action: 'Settings Saved', detail: 'Display order and visibility were updated.', time: '1 week ago', icon: Settings2, color: 'text-dark-400' },
-];
 
 export function CategoryDetail() {
   const { eventId, categoryId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const category = mockCategories.find(c => c.id === categoryId && c.eventId === eventId)
-    || mockCategories.find(c => c.id === categoryId)
-    || mockCategories[0];
-  const nominees = mockNominees.filter(n => n.categoryId === category?.id);
+  const category = useQuery(
+    api.categories.queries.getById,
+    categoryId ? { categoryId: categoryId as any } : 'skip'
+  );
+  const allCategories = useQuery(
+    api.categories.queries.getByEvent,
+    eventId ? { eventId: eventId as any } : 'skip'
+  ) ?? [];
+  const nominees = useQuery(
+    api.nominees.queries.getByCategory,
+    category ? { categoryId: category._id } : 'skip'
+  ) ?? [];
 
   const [settings, setSettings] = React.useState({
     enabled: true,
@@ -65,7 +54,7 @@ export function CategoryDetail() {
   const [categorySearch, setCategorySearch] = React.useState('');
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-  const filteredCategories = mockCategories.filter(c =>
+  const filteredCategories = allCategories.filter(c =>
     c.name.toLowerCase().includes(categorySearch.toLowerCase())
   );
 
@@ -163,21 +152,21 @@ export function CategoryDetail() {
                   <div className="max-h-48 overflow-y-auto p-1">
                     {filteredCategories.map((cat) => (
                       <button
-                        key={cat.id}
+                        key={cat._id}
                         onClick={() => {
-                          navigate(`/dashboard/events/${cat.eventId}/categories/${cat.id}`);
+                          navigate(`/dashboard/events/${cat.eventId}/categories/${cat._id}`);
                           setCategoryDropdownOpen(false);
                           setCategorySearch('');
                         }}
                         className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs transition-colors ${
-                          cat.id === category.id
+                          cat._id === category?._id
                             ? 'bg-gold-500/10 text-gold-500'
                             : 'text-dark-300 hover:bg-white/5 hover:text-white'
                         }`}
                       >
                         <Award className="h-3 w-3 shrink-0" />
                         <span className="truncate flex-1 text-left">{cat.name}</span>
-                        {cat.id === category.id && <Check className="h-3 w-3 shrink-0" />}
+                        {cat._id === category?._id && <Check className="h-3 w-3 shrink-0" />}
                       </button>
                     ))}
                     {filteredCategories.length === 0 && (
@@ -290,36 +279,14 @@ export function CategoryDetail() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Recent Activity</CardTitle>
-                <Button variant="ghost" size="sm" className="text-xs text-dark-400" onClick={() => {
-                  const el = document.querySelector('[value="activity"]');
-                  if (el) (el as HTMLElement).click();
-                }}>
-                  View All <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {MOCK_ACTIVITY_LOG.slice(0, 4).map((entry, i) => {
-                const Icon = entry.icon;
-                return (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors border border-white/5"
-                  >
-                    <div className="h-10 w-10 rounded-xl bg-dark-800 flex items-center justify-center shrink-0">
-                      <Icon className={`h-4 w-4 ${entry.color}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white font-medium">{entry.action}</p>
-                      <p className="text-[10px] text-dark-500 truncate">{entry.detail}</p>
-                    </div>
-                    <span className="text-[10px] text-dark-500 shrink-0">{entry.time}</span>
-                  </motion.div>
-                );
-              })}
+            <CardContent>
+              <div className="py-8 text-center">
+                <Activity className="h-8 w-8 text-dark-600 mx-auto mb-3" />
+                <p className="text-sm text-dark-400">No activity yet</p>
+                <p className="text-xs text-dark-500 mt-1">Changes to this category will appear here</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -345,11 +312,11 @@ export function CategoryDetail() {
             <CardContent className="space-y-6">
               {[
                 { label: 'Voting Method', value: 'Hybrid (Public + Jury)', icon: Vote, color: 'text-gold-500' },
-                { label: 'Public Voting', value: 'Enabled (60% weight)', icon: Globe, color: 'text-emerald-500' },
-                { label: 'Jury Voting', value: 'Enabled (40% weight)', icon: Shield, color: 'text-blue-500' },
-                { label: 'Max Votes per User', value: '5 per category', icon: Hash, color: 'text-purple-500' },
-                { label: 'Vote Cooldown', value: '60 minutes', icon: Clock, color: 'text-orange-500' },
-                { label: 'Voting Period', value: 'Jun 1 - Aug 31, 2026', icon: Flame, color: 'text-rose-500' },
+                { label: 'Public Voting', value: 'Enabled', icon: Globe, color: 'text-emerald-500' },
+                { label: 'Jury Voting', value: 'Enabled', icon: Shield, color: 'text-blue-500' },
+                { label: 'Max Votes per User', value: 'Unlimited', icon: Hash, color: 'text-purple-500' },
+                { label: 'Vote Cooldown', value: 'None', icon: Clock, color: 'text-orange-500' },
+                { label: 'Voting Period', value: 'Not set', icon: Flame, color: 'text-rose-500' },
               ].map((rule, i) => {
                 const Icon = rule.icon;
                 return (
@@ -397,7 +364,7 @@ export function CategoryDetail() {
           <div className="space-y-3">
             {sortedNominees.map((nominee, i) => (
               <motion.div
-                key={nominee.id}
+                key={nominee._id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
@@ -456,56 +423,13 @@ export function CategoryDetail() {
             </Button>
           </div>
 
-          <div className="space-y-4">
-            {MOCK_CRITERIA.map((criterion, i) => (
-              <motion.div
-                key={criterion.name}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-              >
-                <Card className="hover:border-gold-500/30 transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between gap-6">
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-3">
-                          <h4 className="text-white font-medium">{criterion.name}</h4>
-                          <span className="px-2 py-0.5 rounded-full bg-gold-500/10 text-gold-500 text-[10px] font-black uppercase tracking-widest">
-                            {criterion.weight}%
-                          </span>
-                        </div>
-                        <p className="text-xs text-dark-400 leading-relaxed">{criterion.description}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xs text-dark-500 uppercase tracking-widest">Max Score</p>
-                        <p className="text-lg font-serif text-white italic mt-0.5">{criterion.maxScore}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 h-2 w-full bg-dark-950 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${criterion.weight}%` }}
-                        transition={{ duration: 0.8, delay: i * 0.1 }}
-                        className="h-full bg-gold-500 rounded-full"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-
-          <Card className="bg-dark-900/40 border-dashed border-2 border-white/5">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-gold-500/10 flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-gold-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-white font-medium">Total Weight: 100%</p>
-                  <p className="text-[10px] text-dark-500 uppercase tracking-widest">All criteria are properly balanced.</p>
-                </div>
-              </div>
+          <Card className="border-dashed border-2 border-white/5">
+            <CardContent className="p-12 flex flex-col items-center text-center space-y-4">
+              <Target className="h-10 w-10 text-dark-500" />
+              <p className="text-sm text-dark-400">No criteria defined yet.</p>
+              <Button size="sm" onClick={() => navigate(`/dashboard/events/${eventId}/categories/${categoryId}/criteria`)}>
+                <Plus className="h-3.5 w-3.5 mr-1.5" /> Add First Criterion
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -720,46 +644,6 @@ export function CategoryDetail() {
                   <Save className="h-4 w-4 mr-2" /> Save Settings
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ==================== ACTIVITY TAB ==================== */}
-        <TabsContent value="activity" className="space-y-8">
-          <div>
-            <h3 className="text-lg font-serif text-white italic">Activity Log</h3>
-            <p className="text-xs text-dark-400 mt-1">A chronological feed of all changes and events in this category.</p>
-          </div>
-
-          <Card>
-            <CardContent className="p-6 space-y-1">
-              {MOCK_ACTIVITY_LOG.map((entry, i) => {
-                const Icon = entry.icon;
-                const isLast = i === MOCK_ACTIVITY_LOG.length - 1;
-                return (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    className="flex gap-4"
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="h-10 w-10 rounded-xl bg-dark-800 flex items-center justify-center shrink-0 border border-white/5">
-                        <Icon className={`h-4 w-4 ${entry.color}`} />
-                      </div>
-                      {!isLast && <div className="w-px flex-1 bg-white/5 my-1" />}
-                    </div>
-                    <div className={`flex-1 ${isLast ? 'pb-0' : 'pb-6'}`}>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-white font-medium">{entry.action}</p>
-                        <span className="text-[10px] text-dark-500">{entry.time}</span>
-                      </div>
-                      <p className="text-xs text-dark-400 mt-1">{entry.detail}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
             </CardContent>
           </Card>
         </TabsContent>

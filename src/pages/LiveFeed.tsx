@@ -1,243 +1,272 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Card, CardContent } from '../components/ui/Card';
-import { PublicNav } from '../components/navigation/PublicNav';
+import { useAuth } from '../lib/convex-auth';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { useToast } from '../lib/toast';
+import { cn } from '../lib/utils';
+import type { Id } from '../../convex/_generated/dataModel';
 import {
-  Eye, Heart, MessageCircle, TrendingUp, Globe, Share2,
-  Bookmark, BookmarkCheck, ExternalLink
+  Eye, MessageSquare, Heart, Trophy, Users, Send, Pin,
+  Share2, ExternalLink, Clock, TrendingUp,
 } from 'lucide-react';
-import {
-  useStreamData, useLikes, useBookmarks, useFollows,
-  mockPosts, currentUser, showToast
-} from '../lib/feedData';
-import { VideoPlayer } from '../components/player';
-import { LikeButton } from '../components/feed/LikeButton';
-import { FollowButton } from '../components/feed/FollowButton';
-import { ViewerCounter } from '../components/feed/ViewerCounter';
-import { ReactionBar } from '../components/feed/ReactionBar';
-import { CommentSection } from '../components/feed/CommentSection';
-import { ShareModal } from '../components/feed/ShareModal';
-import { LiveChat } from '../components/feed/LiveChat';
-import { FeedPostCard } from '../components/feed/FeedPost';
-import { VideoSkeleton, PostSkeleton, ChatSkeleton } from '../components/feed/SkeletonLoader';
-import { NotificationToast } from '../components/feed/NotificationToast';
+
+const REACTION_EMOJIS = ['❤️', '👏', '🔥', '🎉', '😂', '😮', '💯', '🏆'];
 
 export function LiveFeed() {
-  const stream = useStreamData();
-  const { liked, counts, toggle } = useLikes();
-  const { bookmarks, toggle: toggleBookmark } = useBookmarks();
-  const { follows, toggle: toggleFollow } = useFollows();
-  const [shareOpen, setShareOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'feed' | 'comments'>('feed');
+  const { eventId } = useParams<{ eventId: string }>();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
+  const [chatInput, setChatInput] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Get live broadcast for this event
+  const broadcast = useQuery(
+    api.broadcasts.queries.getLiveByEvent,
+    eventId ? { eventId: eventId as Id<'events'> } : 'skip'
+  );
+
+  // Get event data
+  const eventData = useQuery(
+    api.events.queries.getById,
+    eventId ? { eventId: eventId as Id<'events'> } : 'skip'
+  );
+
+  // Chat messages
+  const chatMessages = useQuery(
+    api.liveChat.queries.getRecent,
+    broadcast ? { broadcastId: broadcast._id, limit: 50 } : 'skip'
+  ) ?? [];
+
+  // Reactions
+  const reactions = useQuery(
+    api.liveReactions.queries.getReactionCounts,
+    broadcast ? { broadcastId: broadcast._id } : 'skip'
+  ) ?? {};
+
+  const sendChat = useMutation(api.liveChat.mutations.send);
+  const sendReaction = useMutation(api.liveReactions.mutations.send);
+
+  // Auto-scroll chat
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 1500);
-    return () => clearTimeout(t);
-  }, []);
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages.length]);
 
-  const metrics = [
-    { icon: Eye, label: `${stream.viewerCount.toLocaleString()} watching`, color: 'text-blue-400' },
-    { icon: Heart, label: `${stream.likeCount.toLocaleString()} likes`, color: 'text-red-400' },
-    { icon: MessageCircle, label: `${stream.commentCount.toLocaleString()} comments`, color: 'text-gold-500' },
-    { icon: TrendingUp, label: `Trending #${stream.trending}`, color: 'text-emerald-500' },
-    { icon: Globe, label: `${stream.countries} countries`, color: 'text-purple-400' },
-  ];
+  const handleSendChat = async () => {
+    if (!chatInput.trim() || !broadcast || !user) return;
+    const msg = chatInput.trim();
+    setChatInput('');
+    try {
+      await sendChat({
+        broadcastId: broadcast._id as Id<'broadcasts'>,
+        eventId: eventId as Id<'events'>,
+        message: msg,
+      });
+    } catch (e: any) {
+      toast(e.message || 'Failed to send', 'error');
+      setChatInput(msg);
+    }
+  };
+
+  const handleReaction = async (emoji: string) => {
+    if (!broadcast || !user) return;
+    try {
+      await sendReaction({
+        broadcastId: broadcast._id as Id<'broadcasts'>,
+        eventId: eventId as Id<'events'>,
+        emoji,
+      });
+    } catch (e: any) {
+      toast(e.message, 'error');
+    }
+  };
+
+  // Not live state
+  if (broadcast === null) {
+    return (
+      <div className="min-h-screen bg-dark-950 flex items-center justify-center p-6">
+        <Card className="max-w-md w-full">
+          <CardContent className="py-16 text-center">
+            <div className="h-16 w-16 rounded-2xl bg-dark-800 flex items-center justify-center mx-auto mb-4">
+              <Clock className="h-8 w-8 text-dark-500" />
+            </div>
+            <h2 className="text-xl font-serif text-white mb-2">Not Live Yet</h2>
+            <p className="text-sm text-dark-400">
+              This event isn't broadcasting right now. Check back later.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (broadcast === undefined) return null;
+
+  const videoId = broadcast.youtubeVideoId;
 
   return (
-    <div className="min-h-screen bg-dark-950 font-sans">
-      <PublicNav />
-      <NotificationToast />
-
-      {/* Activity Bar */}
-      <div className="border-b border-white/5 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="flex items-center gap-4 sm:gap-6 py-3 overflow-x-auto no-scrollbar">
-            {metrics.map((m, i) => (
-              <div key={i} className="flex items-center gap-1.5 shrink-0">
-                <m.icon className={`h-3 w-3 ${m.color}`} />
-                <span className="text-[10px] text-dark-400 font-medium whitespace-nowrap">{m.label}</span>
-              </div>
-            ))}
+    <div className="min-h-screen bg-dark-950">
+      <div className="max-w-7xl mx-auto p-4 md:p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
+            <h1 className="text-lg font-serif text-white">{broadcast.title}</h1>
+          </div>
+          <div className="flex items-center gap-4 text-sm text-dark-400">
+            <span className="flex items-center gap-1"><Eye className="h-4 w-4" /> {broadcast.concurrentViewers}</span>
+            <span className="flex items-center gap-1"><MessageSquare className="h-4 w-4" /> {broadcast.totalChatMessages}</span>
+            <button onClick={() => setShowShareModal(true)} className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-dark-400 hover:text-white transition-colors">
+              <Share2 className="h-4 w-4" />
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-10">
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
-
-          {/* Main Content */}
-          <div className="flex-1 min-w-0 space-y-6">
-
+        <div className="grid lg:grid-cols-3 gap-4">
+          {/* Main Area */}
+          <div className="lg:col-span-2 space-y-4">
             {/* Video Player */}
-            {loading ? <VideoSkeleton /> : (
-              <VideoPlayer
-                videoId={stream.youtubeVideoId}
-                status={stream.status}
-                viewerCount={stream.viewerCount}
-                title={stream.title}
-                org="Headies Official"
-                scheduledAt={stream.scheduledAt}
-              />
-            )}
-
-            {/* Stream Info */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div className="space-y-2">
-                  <h1 className="text-xl sm:text-2xl font-serif text-white italic leading-tight">{stream.title}</h1>
-                  <p className="text-[12px] text-dark-400 leading-relaxed max-w-2xl">{stream.description}</p>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] text-dark-500">
-                    <ViewerCounter count={stream.viewerCount} />
-                    {stream.startedAt && (
-                      <span className="flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-                        Started {Math.floor((Date.now() - stream.startedAt) / 60000)} min ago
-                      </span>
-                    )}
-                    <span>Headies Official</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <FollowButton following={!!follows['headies']} onToggle={() => { toggleFollow('headies'); showToast(follows['headies'] ? 'Unfollowed Headies Official' : 'Following Headies Official', '✓'); }} orgName="Headies Official" />
-                  <Button variant="glass" className="h-9 px-3 text-[10px] font-bold uppercase tracking-widest" onClick={() => setShareOpen(true)}>
-                    <Share2 className="h-3.5 w-3.5 mr-1" /> Share
-                  </Button>
-                </div>
-              </div>
-
-              {/* Reactions */}
-              <div className="flex items-center justify-between">
-                <ReactionBar />
-                <div className="flex items-center gap-2">
-                  <LikeButton
-                    liked={!!liked['stream-main']}
-                    count={counts['stream-main'] ?? stream.likeCount}
-                    onToggle={() => { toggle('stream-main', stream.likeCount); showToast(liked['stream-main'] ? 'Removed like' : 'Liked!', '❤️'); }}
-                  />
-                  <button onClick={() => setShareOpen(true)} className="flex items-center gap-1.5 text-[11px] text-dark-400 hover:text-dark-200 transition-colors">
-                    <Share2 className="h-3.5 w-3.5" />
-                  </button>
-                  <button onClick={() => { toggleBookmark('stream-main'); showToast(bookmarks['stream-main'] ? 'Removed from bookmarks' : 'Added to bookmarks', '✓'); }} className="flex items-center gap-1.5 text-[11px] text-dark-400 hover:text-gold-500 transition-colors">
-                    {bookmarks['stream-main'] ? <BookmarkCheck className="h-3.5 w-3.5 text-gold-500" /> : <Bookmark className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
+            <div className="aspect-video rounded-2xl overflow-hidden border border-white/10 bg-dark-900">
+              {videoId ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+                  className="w-full h-full"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center text-dark-500">Stream unavailable</div>
+              )}
             </div>
 
-            {/* Feed / Comments Tabs */}
-            <div className="flex gap-1 border-b border-white/5">
-              {(['feed', 'comments'] as const).map(tab => (
-                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-all border-b-2 -mb-px ${activeTab === tab ? 'border-gold-500 text-gold-500' : 'border-transparent text-dark-400 hover:text-white'}`}>
-                  {tab === 'feed' ? 'Live Feed' : 'Comments'}
+            {/* Pinned Message */}
+            {broadcast.isPinned && broadcast.pinnedMessage && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-gold-500/10 border border-gold-500/20">
+                <Pin className="h-4 w-4 text-gold-500 shrink-0" />
+                <p className="text-sm text-gold-500">{broadcast.pinnedMessage}</p>
+              </div>
+            )}
+
+            {/* Reactions Bar */}
+            <div className="flex items-center justify-center gap-2 py-2">
+              {REACTION_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  onClick={() => handleReaction(emoji)}
+                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-lg transition-all hover:scale-110 active:scale-95"
+                >
+                  {emoji}
                 </button>
               ))}
             </div>
 
-            {/* Content */}
-            {activeTab === 'feed' ? (
-              <div className="space-y-4">
-                {loading ? (
-                  [...Array(3)].map((_, i) => <PostSkeleton key={i} />)
-                ) : mockPosts.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <p className="text-dark-500 text-sm">No posts yet</p>
-                  </div>
-                ) : (
-                  mockPosts.map(post => (
-                    <FeedPostCard
-                      key={post.id}
-                      post={post}
-                      liked={!!liked[post.id]}
-                      likeCount={counts[post.id] ?? post.likes}
-                      onLikeToggle={() => toggle(post.id, post.likes)}
-                      bookmarked={!!bookmarks[post.id]}
-                      onBookmarkToggle={() => toggleBookmark(post.id)}
-                      onShare={() => setShareOpen(true)}
-                      commentCount={post.comments.length}
-                    />
-                  ))
-                )}
+            {/* Reaction Counts */}
+            {Object.keys(reactions).length > 0 && (
+              <div className="flex items-center justify-center gap-3">
+                {Object.entries(reactions).map(([emoji, count]) => (
+                  <span key={emoji} className="text-sm text-dark-400">{emoji} {count as number}</span>
+                ))}
               </div>
-            ) : (
-              <Card className="border-white/5">
-                <CardContent className="p-5">
-                  <CommentSection initialComments={mockPosts[0]?.comments || []} />
+            )}
+
+            {/* Event Info */}
+            {eventData && (
+              <Card>
+                <CardContent className="pt-4">
+                  <h2 className="text-lg font-bold text-white">{eventData.title}</h2>
+                  <p className="text-sm text-dark-400 mt-1">{eventData.description}</p>
                 </CardContent>
               </Card>
             )}
           </div>
 
-          {/* Sidebar */}
-          <aside className="lg:w-80 xl:w-96 shrink-0">
-            <div className="lg:sticky lg:top-24 space-y-4">
+          {/* Chat Sidebar */}
+          <div className="space-y-4">
+            <Card className="flex flex-col" style={{ height: 'calc(100vh - 200px)', minHeight: '400px' }}>
+              <CardHeader className="pb-2 border-b border-white/5">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <MessageSquare className="h-4 w-4 text-gold-500" /> Live Chat
+                </CardTitle>
+              </CardHeader>
 
-              {/* Quick Stats */}
-              <Card className="border-white/10">
-                <CardContent className="p-5 space-y-3">
-                  <p className="text-[9px] font-bold text-dark-600 uppercase tracking-widest">Stream Stats</p>
-                  {metrics.map((m, i) => (
-                    <div key={i} className="flex items-center justify-between text-[11px]">
-                      <span className="flex items-center gap-2 text-dark-400"><m.icon className={`h-3.5 w-3.5 ${m.color}`} />{m.label.split(' ').slice(1).join(' ')}</span>
-                      <span className="font-medium text-white">{m.label.split(' ')[0]}</span>
+              {/* Messages */}
+              <CardContent className="flex-1 overflow-y-auto space-y-3 custom-scrollbar py-3">
+                {chatMessages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MessageSquare className="h-8 w-8 text-dark-600 mx-auto mb-2" />
+                    <p className="text-xs text-dark-500">No messages yet. Be the first!</p>
+                  </div>
+                ) : chatMessages.map((msg: any) => (
+                  <div key={msg._id} className="flex gap-2">
+                    <div className="h-7 w-7 rounded-full bg-gold-500/10 flex items-center justify-center text-[9px] text-gold-500 font-bold shrink-0 border border-gold-500/20">
+                      {msg.user?.name?.[0] ?? '?'}
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-gold-500">{msg.user?.name ?? 'User'}</span>
+                      <p className="text-xs text-dark-200 break-words">{msg.message}</p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={chatEndRef} />
+              </CardContent>
 
-              {/* Live Chat Toggle */}
-              <Card className="border-white/5 overflow-hidden">
-                <button onClick={() => setChatOpen(!chatOpen)} className="w-full flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors">
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" /></div>
-                    <span className="text-[11px] font-bold text-white uppercase tracking-widest">Live Chat</span>
+              {/* Chat Input */}
+              <div className="p-3 border-t border-white/5">
+                {user ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
+                      placeholder="Type a message..."
+                      maxLength={500}
+                      className="flex-1 h-9 px-3 rounded-lg bg-white/5 border border-white/10 text-white text-xs placeholder:text-dark-600 focus:outline-none focus:border-gold-500/50"
+                    />
+                    <Button variant="primary" onClick={handleSendChat} disabled={!chatInput.trim()} className="h-9 px-3">
+                      <Send className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
-                  <span className="text-[9px] font-bold text-dark-500 bg-white/5 px-2 py-0.5 rounded-full">{chatOpen ? 'Hide' : 'Show'}</span>
-                </button>
-                {chatOpen && (
-                  <div className="border-t border-white/5">
-                    {loading ? <ChatSkeleton /> : <LiveChat />}
-                  </div>
+                ) : (
+                  <p className="text-xs text-dark-500 text-center">
+                    <a href="/auth/login" className="text-gold-500 hover:text-gold-400">Sign in</a> to join the chat
+                  </p>
                 )}
-              </Card>
-
-              {/* Related Links */}
-              <Card className="border-white/5">
-                <CardContent className="p-5 space-y-3">
-                  <p className="text-[9px] font-bold text-dark-600 uppercase tracking-widest">Quick Links</p>
-                  <Link to="/events/evt1" className="flex items-center gap-2 text-[11px] text-dark-400 hover:text-gold-500 transition-colors">
-                    <ExternalLink className="h-3.5 w-3.5" /> Event Hub
-                  </Link>
-                  <Link to="/events/evt1" className="flex items-center gap-2 text-[11px] text-dark-400 hover:text-gold-500 transition-colors">
-                    <ExternalLink className="h-3.5 w-3.5" /> Vote Now
-                  </Link>
-                  <Link to="/org/headies" className="flex items-center gap-2 text-[11px] text-dark-400 hover:text-gold-500 transition-colors">
-                    <ExternalLink className="h-3.5 w-3.5" /> Organization
-                  </Link>
-                </CardContent>
-              </Card>
-            </div>
-          </aside>
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
 
       {/* Share Modal */}
-      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} title={stream.title} />
-
-      {/* Footer */}
-      <footer className="border-t border-white/5 py-12 sm:py-24 px-4 sm:px-6 lg:px-12">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start gap-8 sm:gap-12">
-          <div className="space-y-4 sm:space-y-6 max-w-xs"><p className="text-[10px] sm:text-xs text-dark-500 leading-relaxed uppercase tracking-widest font-bold">The world's leading platform for award management, secure voting, and community recognition.</p></div>
-          <div className="flex gap-6">
-            <Link to="/discover" className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-dark-500 hover:text-gold-500 transition-colors">Explore</Link>
-            <Link to="/schedule" className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-dark-500 hover:text-gold-500 transition-colors">Schedule</Link>
-            <Link to="/org/headies" className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-dark-500 hover:text-gold-500 transition-colors">Organization</Link>
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm mx-4 bg-dark-900 border border-white/10 rounded-2xl shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white">Share Stream</h3>
+              <button onClick={() => setShowShareModal(false)} className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-dark-400 hover:text-white">
+                <span className="text-lg">×</span>
+              </button>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: 'Copy Link', action: () => { navigator.clipboard.writeText(window.location.href); toast('Link copied', 'success'); setShowShareModal(false); } },
+                { label: 'WhatsApp', action: () => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`) },
+                { label: 'Twitter', action: () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`) },
+                { label: 'Facebook', action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`) },
+              ].map((opt) => (
+                <button key={opt.label} onClick={opt.action} className="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm text-left transition-colors">
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </footer>
+      )}
     </div>
   );
 }

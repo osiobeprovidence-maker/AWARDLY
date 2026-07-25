@@ -4,30 +4,24 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Mail, Lock, User, ArrowLeft, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInWithGoogle, signUpWithEmail, sendMagicLink } from '../../lib/firebase';
-import { useAuth } from '../../lib/auth';
+import { useAuth } from '../../lib/convex-auth';
 
 export function Signup() {
   const navigate = useNavigate();
-  const auth = useAuth();
+  const { signInWithGoogle, signUpWithEmail } = useAuth();
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [showMagicLink, setShowMagicLink] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   const handleGoogleSignup = async () => {
     setLoading(true);
     setError('');
     try {
-      const user = await signInWithGoogle();
-      if (user) {
-        auth.signUp(user.email || '', user.displayName || 'New User');
-        navigate('/onboarding');
-      }
+      await signInWithGoogle();
+      navigate('/onboarding');
     } catch (err: any) {
       setError(err.message || 'Google sign-up failed');
     } finally {
@@ -40,27 +34,10 @@ export function Signup() {
     setLoading(true);
     setError('');
     try {
-      const user = await signUpWithEmail(email, password, name);
-      if (user) {
-        auth.signUp(user.email || '', name);
-        navigate('/onboarding');
-      }
+      await signUpWithEmail(email, password, name);
+      navigate('/onboarding');
     } catch (err: any) {
       setError(err.message || 'Sign-up failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      await sendMagicLink(email);
-      setMagicLinkSent(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to send magic link');
     } finally {
       setLoading(false);
     }
@@ -129,66 +106,33 @@ export function Signup() {
             exit={{ opacity: 0, x: -20 }}
           >
             <button 
-              onClick={() => { setShowEmailForm(false); setShowMagicLink(false); setMagicLinkSent(false); }}
+              onClick={() => setShowEmailForm(false)}
               className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-dark-500 hover:text-gold-500 transition-colors mb-6 group"
             >
               <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" />
               Back to options
             </button>
 
-            {magicLinkSent ? (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center">
-                  <Mail className="h-8 w-8 text-green-400" />
-                </div>
-                <h3 className="text-lg font-serif text-white mb-2">Check your email</h3>
-                <p className="text-dark-400 text-sm mb-4">
-                  We sent a magic link to <span className="text-white font-medium">{email}</span>
-                </p>
-                <Button variant="ghost" onClick={() => { setMagicLinkSent(false); setShowMagicLink(false); }}>
-                  Back to sign up
-                </Button>
+            <form onSubmit={handleEmailSignup} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-dark-300 ml-1">Full Name</label>
+                <Input icon={User} placeholder="Jane Doe" required value={name} onChange={(e) => setName(e.target.value)} />
               </div>
-            ) : showMagicLink ? (
-              <form onSubmit={handleMagicLink} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-dark-300 ml-1">Email Address</label>
-                  <Input type="email" icon={Mail} placeholder="jane@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                <Button type="submit" className="w-full mt-4" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Magic Link'}
-                </Button>
-                <button type="button" onClick={() => setShowMagicLink(false)} className="w-full text-center text-xs text-dark-400 hover:text-gold-500 transition-colors">
-                  Use password instead
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleEmailSignup} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-dark-300 ml-1">Full Name</label>
-                  <Input icon={User} placeholder="Jane Doe" required value={name} onChange={(e) => setName(e.target.value)} />
-                </div>
-                
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-dark-300 ml-1">Email Address</label>
-                  <Input type="email" icon={Mail} placeholder="jane@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between items-end mb-1">
-                    <label className="text-xs font-medium text-dark-300 ml-1">Password</label>
-                    <button type="button" onClick={() => setShowMagicLink(true)} className="text-xs text-gold-500 hover:text-gold-400 transition-colors">
-                      Use magic link
-                    </button>
-                  </div>
-                  <Input type="password" icon={Lock} placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
+              
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-dark-300 ml-1">Email Address</label>
+                <Input type="email" icon={Mail} placeholder="jane@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-dark-300 ml-1">Password</label>
+                <Input type="password" icon={Lock} placeholder="••••••••" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
 
-                <Button type="submit" className="w-full mt-4" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create Account'}
-                </Button>
-              </form>
-            )}
+              <Button type="submit" className="w-full mt-4" disabled={loading}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create Account'}
+              </Button>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>

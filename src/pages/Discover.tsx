@@ -5,18 +5,19 @@ import { Button } from '../components/ui/Button';
 import { Search, Trophy, Users, Star, ArrowRight, ShieldCheck, Globe, Radio, Filter, Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
-import { headiesLogo, awardStage } from '../data';
+import headiesLogo from '../assets/images/headies_logo_gold_1784644513476.jpg';
+import awardStage from '../assets/images/cinematic_award_stage_1784642261177.jpg';
 import { PublicNav } from '../components/navigation/PublicNav';
 
 const categories = ['All', 'Entertainment', 'Corporate', 'Government', 'Non-Profit', 'Tech'];
 
 const hubs = [
-  { id: 'headies', name: 'Headies Official', category: 'Entertainment', followers: '1.4M', events: '14 Active', rating: 4.9, image: headiesLogo, isLive: true },
-  { id: 'banking', name: 'Global Banking Awards', category: 'Corporate', followers: '450K', events: '2 Active', rating: 4.8, image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&q=80&w=800', isLive: false },
-  { id: 'oscars', name: 'Cinema Excellence', category: 'Entertainment', followers: '5.2M', events: '1 Active', rating: 5.0, image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800', isLive: true },
-  { id: 'un-sdg', name: 'Impact Global', category: 'Non-Profit', followers: '890K', events: '8 Active', rating: 4.7, image: 'https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?auto=format&fit=crop&q=80&w=800', isLive: false },
-  { id: 'fintech', name: 'Fintech Innovators', category: 'Tech', followers: '120K', events: '1 Active', rating: 4.6, image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800', isLive: false },
-  { id: 'govt-gh', name: 'National Honors GH', category: 'Government', followers: '2.1M', events: '4 Active', rating: 4.8, image: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&q=80&w=800', isLive: true },
+  { id: 'headies', slug: 'headies', name: 'Headies Official', category: 'Entertainment', followers: '1.4M', events: '14 Active', rating: 4.9, image: headiesLogo, isLive: true },
+  { id: 'banking', slug: 'bankingawards', name: 'Global Banking Awards', category: 'Corporate', followers: '450K', events: '2 Active', rating: 4.8, image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&q=80&w=800', isLive: false },
+  { id: 'oscars', slug: 'cinema-excellence', name: 'Cinema Excellence', category: 'Entertainment', followers: '5.2M', events: '1 Active', rating: 5.0, image: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800', isLive: true },
+  { id: 'un-sdg', slug: 'impact-global', name: 'Impact Global', category: 'Non-Profit', followers: '890K', events: '8 Active', rating: 4.7, image: 'https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?auto=format&fit=crop&q=80&w=800', isLive: false },
+  { id: 'fintech', slug: 'fintech-innovators', name: 'Fintech Innovators', category: 'Tech', followers: '120K', events: '1 Active', rating: 4.6, image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800', isLive: false },
+  { id: 'govt-gh', slug: 'national-honors-gh', name: 'National Honors GH', category: 'Government', followers: '2.1M', events: '4 Active', rating: 4.8, image: 'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&q=80&w=800', isLive: true },
 ];
 
 export function Discover() {

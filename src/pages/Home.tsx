@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { useNavigate, Link } from 'react-router-dom';
 import { Trophy, Star, Shield, Zap, Globe, Users, ArrowRight, CheckCircle2, ChevronRight, Menu, X } from 'lucide-react';
 import { BrandLogo } from '../components/brand/BrandLogo';
-import { headiesBanner } from '../data';
+import headiesBanner from '../assets/images/headies_banner_crowd_1784644528540.jpg';
 import { PublicNav } from '../components/navigation/PublicNav';
 
 export function Home() {

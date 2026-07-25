@@ -205,3 +205,47 @@ export const incrementVoteCount = mutation({
     });
   },
 });
+
+export const updateJudgingRules = mutation({
+  args: {
+    eventId: v.id('events'),
+    judgingRules: v.object({
+      publicWeight: v.number(),
+      judgeWeight: v.number(),
+      scoreRange: v.number(),
+      lockAfterDeadline: v.boolean(),
+      allowDraftSaving: v.boolean(),
+    }),
+    judgingDeadline: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+    const event = await ctx.db.get(args.eventId);
+    if (!event) throw new Error('Event not found');
+    await requirePermission(ctx, user._id, event.orgId, 'manageJudges');
+
+    await ctx.db.patch(args.eventId, {
+      judgingRules: args.judgingRules,
+      judgingDeadline: args.judgingDeadline,
+      updatedAt: new Date().toISOString(),
+    });
+  },
+});
+
+export const updateJudgingGuidelines = mutation({
+  args: {
+    eventId: v.id('events'),
+    judgingGuidelines: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx);
+    const event = await ctx.db.get(args.eventId);
+    if (!event) throw new Error('Event not found');
+    await requirePermission(ctx, user._id, event.orgId, 'manageJudges');
+
+    await ctx.db.patch(args.eventId, {
+      judgingGuidelines: args.judgingGuidelines,
+      updatedAt: new Date().toISOString(),
+    });
+  },
+});

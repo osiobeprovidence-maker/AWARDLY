@@ -91,7 +91,7 @@ export function VideoPlayer({ videoId, status, scheduledAt }: VideoPlayerProps) 
           <button onClick={() => setIsTheatre(!isTheatre)} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
             <MonitorPlay className="h-3.5 w-3.5 text-white" />
           </button>
-          <button onClick={() => { const el = document.querySelector('iframe'); if (el) { const doc = el.contentDocument || el.contentWindow?.document; if (doc) doc.documentElement.requestPictureInPicture?.(); } }} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+          <button onClick={() => { const el = document.querySelector('iframe'); if (el) { const doc = el.contentDocument || el.contentWindow?.document; if (doc) (doc.documentElement as any).requestPictureInPicture?.(); } }} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
             <PictureInPicture2 className="h-3.5 w-3.5 text-white" />
           </button>
           <button onClick={toggleFullscreen} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">

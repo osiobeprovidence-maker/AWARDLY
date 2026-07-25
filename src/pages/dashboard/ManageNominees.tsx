@@ -25,7 +25,8 @@ import { Input } from '../../components/ui/Input';
 import { ImageUpload } from '../../components/ImageUpload';
 import { useToast } from '../../lib/toast';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
-import { mockNominees, mockCategories } from '../../data';
+import { useQuery } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 import { Nominee } from '../../types';
 
 type SortKey = 'name' | 'votes' | 'date';
@@ -47,16 +48,11 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 function mapNominees(raw: Nominee[]): NomineeWithMeta[] {
-  return raw.map((n, i) => ({
+  return raw.map((n) => ({
     ...n,
-    bio:
-      n.description ||
-      'Distinguished nominee recognized for outstanding contributions and excellence in their field.',
-    twitter: i % 3 === 0 ? '@nominee' : undefined,
-    instagram: i % 2 === 0 ? '@nominee' : undefined,
-    website: i % 4 === 0 ? 'https://nominee.com' : undefined,
-    status: (['active', 'pending', 'active', 'active', 'pending', 'inactive'] as const)[i % 6],
-    addedAt: new Date(Date.now() - i * 86400000).toISOString(),
+    bio: n.description || '',
+    status: 'active' as const,
+    addedAt: new Date().toISOString(),
   }));
 }
 
@@ -65,11 +61,21 @@ export function ManageNominees() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const category = mockCategories.find(c => c.id === categoryId) || mockCategories[0];
+  const category = useQuery(
+    api.categories.queries.getById,
+    categoryId ? { categoryId: categoryId as any } : 'skip'
+  ) || { _id: '' as any, name: 'Loading...', eventId: '' as any };
 
-  const [nominees, setNominees] = React.useState<NomineeWithMeta[]>(() =>
-    mapNominees(mockNominees.filter(n => n.categoryId === categoryId))
-  );
+  const rawNominees = useQuery(
+    api.nominees.queries.getByCategory,
+    categoryId ? { categoryId: categoryId as any } : 'skip'
+  ) ?? [];
+
+  const [nominees, setNominees] = React.useState<NomineeWithMeta[]>([]);
+
+  React.useEffect(() => {
+    setNominees(mapNominees(rawNominees.map(n => ({ ...n, id: n._id }))));
+  }, [rawNominees]);
   const [search, setSearch] = React.useState('');
   const [sort, setSort] = React.useState<SortKey>('name');
   const [filterStatus, setFilterStatus] = React.useState<FilterStatus>('all');
@@ -541,11 +547,9 @@ function NomineeModal({
             label="Profile Photo"
             aspectRatio="square"
             value={imageUrl}
-            onImageSelect={file => {
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => setImageUrl(reader.result as string);
-                reader.readAsDataURL(file);
+            onImageSelect={url => {
+              if (url) {
+                setImageUrl(url);
               } else {
                 setImageUrl(undefined);
               }

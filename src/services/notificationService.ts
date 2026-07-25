@@ -3,40 +3,41 @@
  * Wraps Convex queries/mutations for notifications.
  */
 import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 // ─── Queries ────────────────────────────────────────────────────────────────
 
-export function useNotifications(userId: string | undefined, limit?: number) {
+export function useNotifications(firebaseUid: string | undefined, limit?: number) {
   return useQuery(
-    'notifications:getForUser',
-    userId ? { userId: userId as any, limit } : 'skip'
+    api.notifications.queries.getForUser,
+    firebaseUid ? { firebaseUid, limit } : 'skip'
   );
 }
 
-export function useUnreadNotificationCount(userId: string | undefined) {
+export function useUnreadNotificationCount(firebaseUid: string | undefined) {
   return useQuery(
-    'notifications:getUnreadCount',
-    userId ? { userId: userId as any } : 'skip'
+    api.notifications.queries.getUnreadCount,
+    firebaseUid ? { firebaseUid } : 'skip'
   );
 }
 
-export function useUnreadNotifications(userId: string | undefined) {
+export function useUnreadNotifications(firebaseUid: string | undefined) {
   return useQuery(
-    'notifications:getUnread',
-    userId ? { userId: userId as any } : 'skip'
+    api.notifications.queries.getUnread,
+    firebaseUid ? { firebaseUid } : 'skip'
   );
 }
 
 // ─── Mutations ──────────────────────────────────────────────────────────────
 
 export function useMarkNotificationRead() {
-  return useMutation('notifications:markAsRead');
+  return useMutation(api.notifications.mutations.markAsRead);
 }
 
 export function useMarkAllNotificationsRead() {
-  return useMutation('notifications:markAllAsRead');
+  return useMutation(api.notifications.mutations.markAllAsRead);
 }
 
 export function useDeleteNotification() {
-  return useMutation('notifications:deleteNotification');
+  return useMutation(api.notifications.mutations.deleteNotification);
 }

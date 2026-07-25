@@ -5,10 +5,7 @@ export const getUrl = query({
   args: { storageId: v.string() },
   handler: async (ctx, args) => {
     if (!args.storageId) return null;
-
-    const url = await ctx.storage.getUrl(args.storageId as any);
-    console.log('Resolved URL:', url);
-    return url;
+    return await ctx.storage.getUrl(args.storageId as any);
   },
 });
 
