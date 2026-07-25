@@ -182,7 +182,7 @@ export function Resources() {
               <BookOpen className="h-3 w-3" /> Learning Center
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif text-white italic leading-[1.1]">
-              Master <span className="text-gold-500">Awardly</span>
+              Master <span className="text-gold-500">Awwardly</span>
             </h1>
             <p className="text-dark-400 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
               Expert guides, video tutorials, case studies, templates, and best practices for running world-class award programs.
@@ -426,7 +426,7 @@ export function Resources() {
               <div className="max-w-3xl mx-auto">
                 <div className="text-center mb-8">
                   <h2 className="text-2xl sm:text-3xl font-serif text-white italic mb-3">Frequently Asked Questions</h2>
-                  <p className="text-dark-500 text-sm">Quick answers to common questions about Awardly.</p>
+                  <p className="text-dark-500 text-sm">Quick answers to common questions about Awwardly.</p>
                 </div>
                 <div className="relative mb-6">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-dark-600" />
@@ -487,7 +487,7 @@ export function Resources() {
             {/* Footer CTA */}
             <section className="py-16 border-t border-white/5 text-center">
               <h2 className="text-3xl sm:text-4xl font-serif text-white italic mb-4">Ready to launch your own award program?</h2>
-              <p className="text-dark-400 text-sm mb-8 max-w-md mx-auto">Join thousands of organizers who use Awardly to run world-class award ceremonies.</p>
+              <p className="text-dark-400 text-sm mb-8 max-w-md mx-auto">Join thousands of organizers who use Awwardly to run world-class award ceremonies.</p>
               <div className="flex flex-wrap justify-center gap-3">
                 <Link to="/onboarding"><Button variant="primary" className="h-12 px-8 text-[11px] font-bold uppercase tracking-widest"><Zap className="h-4 w-4 mr-2" /> Create Hub</Button></Link>
                 <Link to="/pricing"><Button variant="glass" className="h-12 px-8 text-[11px] font-bold uppercase tracking-widest"><BarChart3 className="h-4 w-4 mr-2" /> Explore Pricing</Button></Link>

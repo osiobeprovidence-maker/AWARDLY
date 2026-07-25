@@ -37,7 +37,7 @@ export function Home() {
             transition={{ delay: 0.2 }}
             className="text-lg md:text-xl text-dark-300 max-w-2xl mb-12 leading-relaxed"
           >
-            Awardly is the all-in-one platform for organizations to launch, manage, and monetize world-class awards. Create your own branded Award Hub, accept nominations, run secure voting, and celebrate excellence with confidence.
+            Awwardly is the all-in-one platform for organizations to launch, manage, and monetize world-class awards. Create your own branded Award Hub, accept nominations, run secure voting, and celebrate excellence with confidence.
           </motion.p>
 
           <motion.div 

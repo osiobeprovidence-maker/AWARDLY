@@ -151,7 +151,7 @@ const eventsData: Record<string, EventData> = {
     ],
     faq: [
       { question: 'How do I register to attend?', answer: 'Registration opens on our official website. Limited VIP seats are available.' },
-      { question: 'Can I vote online?', answer: 'Yes! Public voting is open on Awardly. Vote once per category per day.' },
+      { question: 'Can I vote online?', answer: 'Yes! Public voting is open on Awwardly. Vote once per category per day.' },
       { question: 'Is there a dress code?', answer: 'The ceremony follows a Black Tie dress code. Formal attire is required.' },
     ],
     relatedEvents: [

@@ -128,7 +128,7 @@ const awardsData: Record<string, AwardData> = {
     faq: [
       { question: 'How do I nominate?', answer: 'Nominations are submitted through the official Headies portal during the nomination window. Artists, labels, and fans can submit entries for consideration by the screening committee.' },
       { question: 'Can anyone vote?', answer: 'Yes! Public voting is open to everyone with a valid email address. You can vote once per category per day during the voting period.' },
-      { question: 'Is voting free?', answer: 'Yes, public voting on Awardly is completely free. Premium voting packages with additional features are available but not required.' },
+      { question: 'Is voting free?', answer: 'Yes, public voting on Awwardly is completely free. Premium voting packages with additional features are available but not required.' },
       { question: 'How are winners selected?', answer: 'Winners are determined through a combination of public voting (40%) and academy voting (60%). The final judging panel reviews all nominees before the ceremony.' },
       { question: 'Can organizations sponsor the awards?', answer: 'Yes, sponsorship packages are available. Visit our partnerships page or contact our team for more information about brand integration opportunities.' },
     ],

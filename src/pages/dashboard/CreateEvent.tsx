@@ -954,7 +954,7 @@ export function CreateEvent() {
               Powered by MyInvite
             </span>
           </CardTitle>
-          <CardDescription>Sell tickets for your award ceremony without leaving Awardly.</CardDescription>
+          <CardDescription>Sell tickets for your award ceremony without leaving Awwardly.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {(data.awardFormat === 'online') ? (
@@ -990,7 +990,7 @@ export function CreateEvent() {
                 <ShieldCheck className="h-5 w-5 text-gold-500 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm text-white font-medium">Secure event registration powered by MyInvite</p>
-                  <p className="text-xs text-dark-400 mt-1">Handle ticket sales, attendee registration, QR check-in, and guest management — all within Awardly.</p>
+                  <p className="text-xs text-dark-400 mt-1">Handle ticket sales, attendee registration, QR check-in, and guest management — all within Awwardly.</p>
                 </div>
               </div>
             </div>

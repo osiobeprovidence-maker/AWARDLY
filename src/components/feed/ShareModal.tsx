@@ -23,7 +23,7 @@ export function ShareModal({ open, onClose, title }: ShareModalProps) {
   const url = typeof window !== 'undefined' ? window.location.href : '';
 
   const handleShare = (action: string) => {
-    const text = encodeURIComponent(`${title} — Watch live on Awardly`);
+    const text = encodeURIComponent(`${title} — Watch live on Awwardly`);
     const encodedUrl = encodeURIComponent(url);
     switch (action) {
       case 'copy':

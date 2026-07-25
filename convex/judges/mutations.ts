@@ -20,7 +20,7 @@ export const invite = mutation({
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', args.email))
       .unique();
-    if (!targetUser) throw new Error('User not found. They must have an Awardly account.');
+    if (!targetUser) throw new Error('User not found. They must have an Awwardly account.');
 
     // Check if already a judge for this event
     const existing = await ctx.db

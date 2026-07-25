@@ -259,7 +259,7 @@ export function JudgeManagement() {
                     className="w-full h-11 pl-10 pr-4 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder:text-dark-600 focus:outline-none focus:border-gold-500/50"
                   />
                 </div>
-                <p className="text-xs text-dark-500 mt-1">They must already have an Awardly account.</p>
+                <p className="text-xs text-dark-500 mt-1">They must already have an Awwardly account.</p>
               </div>
 
               <div>

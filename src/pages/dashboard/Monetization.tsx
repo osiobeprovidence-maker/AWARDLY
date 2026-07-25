@@ -430,7 +430,7 @@ export function Monetization() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Platform Fees</CardTitle>
-          <CardDescription>Awardly charges the following fees for payment processing.</CardDescription>
+          <CardDescription>Awwardly charges the following fees for payment processing.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">

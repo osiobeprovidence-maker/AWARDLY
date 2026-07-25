@@ -420,7 +420,7 @@ export function DashboardLive() {
             {[
               { step: '1', icon: Youtube, label: 'Connect YouTube', desc: 'Paste your YouTube live URL', color: 'text-red-500' },
               { step: '2', icon: Settings, label: 'Configure', desc: 'Set title, event, schedule', color: 'text-violet-500' },
-              { step: '3', icon: Radio, label: 'Go Live', desc: 'Embed stream on Awardly', color: 'text-gold-500' },
+              { step: '3', icon: Radio, label: 'Go Live', desc: 'Embed stream on Awwardly', color: 'text-gold-500' },
               { step: '4', icon: Users, label: 'Engage', desc: 'Chat, vote, donate, react', color: 'text-emerald-500' },
             ].map((item, i) => (
               <div key={i} className="text-center">
@@ -505,7 +505,7 @@ export function DashboardLive() {
             <h3 className="text-xl font-serif text-white mb-2">Ready to go live?</h3>
             <p className="text-sm text-dark-400 max-w-md mx-auto mb-6">
               Connect your YouTube live stream and create an interactive viewing experience for your audience.
-              Fans can watch, vote, chat, donate, and engage — all on Awardly.
+              Fans can watch, vote, chat, donate, and engage — all on Awwardly.
             </p>
             <Button variant="primary" onClick={() => setShowWizard(true)} className="flex items-center gap-2 mx-auto">
               <Radio className="h-4 w-4" /> Go Live
