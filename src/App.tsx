@@ -37,6 +37,10 @@ import { TeamManagement } from './pages/dashboard/Team';
 import { JudgeManagement } from './pages/dashboard/JudgeManagement';
 import { NotificationsPage } from './pages/dashboard/Notifications';
 import { UserProfile } from './pages/profile/UserProfile';
+import { MyAwards } from './pages/dashboard/MyAwards';
+import { MyNominations } from './pages/dashboard/MyNominations';
+import { MyTickets } from './pages/dashboard/MyTickets';
+import { SavedEvents } from './pages/dashboard/SavedEvents';
 import { Pricing } from './pages/Pricing';
 import { Resources } from './pages/Resources';
 import { ArticlePage } from './pages/resources/ArticlePage';
@@ -131,6 +135,11 @@ export default function App() {
                 <Route path="settings" element={<DashboardSettings />} />
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="profile/:userId" element={<UserProfile />} />
+                <Route path="my-awards" element={<MyAwards />} />
+                <Route path="my-nominations" element={<MyNominations />} />
+                <Route path="my-tickets" element={<MyTickets />} />
+                <Route path="saved" element={<SavedEvents />} />
+                <Route path="org" element={<DashboardOverview />} />
               </Route>
 
               {/* Public Org Routes */}

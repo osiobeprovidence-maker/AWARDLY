@@ -4,272 +4,278 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../components/ui/Button';
 import { 
   Trophy, Users, Eye, ArrowUpRight, TrendingUp, 
-  MessageSquare, PlusCircle, Radio, Image, Send, LayoutGrid, Clock, Vote
+  Medal, Ticket, Bookmark, Building2, Star, Zap, User
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'motion/react';
-import { useToast } from '../../lib/toast';
-import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useAuth } from '../../lib/convex-auth';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 
 export function DashboardOverview() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { currentOrg, user, currentRole, organizations } = useAuth();
+  const { user, currentOrg, organizations } = useAuth();
 
-  const orgEvents = useQuery(
-    api.events.queries.getByOrg,
-    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
-  ) ?? [];
-  const activeEvent = orgEvents.find(e => e.isVotingActive);
-
-  const feedPostsResult = useQuery(
-    api.feeds.queries.getByOrg,
-    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
+  const convexUser = useQuery(
+    api.users.queries.getUserByFirebaseUid,
+    user?.id ? { firebaseUid: user.id } : 'skip'
   );
-  const feedPosts = Array.isArray(feedPostsResult) ? feedPostsResult : (feedPostsResult?.posts ?? []);
 
-  const orgMembers = useQuery(
-    api.organizationMembers.queries.getOrgMembers,
-    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
-  ) ?? [];
+  const memberships = useQuery(
+    api.organizationMembers.queries.getMyMemberships,
+    convexUser ? { userId: convexUser._id } : 'skip'
+  );
 
-  const totalVotes = orgEvents.reduce((s, e) => s + (e.totalVotes || 0), 0);
-  const activeEvents = orgEvents.filter(e => e.status === 'published').length;
+  const bookmarks = useQuery(
+    api.feeds.queries.getMyBookmarks,
+    convexUser ? { userId: convexUser._id } : 'skip'
+  );
 
-  // Build simple chart from event vote counts
-  const chartData = orgEvents.length > 0
-    ? orgEvents.slice(0, 7).map((e, i) => ({
-        name: e.title.length > 8 ? e.title.slice(0, 8) + '…' : e.title,
-        votes: e.totalVotes || 0,
-      }))
-    : [{ name: 'No events', votes: 0 }];
+  const userPosts = useQuery(
+    api.feeds.queries.getByAuthor,
+    convexUser ? { authorId: convexUser._id } : 'skip'
+  );
 
-  if (!currentOrg) {
-    return (
-      <div className="space-y-8 pb-20">
-        <Breadcrumbs />
-        <div className="text-center py-20">
-          <Users className="h-16 w-16 text-dark-500 mx-auto mb-6" />
-          <h1 className="text-3xl font-serif text-white mb-3">Welcome to Awardly</h1>
-          <p className="text-dark-400 max-w-md mx-auto mb-8">
-            {organizations.length === 0
-              ? "Get started by creating your first organization."
-              : "Select an organization from the sidebar to get started."}
-          </p>
-          {organizations.length === 0 && (
-            <Button onClick={() => navigate('/onboarding')} size="lg" className="shadow-xl shadow-gold-500/20">
-              <PlusCircle className="h-4 w-4 mr-2" /> Create Organization
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
+  const completion = useQuery(
+    api.users.queries.getProfileCompletion,
+    convexUser ? { userId: convexUser._id } : 'skip'
+  );
+
+  const stats = [
+    { label: 'Reputation', value: convexUser?.reputationScore ?? 0, icon: Star, color: 'text-gold-500', to: '/dashboard/profile' },
+    { label: 'Awards', value: convexUser?.awardsCount ?? 0, icon: Trophy, color: 'text-gold-500', to: '/dashboard/my-awards' },
+    { label: 'Nominations', value: convexUser?.nominationsCount ?? 0, icon: Medal, color: 'text-amber-400', to: '/dashboard/my-nominations' },
+    { label: 'Followers', value: convexUser?.followerCount ?? 0, icon: Users, color: 'text-sky-400', to: '/dashboard/profile' },
+  ];
 
   return (
-    <div className="space-y-10 pb-20">
-      {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-        <div>
-           <Breadcrumbs />
-           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-             <h1 className="text-4xl font-serif text-white tracking-tight mb-2 italic">Welcome, {currentOrg.name}</h1>
-             <p className="text-dark-400 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-gold-500" />
-                {currentRole && <span className="text-gold-500 font-bold uppercase text-[10px] tracking-widest mr-2">{currentRole.replace('_', ' ')}</span>}
-                {orgEvents.length} event{orgEvents.length !== 1 ? 's' : ''} across your hub.
-             </p>
-           </motion.div>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          <Button variant="outline" className="flex-1 lg:flex-initial h-12 border-white/10" onClick={() => navigate('/dashboard/team')}>
-             <Users className="h-4 w-4 mr-2" /> Team
-          </Button>
-          <Button variant="outline" className="flex-1 lg:flex-initial h-12 border-white/10" onClick={() => navigate('/dashboard/live')}>
-             <Radio className="h-4 w-4 mr-2" /> Go Live
-          </Button>
-          <Button className="flex-1 lg:flex-initial h-12 shadow-xl shadow-gold-500/20" onClick={() => navigate('/dashboard/events/create')}>
-             <Trophy className="h-4 w-4 mr-2" /> Create Event
-          </Button>
+    <div className="space-y-8 pb-20">
+      {/* Welcome Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+        <div className="flex items-center gap-4">
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} className="h-16 w-16 rounded-2xl object-cover border-2 border-white/10" alt="" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="h-16 w-16 rounded-2xl bg-gold-500/10 flex items-center justify-center border border-gold-500/20">
+              <User className="h-8 w-8 text-gold-500" />
+            </div>
+          )}
+          <div>
+            <motion.h1 
+              initial={{ opacity: 0, x: -20 }} 
+              animate={{ opacity: 1, x: 0 }}
+              className="text-3xl font-serif text-white tracking-tight italic"
+            >
+              Welcome back, {user?.name?.split(' ')[0] || 'there'}
+            </motion.h1>
+            <p className="text-dark-400 text-sm mt-1">
+              {currentOrg 
+                ? `Managing ${currentOrg.name}` 
+                : organizations.length > 0 
+                  ? `${organizations.length} organization${organizations.length !== 1 ? 's' : ''} available`
+                  : 'Your personal award management hub'}
+            </p>
+          </div>
         </div>
       </div>
 
+      {/* Profile Completion */}
+      {completion && completion.percentage < 100 && (
+        <Card className="p-5 bg-gold-500/5 border-gold-500/10">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-bold text-white">Complete Your Profile</p>
+            <span className="text-xs font-bold text-gold-500">{completion.percentage}%</span>
+          </div>
+          <div className="h-2 bg-dark-800 rounded-full overflow-hidden mb-3">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${completion.percentage}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="h-full bg-gold-500 rounded-full"
+            />
+          </div>
+          {completion.suggestions.length > 0 && (
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-dark-400">{completion.suggestions[0]}</p>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/profile')} className="text-[10px] font-bold uppercase tracking-widest text-gold-500">
+                Complete <ArrowUpRight className="h-3 w-3 ml-1" />
+              </Button>
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { title: 'Total Followers', value: currentOrg.followerCount.toLocaleString(), change: 'All time', icon: Users, color: 'text-blue-400' },
-          { title: 'Active Events', value: String(activeEvents), change: `${orgEvents.length} total`, icon: Trophy, color: 'text-gold-500' },
-          { title: 'Team Members', value: String(orgMembers.length), change: currentRole === 'owner' ? 'Manage' : 'View', icon: Users, color: 'text-emerald-400' },
-          { title: 'Total Votes', value: totalVotes.toLocaleString(), change: activeEvent ? 'Active' : 'None', icon: Vote, color: 'text-white' },
-        ].map((stat, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <Card className="hover:border-gold-500/30 transition-all group overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                 <stat.icon className="h-16 w-16" />
-              </div>
-              <CardContent className="p-0">
-                <p className="text-[10px] font-bold text-dark-500 uppercase tracking-[0.2em] mb-4">{stat.title}</p>
-                <div className="flex items-end justify-between">
-                   <h3 className="text-3xl font-serif text-white leading-none">{stat.value}</h3>
-                   <div className="px-2 py-1 rounded bg-white/5 border border-white/5 text-[10px] font-bold text-emerald-400">{stat.change}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {stats.map((stat, i) => (
+          <motion.div 
+            key={stat.label} 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay: i * 0.1 }}
+          >
+            <Card 
+              className="hover:border-gold-500/30 transition-all group cursor-pointer overflow-hidden relative"
+              onClick={() => navigate(stat.to)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                  <p className="text-[9px] font-bold text-dark-500 uppercase tracking-widest">{stat.label}</p>
                 </div>
+                <h3 className="text-2xl font-serif text-white">{stat.value}</h3>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-           <Card className="bg-dark-900/40 border-white/5">
-               <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                     <CardTitle className="font-serif text-xl">Engagement Analytics</CardTitle>
-                     <CardDescription>Votes per event</CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-serif">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[
+                { label: 'Edit Profile', icon: User, to: '/dashboard/profile', desc: 'Update your personal information' },
+                { label: 'Browse Events', icon: Trophy, to: '/dashboard/events', desc: 'Discover awards and competitions' },
+                { label: 'Community Feed', icon: Zap, to: '/dashboard/feed', desc: 'See what\'s happening' },
+                ...(organizations.length === 0 ? [{ label: 'Create Organization', icon: Building2, to: '/onboarding', desc: 'Start managing your own awards' }] : []),
+              ].map(action => (
+                <button 
+                  key={action.label} 
+                  onClick={() => navigate(action.to)} 
+                  className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-gold-500/10 transition-colors shrink-0">
+                    <action.icon className="h-5 w-5 text-dark-500 group-hover:text-gold-500" />
                   </div>
-               </CardHeader>
-              <CardContent className="pt-6">
-                 <div className="min-h-[340px] w-full">
-                   <ResponsiveContainer width="100%" height={340}>
-                      <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                       <defs>
-                         <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                           <stop offset="5%" stopColor="#c68a35" stopOpacity={0.4}/>
-                           <stop offset="95%" stopColor="#c68a35" stopOpacity={0}/>
-                         </linearGradient>
-                       </defs>
-                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                       <XAxis dataKey="name" stroke="#4f4f4f" fontSize={10} tickLine={false} axisLine={false} tick={{ transform: 'translate(0, 10)' }} />
-                       <YAxis stroke="#4f4f4f" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(value) => `${value / 1000}k`} />
-                       <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }} itemStyle={{ color: '#fff', fontSize: '12px' }} cursor={{ stroke: 'rgba(198, 138, 53, 0.2)', strokeWidth: 20 }} />
-                        <Area type="monotone" dataKey="votes" stroke="#c68a35" strokeWidth={3} fillOpacity={1} fill="url(#chartGradient)" />
-                      </AreaChart>
-                   </ResponsiveContainer>
-                 </div>
-              </CardContent>
-           </Card>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white group-hover:text-gold-500 transition-colors">{action.label}</p>
+                    <p className="text-[10px] text-dark-500">{action.desc}</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-dark-500 group-hover:text-gold-500 shrink-0" />
+                </button>
+              ))}
+            </CardContent>
+          </Card>
 
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="bg-gold-500/5 border-gold-500/10">
-                 <CardHeader>
-                    <div className="flex items-center gap-3">
-                       <div className="h-10 w-10 rounded-xl bg-gold-500 flex items-center justify-center text-dark-950 font-bold">
-                          <PlusCircle className="h-5 w-5" />
-                       </div>
-                       <div>
-                          <CardTitle className="text-lg">Quick Draft</CardTitle>
-                          <CardDescription>Post a community update</CardDescription>
-                       </div>
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg font-serif">Recent Activity</CardTitle>
+              {userPosts && userPosts.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/profile')} className="text-[10px] font-bold uppercase tracking-widest text-dark-500">
+                  View All
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {!userPosts || userPosts.length === 0 ? (
+                <div className="text-center py-8">
+                  <Zap className="h-8 w-8 text-dark-600 mx-auto mb-3" />
+                  <p className="text-sm text-dark-400">No activity yet</p>
+                  <p className="text-[10px] text-dark-500 mt-1">Your posts and interactions will appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {userPosts.slice(0, 3).map((post: any) => (
+                    <div key={post._id} className="flex gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                      <div className="h-2 w-2 rounded-full bg-gold-500 mt-2 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-dark-300 line-clamp-2">{post.content}</p>
+                        <p className="text-[10px] text-dark-500 mt-1">
+                          {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}
+                        </p>
+                      </div>
                     </div>
-                 </CardHeader>
-                 <CardContent className="space-y-4">
-                    <textarea className="w-full bg-dark-950/50 border border-white/5 rounded-xl p-4 text-sm resize-none focus:border-gold-500/50 focus:outline-none h-24" placeholder="Say something to your followers..." />
-                    <div className="flex justify-between items-center">
-                       <div className="flex gap-2">
-                          <Button variant="glass" size="icon" className="h-8 w-8"><Image className="h-4 w-4" /></Button>
-                          <Button variant="glass" size="icon" className="h-8 w-8"><LayoutGrid className="h-4 w-4" /></Button>
-                       </div>
-                       <Button size="sm" className="px-6 h-8 text-[10px] font-bold uppercase tracking-widest" onClick={() => toast('Update shared with community!', 'success')}><Send className="h-3 w-3 mr-2" /> Share</Button>
-                    </div>
-                 </CardContent>
-              </Card>
-
-              <Card className="bg-dark-900/40">
-                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                       <CardTitle className="text-lg">Quick Actions</CardTitle>
-                    </div>
-                 </CardHeader>
-                 <CardContent className="space-y-3">
-                    {[
-                      { label: 'Create Event', icon: Trophy, to: '/dashboard/events/create' },
-                      { label: 'Manage Team', icon: Users, to: '/dashboard/team' },
-                      { label: 'View Analytics', icon: TrendingUp, to: '/dashboard/analytics' },
-                      { label: 'Public Profile', icon: Eye, to: `/org/${currentOrg.slug}` },
-                    ].map(a => (
-                      <button key={a.label} onClick={() => navigate(a.to)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group">
-                        <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-gold-500/10 transition-colors">
-                          <a.icon className="h-4 w-4 text-dark-500 group-hover:text-gold-500" />
-                        </div>
-                        <span className="text-sm text-dark-300 group-hover:text-white transition-colors">{a.label}</span>
-                        <ArrowUpRight className="h-3 w-3 text-dark-500 group-hover:text-gold-500 ml-auto" />
-                      </button>
-                    ))}
-                 </CardContent>
-              </Card>
-           </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="space-y-8">
-           {activeEvent && (
-             <Card className="border-gold-500/20 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4">
-                   <Radio className="h-5 w-5 text-red-500 animate-pulse" />
+        {/* Right Column */}
+        <div className="space-y-6">
+          {/* Organizations */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg font-serif">Organizations</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/onboarding')} className="text-[10px] font-bold uppercase tracking-widest text-gold-500">
+                <Building2 className="h-3 w-3 mr-1" /> Create
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {organizations.length === 0 ? (
+                <div className="text-center py-6">
+                  <Building2 className="h-8 w-8 text-dark-600 mx-auto mb-3" />
+                  <p className="text-sm text-dark-400 mb-3">No organizations yet</p>
+                  <Button size="sm" onClick={() => navigate('/onboarding')} className="text-[10px]">
+                    Create Your First
+                  </Button>
                 </div>
-                <CardHeader>
-                   <CardTitle className="text-lg font-serif">Event Spotlight</CardTitle>
-                   <CardDescription>Current most active event</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   <div className="aspect-[4/3] rounded-2xl overflow-hidden relative mb-6 group cursor-pointer border border-white/5" onClick={() => navigate('/dashboard/events')}>
-                      {activeEvent.coverUrl && <img src={activeEvent.coverUrl} className="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt="" />}
-                      <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/20 to-transparent" />
-                      <div className="absolute bottom-4 left-4">
-                         <h4 className="text-white font-serif text-xl mb-1 italic">{activeEvent.title}</h4>
-                         <span className="text-[10px] font-bold text-gold-500 uppercase tracking-widest">{activeEvent.status === 'published' ? 'Live' : 'Draft'}</span>
+              ) : (
+                <div className="space-y-2">
+                  {organizations.slice(0, 4).map((org: any) => (
+                    <button
+                      key={org.id}
+                      onClick={() => navigate('/dashboard/events')}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left group"
+                    >
+                      {org.logoUrl ? (
+                        <img src={org.logoUrl} className="h-8 w-8 rounded-lg object-cover shrink-0" alt="" />
+                      ) : (
+                        <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                          <Building2 className="h-4 w-4 text-dark-500" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white truncate group-hover:text-gold-500 transition-colors">{org.name}</p>
+                        <p className="text-[10px] text-dark-500">{org.eventCount} events</p>
                       </div>
-                   </div>
-                   <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                         <p className="text-[8px] font-bold text-dark-500 uppercase tracking-widest mb-1">Total Votes</p>
-                         <p className="text-white font-medium">{(activeEvent.totalVotes || 0).toLocaleString()}</p>
-                      </div>
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/5">
-                         <p className="text-[8px] font-bold text-dark-500 uppercase tracking-widest mb-1">Categories</p>
-                         <p className="text-white font-medium">{activeEvent.categoryCount || 0}</p>
-                      </div>
-                   </div>
-                   <Button className="w-full h-12 shadow-xl shadow-gold-500/10" onClick={() => navigate('/dashboard/events')}>Manage Events</Button>
-                </CardContent>
-             </Card>
-           )}
+                      <ArrowUpRight className="h-3.5 w-3.5 text-dark-500 group-hover:text-gold-500 shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-           <Card className="bg-dark-950 border-white/5">
-              <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-white/5">
-                 <CardTitle className="text-lg flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-gold-500" /> Activity
-                 </CardTitle>
-                 <Button variant="ghost" className="text-[10px] font-bold uppercase tracking-widest text-dark-500" onClick={() => navigate('/dashboard/analytics')}>Full Log</Button>
-              </CardHeader>
-               <CardContent className="pt-6 space-y-6">
-                  {feedPosts.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MessageSquare className="h-8 w-8 text-dark-500 mx-auto mb-3" />
-                      <p className="text-dark-400 text-sm">No activity yet. Create your first post or event!</p>
-                    </div>
-                  ) : (
-                    feedPosts.slice(0, 5).map((post) => (
-                      <div key={post._id} className="flex gap-4 group">
-                         <div className="h-2 w-2 rounded-full bg-gold-500/40 mt-1.5 group-hover:bg-gold-500 transition-colors" />
-                         <div className="flex-1">
-                            <p className="text-xs text-dark-300 leading-relaxed">
-                               <span className="text-white font-bold">{post.author?.name ?? 'Someone'}</span> 
-                               {' posted: '}
-                               <span className="text-gold-500 italic font-serif ml-1">{post.content?.slice(0, 60) ?? ''}{(post.content?.length ?? 0) > 60 ? '…' : ''}</span>
-                            </p>
-                            <span className="text-[10px] text-dark-500 font-bold uppercase tracking-widest mt-1 block">
-                              {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}
-                            </span>
-                         </div>
+          {/* Saved Events */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-lg font-serif">Saved Events</CardTitle>
+              {bookmarks && bookmarks.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/saved')} className="text-[10px] font-bold uppercase tracking-widest text-dark-500">
+                  View All
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {!bookmarks || bookmarks.length === 0 ? (
+                <div className="text-center py-6">
+                  <Bookmark className="h-8 w-8 text-dark-600 mx-auto mb-3" />
+                  <p className="text-sm text-dark-400">No saved events</p>
+                  <p className="text-[10px] text-dark-500 mt-1">Events you save will appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {bookmarks.slice(0, 3).map((bm: any) => (
+                    <div key={bm._id} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                      <Bookmark className="h-4 w-4 text-gold-500 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-white truncate">{bm.targetId}</p>
+                        <p className="text-[10px] text-dark-500">Saved event</p>
                       </div>
-                    ))
-                  )}
-               </CardContent>
-           </Card>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

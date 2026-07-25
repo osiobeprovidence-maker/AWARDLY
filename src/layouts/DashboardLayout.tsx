@@ -3,7 +3,8 @@ import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
 import { 
   Building2, LayoutDashboard, Radio, Trophy, Users, 
   Settings, Image, Vote, Presentation, TrendingUp, LogOut, Menu, X, DollarSign,
-  Bell, Search, PlusCircle, ChevronDown, CreditCard, Gavel, Ticket, User
+  Bell, Search, PlusCircle, ChevronDown, CreditCard, Gavel, Ticket, User,
+  Medal, Bookmark, Star, Folder
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -13,9 +14,17 @@ import { NotificationsDropdown } from '../components/feed/NotificationsDropdown'
 import { useToast } from '../lib/toast';
 import { useAuth } from '../lib/convex-auth';
 
-const navItems = [
-  { icon: LayoutDashboard, label: 'Overview', to: '/dashboard' },
-  { icon: Search, label: 'Search', to: '/dashboard/search' },
+const personalNavItems = [
+  { icon: LayoutDashboard, label: 'Home', to: '/dashboard', end: true },
+  { icon: User, label: 'My Profile', to: '/dashboard/profile' },
+  { icon: Trophy, label: 'My Awards', to: '/dashboard/my-awards' },
+  { icon: Medal, label: 'My Nominations', to: '/dashboard/my-nominations' },
+  { icon: Ticket, label: 'My Tickets', to: '/dashboard/my-tickets' },
+  { icon: Bookmark, label: 'Saved Events', to: '/dashboard/saved' },
+];
+
+const orgNavItems = [
+  { icon: LayoutDashboard, label: 'Overview', to: '/dashboard/org' },
   { icon: Presentation, label: 'Community Feed', to: '/dashboard/feed' },
   { icon: Trophy, label: 'Events & Awards', to: '/dashboard/events' },
   { icon: Ticket, label: 'Ticketing', to: '/dashboard/ticketing' },
@@ -23,13 +32,10 @@ const navItems = [
   { icon: Users, label: 'Team', to: '/dashboard/team' },
   { icon: Gavel, label: 'Judges', to: '/dashboard/judges' },
   { icon: DollarSign, label: 'Monetization', to: '/dashboard/monetization' },
-  { icon: Ticket, label: 'Ceremony', to: '/dashboard/ceremony' },
-  { icon: CreditCard, label: 'Billing', to: '/dashboard/billing' },
   { icon: Radio, label: 'Live Broadcasts', to: '/dashboard/live' },
   { icon: Image, label: 'Media Center', to: '/dashboard/media' },
   { icon: TrendingUp, label: 'Analytics', to: '/dashboard/analytics' },
-  { icon: Bell, label: 'Notifications', to: '/dashboard/notifications' },
-  { icon: User, label: 'My Profile', to: '/dashboard/profile' },
+  { icon: CreditCard, label: 'Billing', to: '/dashboard/billing' },
   { icon: Settings, label: 'Settings', to: '/dashboard/settings' },
 ];
 
@@ -52,84 +58,14 @@ export function DashboardLayout() {
         <BrandLogo className="scale-90 origin-left" />
       </div>
 
-      {/* Org Switcher */}
-      {currentOrg && (
-        <div className="px-4 pt-4 pb-2">
-          <div className="relative">
-            <button
-              onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-gold-500/20 transition-all"
-            >
-              {currentOrg.logoUrl ? (
-                <img src={currentOrg.logoUrl} className="h-8 w-8 rounded-lg object-cover shrink-0" alt="" />
-              ) : (
-                <div className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: currentOrg.primaryColor + '20' }}>
-                  <Building2 className="h-4 w-4" style={{ color: currentOrg.primaryColor }} />
-                </div>
-              )}
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-bold text-white truncate">{currentOrg.name}</p>
-                <p className="text-[10px] text-dark-500 truncate">{currentOrg.slug}</p>
-              </div>
-              <ChevronDown className={cn("h-4 w-4 text-dark-500 transition-transform", isOrgDropdownOpen && "rotate-180")} />
-            </button>
-
-            <AnimatePresence>
-              {isOrgDropdownOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute left-0 right-0 top-full mt-1 z-50 bg-dark-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden"
-                >
-                  <div className="p-1 max-h-[240px] overflow-y-auto">
-                    {organizations.map(org => (
-                      <button
-                        key={org.id}
-                        onClick={() => { switchOrg(org.id); setIsOrgDropdownOpen(false); }}
-                        className={cn(
-                          "w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-colors",
-                          org.id === currentOrg.id ? "bg-gold-500/10" : "hover:bg-white/5"
-                        )}
-                      >
-                        {org.logoUrl ? (
-                          <img src={org.logoUrl} className="h-7 w-7 rounded-md object-cover shrink-0" alt="" />
-                        ) : (
-                          <div className="h-7 w-7 rounded-md flex items-center justify-center shrink-0 text-[10px] font-bold" style={{ backgroundColor: org.primaryColor + '20', color: org.primaryColor }}>
-                            {org.name[0]}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className={cn("text-xs font-medium truncate", org.id === currentOrg.id ? "text-gold-500" : "text-white")}>{org.name}</p>
-                          <p className="text-[10px] text-dark-500">{org.eventCount} events</p>
-                        </div>
-                        {org.id === currentOrg.id && <span className="h-1.5 w-1.5 rounded-full bg-gold-500 shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="p-1 border-t border-white/5">
-                    <Link
-                      to="/onboarding"
-                      onClick={() => setIsOrgDropdownOpen(false)}
-                      className="w-full flex items-center gap-2 p-2.5 rounded-lg text-xs text-dark-400 hover:text-gold-500 hover:bg-white/5 transition-colors"
-                    >
-                      <PlusCircle className="h-4 w-4" /> Create New Organization
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
-
+      {/* Personal Section */}
       <div className="flex-1 overflow-y-auto py-4 px-4 flex flex-col gap-1 custom-scrollbar">
-        <div className="mb-2 px-3 text-[10px] font-bold text-dark-500 uppercase tracking-[0.2em]">Management Hub</div>
-        {navItems.map((item) => (
+        <div className="mb-2 px-3 text-[10px] font-bold text-dark-500 uppercase tracking-[0.2em]">Personal</div>
+        {personalNavItems.map((item) => (
           <NavLink
             key={item.label}
             to={item.to}
-            end={item.to === '/dashboard'}
+            end={item.end}
             className={({ isActive }) => cn(
               "group flex items-center px-4 py-3 rounded-xl transition-all duration-300 text-sm",
               isActive 
@@ -149,16 +85,107 @@ export function DashboardLayout() {
           </NavLink>
         ))}
 
+        {/* Organizations Section */}
         {currentOrg && (
           <>
-            <div className="mt-8 mb-2 px-3 text-[10px] font-bold text-dark-500 uppercase tracking-[0.2em]">Public</div>
+            <div className="mt-6 mb-2 px-3 text-[10px] font-bold text-dark-500 uppercase tracking-[0.2em]">Organizations</div>
+            
+            {/* Org Switcher */}
+            <div className="relative mb-2">
+              <button
+                onClick={() => setIsOrgDropdownOpen(!isOrgDropdownOpen)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-gold-500/20 transition-all"
+              >
+                {currentOrg.logoUrl ? (
+                  <img src={currentOrg.logoUrl} className="h-7 w-7 rounded-lg object-cover shrink-0" alt="" />
+                ) : (
+                  <div className="h-7 w-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: currentOrg.primaryColor + '20' }}>
+                    <Building2 className="h-3.5 w-3.5" style={{ color: currentOrg.primaryColor }} />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-[11px] font-bold text-white truncate">{currentOrg.name}</p>
+                </div>
+                <ChevronDown className={cn("h-3.5 w-3.5 text-dark-500 transition-transform", isOrgDropdownOpen && "rotate-180")} />
+              </button>
+
+              <AnimatePresence>
+                {isOrgDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute left-0 right-0 top-full mt-1 z-50 bg-dark-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+                  >
+                    <div className="p-1 max-h-[200px] overflow-y-auto">
+                      {organizations.map(org => (
+                        <button
+                          key={org.id}
+                          onClick={() => { switchOrg(org.id); setIsOrgDropdownOpen(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-3 p-2.5 rounded-lg text-left transition-colors",
+                            org.id === currentOrg.id ? "bg-gold-500/10" : "hover:bg-white/5"
+                          )}
+                        >
+                          {org.logoUrl ? (
+                            <img src={org.logoUrl} className="h-6 w-6 rounded-md object-cover shrink-0" alt="" />
+                          ) : (
+                            <div className="h-6 w-6 rounded-md flex items-center justify-center shrink-0 text-[9px] font-bold" style={{ backgroundColor: org.primaryColor + '20', color: org.primaryColor }}>
+                              {org.name[0]}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className={cn("text-[11px] font-medium truncate", org.id === currentOrg.id ? "text-gold-500" : "text-white")}>{org.name}</p>
+                          </div>
+                          {org.id === currentOrg.id && <span className="h-1.5 w-1.5 rounded-full bg-gold-500 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="p-1 border-t border-white/5">
+                      <Link
+                        to="/onboarding"
+                        onClick={() => setIsOrgDropdownOpen(false)}
+                        className="w-full flex items-center gap-2 p-2.5 rounded-lg text-[11px] text-dark-400 hover:text-gold-500 hover:bg-white/5 transition-colors"
+                      >
+                        <PlusCircle className="h-3.5 w-3.5" /> Create Organization
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Org Management Nav */}
+            {orgNavItems.map((item) => (
+              <NavLink
+                key={item.label}
+                to={item.to}
+                className={({ isActive }) => cn(
+                  "group flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 text-[13px]",
+                  isActive 
+                    ? "bg-gold-500/10 text-gold-500 font-bold" 
+                    : "text-dark-400 hover:text-white hover:bg-white/5"
+                )}
+              >
+                {({ isActive }) => (
+                  <>
+                    <item.icon className={cn(
+                      "mr-3 h-4 w-4 transition-colors",
+                      isActive ? "text-gold-500" : "text-dark-500 group-hover:text-gold-500"
+                    )} />
+                    {item.label}
+                  </>
+                )}
+              </NavLink>
+            ))}
+
             <a
               href={`/org/${currentOrg.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center px-4 py-3 rounded-xl transition-all duration-300 text-sm text-dark-400 hover:text-gold-400 hover:bg-gold-500/5 group"
+              className="flex items-center px-4 py-2.5 rounded-xl transition-all duration-300 text-[13px] text-dark-400 hover:text-gold-400 hover:bg-gold-500/5 group mt-2"
             >
-              <Building2 className="mr-3 h-5 w-5 text-dark-500 group-hover:text-gold-500" />
+              <Star className="mr-3 h-4 w-4 text-dark-500 group-hover:text-gold-500" />
               View Public Profile
             </a>
           </>
