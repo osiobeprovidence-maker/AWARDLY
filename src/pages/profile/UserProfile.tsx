@@ -220,6 +220,7 @@ export function UserProfile() {
     if (!editForm.name?.trim()) { toast('Name is required', 'error'); return; }
     try {
       await updateProfile({
+        firebaseUid: authUser?.id,
         name: editForm.name.trim(),
         username: editForm.username?.trim() || undefined,
         headline: editForm.headline?.trim() || undefined,

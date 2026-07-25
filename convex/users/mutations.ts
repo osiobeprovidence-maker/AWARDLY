@@ -43,6 +43,7 @@ export const syncUser = mutation({
 
 export const updateProfile = mutation({
   args: {
+    firebaseUid: v.optional(v.string()),
     name: v.optional(v.string()),
     username: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
@@ -66,10 +67,11 @@ export const updateProfile = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const { firebaseUid, ...updates } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
 
-    if (args.username) {
-      const clean = args.username.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    if (updates.username) {
+      const clean = updates.username.toLowerCase().replace(/[^a-z0-9_]/g, '');
       if (clean.length < 3 || clean.length > 30) {
         throw new Error('Username must be 3-30 characters, alphanumeric and underscores only');
       }
@@ -80,20 +82,8 @@ export const updateProfile = mutation({
       if (existing && existing._id !== user._id) {
         throw new Error('Username is already taken');
       }
+      updates.username = clean;
     }
-
-    const updates: Record<string, any> = {};
-    const fields = [
-      'name', 'username', 'avatarUrl', 'coverUrl', 'bio', 'headline',
-      'location', 'website', 'phone', 'industry',
-    ] as const;
-    for (const field of fields) {
-      if (args[field] !== undefined) updates[field] = args[field];
-    }
-    if (args.skills !== undefined) updates.skills = args.skills;
-    if (args.languages !== undefined) updates.languages = args.languages;
-    if (args.interests !== undefined) updates.interests = args.interests;
-    if (args.socialLinks !== undefined) updates.socialLinks = args.socialLinks;
 
     await ctx.db.patch(user._id, updates);
     return user._id;

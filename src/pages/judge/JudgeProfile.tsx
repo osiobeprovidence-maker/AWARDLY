@@ -21,6 +21,7 @@ export function JudgeProfile() {
     setIsSaving(true);
     try {
       await updateProfile({
+        firebaseUid: user?.id,
         name,
         avatarUrl: photoUrl,
       });
