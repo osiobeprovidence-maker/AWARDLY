@@ -4,13 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../components/ui/Button';
 import {
   CreditCard, Check, ArrowLeft, Download, Calendar, HardDrive, Users,
-  Trophy, Loader2, ArrowUpRight, ArrowDownRight, Clock,
+  Trophy, Loader2, ArrowUpRight, ArrowDownRight, Clock, ShieldCheck,
 } from 'lucide-react';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useToast } from '../../lib/toast';
 import { useAuth } from '../../lib/convex-auth';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+import { usePaystackPayment } from '../../hooks/usePaystackPayment';
 
 const PLANS = [
   {
@@ -75,6 +76,7 @@ export function Billing() {
   const { toast } = useToast();
   const { currentOrg } = useAuth();
   const [changingPlan, setChangingPlan] = useState<string | null>(null);
+  const [payingPlan, setPayingPlan] = useState<string | null>(null);
 
   const subscription = useQuery(
     api.subscriptions.queries.getByOrg,
@@ -98,25 +100,6 @@ export function Billing() {
     ['platform_fee', 'payout', 'withdrawal'].includes(t.type)
   );
 
-  const handleUpgrade = async (planId: string) => {
-    const plan = PLANS.find(p => p.id === planId);
-    if (!plan) return;
-    try {
-      setChangingPlan(planId);
-      await upsertSubscription({
-        orgId: currentOrg.id as any,
-        plan: planId as any,
-        status: 'active',
-        monthlyPrice: plan.price,
-      });
-      toast(`Upgraded to ${plan.name} plan`, 'success');
-    } catch (error: any) {
-      toast(error.message || 'Failed to upgrade', 'error');
-    } finally {
-      setChangingPlan(null);
-    }
-  };
-
   const handleCancel = async () => {
     try {
       setChangingPlan('cancel');
@@ -130,6 +113,62 @@ export function Billing() {
   };
 
   const storageUsed = '0 GB';
+
+  const { user } = useAuth();
+
+  const payForPlan = usePaystackPayment({
+    email: user?.email || '',
+    amount: payingPlan ? (PLANS.find(p => p.id === payingPlan)?.price || 0) : 0,
+    onSuccess: async () => {
+      const plan = PLANS.find(p => p.id === payingPlan);
+      if (!plan) return;
+      try {
+        setChangingPlan(payingPlan);
+        await upsertSubscription({
+          orgId: currentOrg.id as any,
+          plan: payingPlan as any,
+          status: 'active',
+          monthlyPrice: plan.price,
+        });
+        toast(`Upgraded to ${plan.name} plan`, 'success');
+      } catch (error: any) {
+        toast(error.message || 'Failed to activate plan', 'error');
+      } finally {
+        setChangingPlan(null);
+        setPayingPlan(null);
+      }
+    },
+    onError: (err) => {
+      toast(err.message || 'Payment failed', 'error');
+      setPayingPlan(null);
+    },
+  });
+
+  const handleUpgrade = async (planId: string) => {
+    const plan = PLANS.find(p => p.id === planId);
+    if (!plan) return;
+
+    if (plan.price === 0) {
+      try {
+        setChangingPlan(planId);
+        await upsertSubscription({
+          orgId: currentOrg.id as any,
+          plan: planId as any,
+          status: 'active',
+          monthlyPrice: 0,
+        });
+        toast(`Switched to ${plan.name} plan`, 'success');
+      } catch (error: any) {
+        toast(error.message || 'Failed to change plan', 'error');
+      } finally {
+        setChangingPlan(null);
+      }
+      return;
+    }
+
+    setPayingPlan(planId);
+    await payForPlan.pay({ planId, orgId: currentOrg.id });
+  };
 
   return (
     <div className="space-y-8">
@@ -211,9 +250,9 @@ export function Billing() {
                         variant={plan.popular ? 'primary' : 'outline'}
                         className="w-full"
                         onClick={() => handleUpgrade(plan.id)}
-                        disabled={isLoading}
+                        disabled={isLoading || changingPlan === plan.id || payingPlan === plan.id}
                       >
-                        {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                        {(isLoading || changingPlan === plan.id || payingPlan === plan.id) ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                         {plan.price === 0 ? 'Downgrade' : 'Upgrade'}
                       </Button>
                     )}
@@ -229,16 +268,17 @@ export function Billing() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Payment Method</CardTitle>
-          <CardDescription>Manage your billing card on file.</CardDescription>
+          <CardDescription>Secure payments powered by Paystack.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <CreditCard className="h-10 w-10 text-dark-600 mx-auto mb-3" />
-            <p className="text-sm text-dark-400 mb-1">No payment method on file</p>
-            <p className="text-xs text-dark-500 mb-4">Add a card to upgrade your plan</p>
-            <Button variant="outline" onClick={() => toast('Card form coming soon', 'info')}>
-              <CreditCard className="h-4 w-4 mr-2" /> Add Card
-            </Button>
+            <p className="text-sm text-dark-400 mb-1">Payments are processed securely via Paystack</p>
+            <p className="text-xs text-dark-500 mb-4">You'll be redirected to complete payment when upgrading</p>
+            <div className="flex items-center justify-center gap-2 text-[11px] text-dark-500">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+              <span>Secured by Paystack</span>
+            </div>
           </div>
         </CardContent>
       </Card>
