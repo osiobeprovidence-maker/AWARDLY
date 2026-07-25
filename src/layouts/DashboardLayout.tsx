@@ -15,7 +15,6 @@ import { useAuth } from '../lib/convex-auth';
 
 const personalNavItems = [
   { icon: LayoutDashboard, label: 'Home', to: '/dashboard', end: true },
-  { icon: User, label: 'My Profile', to: '/dashboard/profile' },
   { icon: Trophy, label: 'My Awards', to: '/dashboard/my-awards' },
   { icon: Vote, label: 'My Nominations', to: '/dashboard/my-nominations' },
   { icon: Ticket, label: 'My Tickets', to: '/dashboard/my-tickets' },
