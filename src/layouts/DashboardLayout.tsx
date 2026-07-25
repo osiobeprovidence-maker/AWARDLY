@@ -150,13 +150,15 @@ export function DashboardLayout() {
         {currentOrg && (
           <>
             <div className="mt-8 mb-2 px-3 text-[10px] font-bold text-dark-500 uppercase tracking-[0.2em]">Public</div>
-            <Link
-              to={`/org/${currentOrg.slug}`}
+            <a
+              href={`/org/${currentOrg.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center px-4 py-3 rounded-xl transition-all duration-300 text-sm text-dark-400 hover:text-gold-400 hover:bg-gold-500/5 group"
             >
               <Building2 className="mr-3 h-5 w-5 text-dark-500 group-hover:text-gold-500" />
               View Public Profile
-            </Link>
+            </a>
           </>
         )}
       </div>
