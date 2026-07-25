@@ -1,6 +1,7 @@
 // ─── User ───────────────────────────────────────────────────────────────────
 export type User = {
   id: string;
+  convexUserId?: string;
   name: string;
   email: string;
   avatarUrl?: string;

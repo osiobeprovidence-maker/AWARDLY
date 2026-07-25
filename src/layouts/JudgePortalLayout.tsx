@@ -30,7 +30,7 @@ export function JudgePortalLayout() {
   // Get judge assignments for event switching
   const assignments = useQuery(
     api.judges.queries.getMyAssignments,
-    user ? { userId: user._id as any } : 'skip'
+    user?.convexUserId ? { userId: user.convexUserId as any } : 'skip'
   ) ?? [];
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);

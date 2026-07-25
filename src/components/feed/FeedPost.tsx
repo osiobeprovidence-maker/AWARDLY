@@ -70,16 +70,16 @@ export function FeedPostCard({ post, org, showOrgHeader = false, onCommentToggle
   );
   const hasVoted = useQuery(
     api.feeds.queries.hasVoted,
-    pollData && user ? { pollId: pollData._id, userId: user._id as any } : 'skip'
+    pollData && user?.convexUserId ? { pollId: pollData._id, userId: user.convexUserId as any } : 'skip'
   );
 
   const likeStatus = useQuery(
     api.feeds.queries.isLiked,
-    user ? { userId: user._id as any, targetType: 'post', targetId: post._id } : 'skip'
+    user?.convexUserId ? { userId: user.convexUserId as any, targetType: 'post', targetId: post._id } : 'skip'
   );
   const bookmarkStatus = useQuery(
     api.feeds.queries.isBookmarked,
-    user ? { userId: user._id as any, targetType: 'post', targetId: post._id } : 'skip'
+    user?.convexUserId ? { userId: user.convexUserId as any, targetType: 'post', targetId: post._id } : 'skip'
   );
 
   useEffect(() => {

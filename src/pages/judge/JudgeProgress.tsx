@@ -18,8 +18,8 @@ export function JudgeProgress() {
 
   const progress = useQuery(
     api.judges.queries.getMyProgress,
-    user && currentEvent
-      ? { userId: user._id as any, eventId: currentEvent._id || selectedAssignment?.eventId }
+    user && user.convexUserId && currentEvent
+      ? { userId: user.convexUserId as any, eventId: currentEvent._id || selectedAssignment?.eventId }
       : 'skip'
   );
 

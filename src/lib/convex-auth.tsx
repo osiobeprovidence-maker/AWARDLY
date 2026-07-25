@@ -175,6 +175,15 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
     return mappedOrganizations.find(o => o.id === currentOrg._id) ?? null;
   }, [currentOrg, mappedOrganizations]);
 
+  // Enrich user with Convex _id when available
+  const enrichedUser = useMemo(() => {
+    if (!user) return null;
+    if (convexUser?._id) {
+      return { ...user, convexUserId: convexUser._id };
+    }
+    return user;
+  }, [user, convexUser]);
+
   // Persist current org
   useEffect(() => {
     if (currentOrgId) {
@@ -231,8 +240,8 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
   }, []);
 
   const state: AuthState = {
-    user,
-    isAuthenticated: !!user,
+    user: enrichedUser,
+    isAuthenticated: !!enrichedUser,
     isLoading,
     organizations: mappedOrganizations,
     currentOrg: mappedCurrentOrg,
