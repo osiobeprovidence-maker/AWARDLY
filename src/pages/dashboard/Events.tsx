@@ -1,43 +1,125 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Plus, Search, Trophy, ExternalLink, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Trophy, ExternalLink, Trash2, AlertTriangle, Calendar, Vote, Loader2 } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../lib/convex-auth';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+
+type TabKey = 'all' | 'draft' | 'published' | 'live' | 'closed';
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'draft', label: 'Draft' },
+  { key: 'published', label: 'Published' },
+  { key: 'live', label: 'Live' },
+  { key: 'closed', label: 'Closed' },
+];
+
+const STATUS_STYLES: Record<string, string> = {
+  draft: 'bg-dark-800 text-dark-400 border-white/5',
+  published: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  live: 'bg-gold-500/10 text-gold-500 border-gold-500/20',
+  closed: 'bg-red-500/10 text-red-400 border-red-500/20',
+  archived: 'bg-dark-800 text-dark-500 border-white/5',
+};
 
 export function DashboardEvents() {
   const { currentOrg } = useAuth();
-  const events = useQuery(
+  const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const [search, setSearch] = useState('');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const allEvents = useQuery(
     api.events.queries.getByOrg,
     currentOrg ? { orgId: currentOrg.id as any } : 'skip'
-  ) ?? [];
+  );
 
-  const categories = useQuery(
-    api.categories.queries.getByEvent,
-    events.length > 0 ? { eventId: events[0]?._id } : 'skip'
-  ) ?? [];
+  const draftEvents = useQuery(
+    api.events.queries.getByOrgAndStatus,
+    currentOrg ? { orgId: currentOrg.id as any, status: 'draft' } : 'skip'
+  );
 
-  const nominees = useQuery(
-    api.nominees.queries.getByOrg,
-    currentOrg ? { orgId: currentOrg.id as any } : 'skip'
-  ) ?? [];
+  const publishedEvents = useQuery(
+    api.events.queries.getByOrgAndStatus,
+    currentOrg ? { orgId: currentOrg.id as any, status: 'published' } : 'skip'
+  );
 
-  const [deleteId, setDeleteId] = React.useState<string | null>(null);
+  const liveEvents = useQuery(
+    api.events.queries.getByOrgAndStatus,
+    currentOrg ? { orgId: currentOrg.id as any, status: 'live' } : 'skip'
+  );
 
-  const handleDelete = () => {
-    if (deleteId) {
+  const closedEvents = useQuery(
+    api.events.queries.getByOrgAndStatus,
+    currentOrg ? { orgId: currentOrg.id as any, status: 'closed' } : 'skip'
+  );
+
+  const softDelete = useMutation(api.events.mutations.softDelete);
+
+  const isLoading = allEvents === undefined;
+
+  const tabCounts = useMemo(() => ({
+    all: allEvents?.length ?? 0,
+    draft: draftEvents?.length ?? 0,
+    published: publishedEvents?.length ?? 0,
+    live: liveEvents?.length ?? 0,
+    closed: closedEvents?.length ?? 0,
+  }), [allEvents, draftEvents, publishedEvents, liveEvents, closedEvents]);
+
+  const filteredEvents = useMemo(() => {
+    let list: any[] = [];
+    if (activeTab === 'all') list = allEvents ?? [];
+    else if (activeTab === 'draft') list = draftEvents ?? [];
+    else if (activeTab === 'published') list = publishedEvents ?? [];
+    else if (activeTab === 'live') list = liveEvents ?? [];
+    else if (activeTab === 'closed') list = closedEvents ?? [];
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(e => e.title.toLowerCase().includes(q) || e.description?.toLowerCase().includes(q));
+    }
+
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [activeTab, search, allEvents, draftEvents, publishedEvents, liveEvents, closedEvents]);
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    try {
+      await softDelete({ eventId: deleteId as any });
       setDeleteId(null);
+    } catch (e: any) {
+      console.error('Delete failed:', e);
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return null;
+    try {
+      return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return null;
+    }
   };
+
+  const emptyMessages: Record<TabKey, { title: string; subtitle: string }> = {
+    all: { title: 'No events yet', subtitle: 'Create your first award event to start managing categories and nominees.' },
+    draft: { title: 'No draft events', subtitle: 'Events you start creating will appear here as drafts.' },
+    published: { title: 'No published events', subtitle: 'Publish a draft event to make it live for your audience.' },
+    live: { title: 'No live events', subtitle: 'Go live from an event to start receiving votes in real-time.' },
+    closed: { title: 'No closed events', subtitle: 'Events that have ended will appear here.' },
+  };
+
+  if (!currentOrg) {
+    return <div className="text-center py-20 text-dark-400">Select an organization first.</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -55,103 +137,156 @@ export function DashboardEvents() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1 lg:max-w-md">
-              <Input icon={Search} placeholder="Search events..." />
+          {/* Search + Tabs */}
+          <div className="px-6 pt-6 pb-0">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 lg:max-w-md">
+                <Input
+                  icon={Search}
+                  placeholder="Search events..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
             </div>
-            <select className="bg-dark-900 border border-white/10 rounded-lg px-4 h-12 text-white text-sm outline-none focus:ring-1 focus:ring-gold-500">
-              <option>All Status</option>
-              <option>Published</option>
-              <option>Draft</option>
-              <option>Ended</option>
-            </select>
+
+            <div className="flex gap-1 border-b border-white/5 -mb-px overflow-x-auto">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`relative px-4 py-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                    activeTab === tab.key
+                      ? 'text-gold-500'
+                      : 'text-dark-400 hover:text-dark-200'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    {tab.label}
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      activeTab === tab.key ? 'bg-gold-500/10 text-gold-500' : 'bg-white/5 text-dark-500'
+                    }`}>
+                      {tabCounts[tab.key]}
+                    </span>
+                  </span>
+                  {activeTab === tab.key && (
+                    <motion.div
+                      layoutId="events-tab-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold-500 rounded-full"
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {events.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
+          {/* Loading */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-24">
+              <Loader2 className="h-6 w-6 text-gold-500 animate-spin" />
+            </div>
+          ) : filteredEvents.length === 0 ? (
+            /* Empty State */
+            <div className="flex flex-col items-center justify-center py-24 text-center px-6">
               <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
                 <Trophy className="h-10 w-10 text-dark-600" />
               </div>
-              <h3 className="text-xl font-serif text-white mb-2">No events yet</h3>
-              <p className="text-sm text-dark-500 max-w-sm mb-6">Create your first award event to start managing categories and nominees.</p>
-              <Link to="/dashboard/events/create">
-                <Button><Plus className="h-4 w-4 mr-2" /> Create Your First Event</Button>
-              </Link>
+              <h3 className="text-xl font-serif text-white mb-2">{emptyMessages[activeTab].title}</h3>
+              <p className="text-sm text-dark-500 max-w-sm mb-6">{emptyMessages[activeTab].subtitle}</p>
+              {activeTab === 'all' && (
+                <Link to="/dashboard/events/create">
+                  <Button><Plus className="h-4 w-4 mr-2" /> Create Your First Event</Button>
+                </Link>
+              )}
             </div>
           ) : (
+            /* Events Table */
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="text-xs font-medium text-dark-500 uppercase tracking-widest border-b border-white/5">
-                    <th className="px-4 py-4">Event Details</th>
-                    <th className="px-4 py-4">Status</th>
-                    <th className="px-4 py-4">Voting</th>
-                    <th className="px-4 py-4">Date</th>
-                    <th className="px-4 py-4 text-right">Actions</th>
+                    <th className="px-6 py-4">Event</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Voting</th>
+                    <th className="px-6 py-4">Categories</th>
+                    <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {events.map((event: any) => (
+                  {filteredEvents.map((event) => (
                     <tr key={event._id} className="group hover:bg-white/5 transition-colors">
-                      <td className="px-4 py-5">
+                      <td className="px-6 py-5">
                         <div className="flex items-center gap-4">
-                          <img 
-                            src={event.coverUrl} 
-                            className="h-12 w-20 rounded-lg object-cover" 
-                            alt="cover" 
-                            referrerPolicy="no-referrer"
-                          />
-                          <div>
-                            <h4 className="text-white font-medium text-sm mb-1">{event.title}</h4>
-                            <div className="flex items-center text-xs text-dark-500">
-                              <Trophy className="h-3 w-3 mr-1 text-gold-500" /> {categories.length} Categories • {nominees.length} Nominees
+                          {(event.bannerUrl || event.coverUrl) ? (
+                            <img
+                              src={event.bannerUrl || event.coverUrl}
+                              className="h-12 w-20 rounded-lg object-cover"
+                              alt=""
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div
+                              className="h-12 w-20 rounded-lg flex items-center justify-center shrink-0"
+                              style={{ backgroundColor: (event.themeColor || '#c68a35') + '15' }}
+                            >
+                              <Trophy className="h-5 w-5" style={{ color: event.themeColor || '#c68a35' }} />
                             </div>
+                          )}
+                          <div>
+                            <h4 className="text-white font-medium text-sm">{event.title}</h4>
+                            {event.tagline && (
+                              <p className="text-xs text-dark-500 mt-0.5 truncate max-w-[200px]">{event.tagline}</p>
+                            )}
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-5 font-serif">
-                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                           event.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-dark-800 text-dark-400 border-white/5'
-                         }`}>
-                           {event.status}
-                         </span>
+                      <td className="px-6 py-5">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${STATUS_STYLES[event.status] || STATUS_STYLES.draft}`}>
+                          {event.status}
+                        </span>
                       </td>
-                      <td className="px-4 py-5">
-                         <span className={`text-xs font-medium ${event.isVotingActive ? 'text-emerald-400' : 'text-dark-500'}`}>
-                           {event.isVotingActive ? 'Active' : 'Disabled'}
-                         </span>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`h-1.5 w-1.5 rounded-full ${event.isVotingActive ? 'bg-emerald-400' : 'bg-dark-600'}`} />
+                          <span className={`text-xs font-medium ${event.isVotingActive ? 'text-emerald-400' : 'text-dark-500'}`}>
+                            {event.isVotingActive ? 'Active' : 'Off'}
+                          </span>
+                        </div>
                       </td>
-                      <td className="px-4 py-5">
-                         {event.startDate ? (
-                           <>
-                             <div className="text-sm text-dark-300">{formatDate(event.startDate)}</div>
-                             <div className="text-xs text-dark-500">{event.startTime || ''}</div>
-                           </>
-                         ) : (
-                           <div className="text-sm text-dark-500">Not set</div>
-                         )}
+                      <td className="px-6 py-5">
+                        <span className="text-xs text-dark-400">
+                          {event.categoryCount ?? 0} categories
+                        </span>
                       </td>
-                      <td className="px-4 py-5 text-right">
-                         <div className="flex items-center justify-end gap-2">
-                           <Link to={`/dashboard/events/${event._id}/manage`}>
-                             <Button variant="glass" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider px-3 bg-white/5 hover:bg-white/10">
-                               Manage
-                             </Button>
-                           </Link>
-                            <Link to={`/org/${currentOrg?.slug || event.orgId}/events/${event._id}`} target="_blank">
-                             <Button variant="ghost" size="icon" className="h-8 w-8 text-dark-500 hover:text-white">
-                               <ExternalLink className="h-4 w-4" />
-                             </Button>
-                           </Link>
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             onClick={() => setDeleteId(event._id)}
-                             className="h-8 w-8 text-dark-500 hover:text-rose-500 hover:bg-rose-500/10"
-                           >
-                             <Trash2 className="h-4 w-4" />
-                           </Button>
-                         </div>
+                      <td className="px-6 py-5">
+                        {formatDate(event.date) ? (
+                          <span className="text-sm text-dark-300">{formatDate(event.date)}</span>
+                        ) : (
+                          <span className="text-sm text-dark-600">Not set</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Link to={`/dashboard/events/${event._id}/manage`}>
+                            <Button variant="glass" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider px-3 bg-white/5 hover:bg-white/10">
+                              Manage
+                            </Button>
+                          </Link>
+                          <Link to={`/org/${currentOrg?.slug || event.orgId}/events/${event._id}`} target="_blank">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-dark-500 hover:text-white">
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setDeleteId(event._id)}
+                            className="h-8 w-8 text-dark-500 hover:text-rose-500 hover:bg-rose-500/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -162,6 +297,7 @@ export function DashboardEvents() {
         </CardContent>
       </Card>
 
+      {/* Delete Confirmation */}
       <AnimatePresence>
         {deleteId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -169,7 +305,7 @@ export function DashboardEvents() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setDeleteId(null)}
+              onClick={() => !deleting && setDeleteId(null)}
               className="absolute inset-0 bg-dark-950/80 backdrop-blur-sm"
             />
             <motion.div
@@ -184,8 +320,18 @@ export function DashboardEvents() {
               <h2 className="text-2xl font-serif text-white mb-2">Delete Event?</h2>
               <p className="text-dark-400 text-sm mb-8">This action is permanent and will delete all categories, nominees, and voting history for this event.</p>
               <div className="flex flex-col gap-3">
-                <Button variant="outline" className="w-full bg-rose-600 hover:bg-rose-700 border-rose-600 text-white" onClick={handleDelete}>Delete Permanently</Button>
-                <Button variant="ghost" className="w-full" onClick={() => setDeleteId(null)}>Cancel</Button>
+                <Button
+                  variant="outline"
+                  className="w-full bg-rose-600 hover:bg-rose-700 border-rose-600 text-white"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  {deleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                  {deleting ? 'Deleting...' : 'Delete Permanently'}
+                </Button>
+                <Button variant="ghost" className="w-full" onClick={() => setDeleteId(null)} disabled={deleting}>
+                  Cancel
+                </Button>
               </div>
             </motion.div>
           </div>
