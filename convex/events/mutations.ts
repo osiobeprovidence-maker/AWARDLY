@@ -22,6 +22,22 @@ export const create = mutation({
     nominationEnd: v.optional(v.string()),
     votingStart: v.optional(v.string()),
     votingEnd: v.optional(v.string()),
+    awardFormat: v.optional(v.union(v.literal('online'), v.literal('physical'), v.literal('hybrid'))),
+    ceremony: v.optional(v.object({
+      venueName: v.optional(v.string()),
+      venueAddress: v.optional(v.string()),
+      coordinates: v.optional(v.object({ lat: v.number(), lng: v.number() })),
+      date: v.optional(v.string()),
+      time: v.optional(v.string()),
+      host: v.optional(v.string()),
+      dressCode: v.optional(v.string()),
+      capacity: v.optional(v.number()),
+      parkingInfo: v.optional(v.string()),
+      accessibilityNotes: v.optional(v.string()),
+      description: v.optional(v.string()),
+      livestreamUrl: v.optional(v.string()),
+      winnerAnnouncementDate: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args) => {
     const user = await getAuthenticatedUser(ctx);

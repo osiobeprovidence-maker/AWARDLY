@@ -14,7 +14,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { ImageUpload } from '../../components/ImageUpload';
 import { Category, VotingRules } from '../../types';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useToast } from '../../lib/toast';
@@ -134,13 +134,17 @@ export function CreateEvent() {
     eventId ? { eventId: eventId as any } : 'skip'
   );
   const { toast } = useToast();
-  const { currentOrg } = useAuth();
+  const { currentOrg, user } = useAuth();
+  const createEvent = useMutation(api.events.mutations.create);
+  const publishEvent = useMutation(api.events.mutations.publish);
+  const createCategory = useMutation(api.categories.mutations.create);
 
   const [step, setStep] = React.useState(0);
   const [data, setData] = React.useState<EventData>(DEFAULT_DATA);
   const [published, setPublished] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [brandingCategoryId, setBrandingCategoryId] = React.useState<string | null>(null);
+  const [saving, setSaving] = React.useState(false);
 
   const update = React.useCallback((patch: Partial<EventData>) => {
     setData(prev => ({ ...prev, ...patch }));
@@ -186,14 +190,102 @@ export function CreateEvent() {
     }
   };
 
-  const saveDraft = () => {
-    toast('Draft saved successfully', 'success');
+  const slugify = (text: string) =>
+    text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
+
+  const buildMutationArgs = () => {
+    if (!currentOrg) return null;
+    const votingType = !data.votingEnabled ? undefined
+      : data.publicVoting && data.judgeVoting ? 'both' as const
+      : data.publicVoting ? 'public' as const
+      : data.judgeVoting ? 'judge' as const
+      : undefined;
+
+    const ceremonyData = (data.awardFormat === 'physical' || data.awardFormat === 'hybrid') ? {
+      venueName: data.ceremony.venueName || undefined,
+      venueAddress: data.ceremony.venueAddress || undefined,
+      date: data.ceremony.date || undefined,
+      time: data.ceremony.time || undefined,
+      host: data.ceremony.host || undefined,
+      dressCode: data.ceremony.dressCode || undefined,
+      capacity: data.ceremony.capacity ? parseInt(data.ceremony.capacity) : undefined,
+      parkingInfo: data.ceremony.parkingInfo || undefined,
+      accessibilityNotes: data.ceremony.accessibilityNotes || undefined,
+      description: data.ceremony.description || undefined,
+      livestreamUrl: data.ceremony.livestreamUrl || undefined,
+      winnerAnnouncementDate: data.ceremony.winnerAnnouncementDate || undefined,
+    } : (data.awardFormat === 'online' && data.ceremony.livestreamUrl) ? {
+      livestreamUrl: data.ceremony.livestreamUrl || undefined,
+      winnerAnnouncementDate: data.ceremony.winnerAnnouncementDate || undefined,
+    } : undefined;
+
+    return {
+      orgId: currentOrg.id as any,
+      title: data.title.trim(),
+      slug: slugify(data.title.trim()),
+      description: data.description.trim(),
+      date: data.date,
+      time: data.time || undefined,
+      bannerUrl: data.bannerUrl || undefined,
+      tagline: data.tagline || undefined,
+      themeColor: data.themeColor || undefined,
+      venue: data.ceremony.venueName || undefined,
+      votingType,
+      nominationStart: data.nominationStart || undefined,
+      nominationEnd: data.nominationEnd || undefined,
+      votingStart: data.votingStart || undefined,
+      votingEnd: data.votingEnd || undefined,
+      awardFormat: data.awardFormat || undefined,
+      ceremony: ceremonyData,
+    };
   };
 
-  const publish = () => {
-    toast('Event published!', 'success');
-    setPublished(true);
-    setStep(8);
+  const saveDraft = async () => {
+    const args = buildMutationArgs();
+    if (!args) return;
+    setSaving(true);
+    try {
+      const eventId = await createEvent(args);
+      for (const cat of data.categories) {
+        await createCategory({
+          eventId: eventId as any,
+          orgId: currentOrg!.id as any,
+          name: cat.name,
+          rulesSource: cat.rulesSource,
+        });
+      }
+      toast('Draft saved successfully', 'success');
+      navigate('/dashboard/events');
+    } catch (e: any) {
+      toast(e.message || 'Failed to save draft', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const publish = async () => {
+    const args = buildMutationArgs();
+    if (!args) return;
+    setSaving(true);
+    try {
+      const eventId = await createEvent(args);
+      for (const cat of data.categories) {
+        await createCategory({
+          eventId: eventId as any,
+          orgId: currentOrg!.id as any,
+          name: cat.name,
+          rulesSource: cat.rulesSource,
+        });
+      }
+      await publishEvent({ eventId: eventId as any });
+      toast('Event published!', 'success');
+      setPublished(true);
+      setStep(8);
+    } catch (e: any) {
+      toast(e.message || 'Failed to publish', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const stepValid = (s: number) => {
@@ -1119,16 +1211,16 @@ export function CreateEvent() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={saveDraft} className="border-white/10 hover:bg-white/5">
-                <Save className="h-4 w-4 mr-2" /> Save Draft
+              <Button variant="outline" onClick={saveDraft} className="border-white/10 hover:bg-white/5" disabled={saving}>
+                <Save className="h-4 w-4 mr-2" /> {saving ? 'Saving...' : 'Save Draft'}
               </Button>
               {step < 7 ? (
                 <Button onClick={next} className="bg-gold-500 hover:bg-gold-600 text-dark-950">
                   Next <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               ) : (
-                <Button onClick={publish} className="bg-gold-500 hover:bg-gold-600 text-dark-950 shadow-lg shadow-gold-500/20">
-                  <Sparkles className="h-4 w-4 mr-2" /> Publish Event
+                <Button onClick={publish} className="bg-gold-500 hover:bg-gold-600 text-dark-950 shadow-lg shadow-gold-500/20" disabled={saving}>
+                  <Sparkles className="h-4 w-4 mr-2" /> {saving ? 'Publishing...' : 'Publish Event'}
                 </Button>
               )}
             </div>
