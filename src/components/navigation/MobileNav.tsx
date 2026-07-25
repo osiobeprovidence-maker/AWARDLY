@@ -53,7 +53,7 @@ export function MobileNav() {
         </NavLink>
 
         <NavLink 
-          to="/auth/login" 
+          to="/dashboard/profile" 
           className={({ isActive }) => cn(
             "flex flex-col items-center gap-1 transition-colors px-4 py-2",
             isActive ? "text-gold-500" : "text-dark-400 hover:text-white"

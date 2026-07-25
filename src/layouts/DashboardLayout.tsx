@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
 import { 
   Building2, LayoutDashboard, Radio, Trophy, Users, 
   Settings, Image, Vote, Presentation, TrendingUp, LogOut, Menu, X, DollarSign,
-  Bell, Search, PlusCircle, ChevronDown, CreditCard, Gavel, Ticket
+  Bell, Search, PlusCircle, ChevronDown, CreditCard, Gavel, Ticket, User
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,6 +29,7 @@ const navItems = [
   { icon: Image, label: 'Media Center', to: '/dashboard/media' },
   { icon: TrendingUp, label: 'Analytics', to: '/dashboard/analytics' },
   { icon: Bell, label: 'Notifications', to: '/dashboard/notifications' },
+  { icon: User, label: 'My Profile', to: '/dashboard/profile' },
   { icon: Settings, label: 'Settings', to: '/dashboard/settings' },
 ];
 
@@ -251,7 +252,7 @@ export function DashboardLayout() {
                   </button>
                   <NotificationPopover isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
                </div>
-               <Link to="/profile" className="h-10 w-10 rounded-xl bg-gold-500 flex items-center justify-center text-dark-950 font-bold border-2 border-white/10 hover:border-white/20 transition-all overflow-hidden">
+               <Link to="/dashboard/profile" className="h-10 w-10 rounded-xl bg-gold-500 flex items-center justify-center text-dark-950 font-bold border-2 border-white/10 hover:border-white/20 transition-all overflow-hidden">
                   {user?.avatarUrl ? (
                     <img src={user.avatarUrl} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
                   ) : (

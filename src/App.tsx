@@ -129,6 +129,8 @@ export default function App() {
                   <Route path="settings" element={<TicketingSettings />} />
                 </Route>
                 <Route path="settings" element={<DashboardSettings />} />
+                <Route path="profile" element={<UserProfile />} />
+                <Route path="profile/:userId" element={<UserProfile />} />
               </Route>
 
               {/* Public Org Routes */}
@@ -137,9 +139,7 @@ export default function App() {
                 <Route path=":orgId/events/:eventId" element={<EventDetails />} />
               </Route>
 
-              {/* User Profiles */}
-              <Route path="/profile" element={<UserProfile />} />
-              <Route path="/profile/:userId" element={<UserProfile />} />
+              {/* Public Profile Routes (for sharing) */}
               <Route path="/u/:username" element={<UserProfile />} />
 
               {/* Judge Portal */}
