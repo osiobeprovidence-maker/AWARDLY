@@ -23,6 +23,7 @@ import { DashboardSettings } from './pages/dashboard/Settings';
 import { Billing } from './pages/dashboard/Billing';
 import { SearchPage } from './pages/dashboard/Search';
 import { AwardCeremony } from './pages/dashboard/AwardCeremony';
+import { TicketingLayout, TicketingDashboard, TicketingEvents, CreateTicket, TicketOrders, TicketCustomers, CheckIn, TicketDiscounts, TicketingAnalytics, TicketingSettings } from './pages/dashboard/ticketing';
 import { CreateEvent } from './pages/dashboard/CreateEvent';
 import { CategoryNominees } from './pages/dashboard/CategoryNominees';
 import { CategoryCriteria } from './pages/dashboard/CategoryCriteria';
@@ -116,6 +117,17 @@ export default function App() {
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="search" element={<SearchPage />} />
                 <Route path="ceremony/:eventId" element={<AwardCeremony />} />
+                <Route path="ticketing" element={<TicketingLayout />}>
+                  <Route index element={<TicketingDashboard />} />
+                  <Route path="events" element={<TicketingEvents />} />
+                  <Route path="create" element={<CreateTicket />} />
+                  <Route path="orders" element={<TicketOrders />} />
+                  <Route path="customers" element={<TicketCustomers />} />
+                  <Route path="check-in" element={<CheckIn />} />
+                  <Route path="discounts" element={<TicketDiscounts />} />
+                  <Route path="analytics" element={<TicketingAnalytics />} />
+                  <Route path="settings" element={<TicketingSettings />} />
+                </Route>
                 <Route path="settings" element={<DashboardSettings />} />
               </Route>
 

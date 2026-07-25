@@ -18,6 +18,7 @@ const navItems = [
   { icon: Search, label: 'Search', to: '/dashboard/search' },
   { icon: Presentation, label: 'Community Feed', to: '/dashboard/feed' },
   { icon: Trophy, label: 'Events & Awards', to: '/dashboard/events' },
+  { icon: Ticket, label: 'Ticketing', to: '/dashboard/ticketing' },
   { icon: Vote, label: 'Nominations & Voting', to: '/dashboard/voting' },
   { icon: Users, label: 'Team', to: '/dashboard/team' },
   { icon: Gavel, label: 'Judges', to: '/dashboard/judges' },

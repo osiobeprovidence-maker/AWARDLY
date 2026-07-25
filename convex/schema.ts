@@ -811,4 +811,106 @@ export default defineSchema({
     .index('by_orgId', ['orgId'])
     .index('by_orgId_isActive', ['orgId', 'isActive'])
     .index('by_orgId_isDeleted', ['orgId', 'isDeleted']),
+
+  // ─── Ticket Types ─────────────────────────────────────────────────────
+  ticketTypes: defineTable({
+    orgId: v.id('organizations'),
+    eventId: v.id('events'),
+    name: v.string(),
+    description: v.optional(v.string()),
+    type: v.union(
+      v.literal('free'), v.literal('paid'), v.literal('vip'),
+      v.literal('vvip'), v.literal('early_bird'), v.literal('student'),
+      v.literal('group'), v.literal('table'), v.literal('donation'),
+    ),
+    price: v.number(),
+    currency: v.string(),
+    quantity: v.number(),
+    sold: v.number(),
+    maxPerCustomer: v.number(),
+    salesStart: v.optional(v.string()),
+    salesEnd: v.optional(v.string()),
+    visibility: v.union(v.literal('public'), v.literal('hidden'), v.literal('invite_only')),
+    refundPolicy: v.optional(v.string()),
+    isActive: v.boolean(),
+    isDeleted: v.boolean(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index('by_orgId', ['orgId'])
+    .index('by_eventId', ['eventId'])
+    .index('by_eventId_isActive', ['eventId', 'isActive']),
+
+  // ─── Ticket Orders ────────────────────────────────────────────────────
+  ticketOrders: defineTable({
+    orgId: v.id('organizations'),
+    eventId: v.id('events'),
+    ticketTypeId: v.id('ticketTypes'),
+    orderId: v.string(),
+    customerName: v.string(),
+    customerEmail: v.string(),
+    customerPhone: v.optional(v.string()),
+    quantity: v.number(),
+    unitPrice: v.number(),
+    totalAmount: v.number(),
+    currency: v.string(),
+    discountCode: v.optional(v.string()),
+    discountAmount: v.optional(v.number()),
+    paymentStatus: v.union(
+      v.literal('pending'), v.literal('successful'),
+      v.literal('failed'), v.literal('refunded'),
+    ),
+    paymentReference: v.optional(v.string()),
+    checkinStatus: v.union(
+      v.literal('not_checked_in'), v.literal('checked_in'),
+    ),
+    checkedInAt: v.optional(v.string()),
+    checkedInBy: v.optional(v.id('users')),
+    ticketCode: v.string(),
+    qrCode: v.optional(v.string()),
+    deliveryMethod: v.optional(v.union(v.literal('email'), v.literal('whatsapp'), v.literal('physical'))),
+    deliveryStatus: v.optional(v.union(v.literal('pending'), v.literal('delivered'), v.literal('failed'))),
+    metadata: v.optional(v.any()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index('by_orgId', ['orgId'])
+    .index('by_eventId', ['eventId'])
+    .index('by_ticketTypeId', ['ticketTypeId'])
+    .index('by_orderId', ['orderId'])
+    .index('by_customerEmail', ['customerEmail'])
+    .index('by_paymentStatus', ['paymentStatus'])
+    .index('by_eventId_paymentStatus', ['eventId', 'paymentStatus']),
+
+  // ─── Ticket Discounts ─────────────────────────────────────────────────
+  ticketDiscounts: defineTable({
+    orgId: v.id('organizations'),
+    eventId: v.id('events'),
+    code: v.string(),
+    description: v.optional(v.string()),
+    type: v.union(v.literal('percentage'), v.literal('fixed')),
+    value: v.number(),
+    maxUses: v.number(),
+    usedCount: v.number(),
+    validFrom: v.string(),
+    validUntil: v.string(),
+    isActive: v.boolean(),
+    isDeleted: v.boolean(),
+    createdAt: v.string(),
+  })
+    .index('by_orgId', ['orgId'])
+    .index('by_eventId', ['eventId'])
+    .index('by_code', ['code']),
+
+  // ─── Check-in Logs ────────────────────────────────────────────────────
+  checkinLogs: defineTable({
+    orgId: v.id('organizations'),
+    eventId: v.id('events'),
+    orderId: v.id('ticketOrders'),
+    checkedInBy: v.id('users'),
+    method: v.union(v.literal('qr_scan'), v.literal('manual'), v.literal('search')),
+    timestamp: v.string(),
+  })
+    .index('by_eventId', ['eventId'])
+    .index('by_orderId', ['orderId']),
 });

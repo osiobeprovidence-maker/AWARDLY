@@ -9,7 +9,7 @@ import {
   Trophy, Calendar, Clock, MapPin, Users, Vote, Award, Target, CheckCircle2,
   ArrowRight, Share2, Bookmark, ExternalLink, ChevronDown, ChevronUp,
   Globe, Star, TrendingUp, Play, Image as ImageIcon, X,
-  Newspaper, Radio, Zap, Link2, CalendarPlus, Flag, Timer, ChevronLeft, ChevronRight, Copy, Ticket
+  Newspaper, Radio, Zap, Link2, CalendarPlus, Flag, Timer, ChevronLeft, ChevronRight, Copy, Ticket, ShieldCheck
 } from 'lucide-react';
 import { TicketingCard } from '../components/ui/TicketingCard';
 
@@ -926,11 +926,50 @@ export function EventHub() {
       case 'Gallery': return <GallerySection event={event} onImageClick={(u, c) => setLightbox({ url: u, caption: c })} />;
       case 'Sponsors': return <SponsorsSection event={event} />;
       case 'Ticketing': return (
-        <div className="max-w-lg mx-auto">
-          <TicketingCard
-            connected={false}
-            variant="full"
-          />
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Ticket className="h-6 w-6 text-gold-500" />
+            <h3 className="text-xl font-serif text-white">Get Your Tickets</h3>
+            <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-gold-500/10 text-gold-500 border border-gold-500/20">
+              Powered by MyInvite
+            </span>
+          </div>
+
+          {[
+            { name: 'Regular', price: '₦5,000', remaining: 142, features: ['Standard seating', 'Event access', 'Digital ticket'] },
+            { name: 'VIP', price: '₦25,000', remaining: 28, features: ['Premium seating', 'Backstage access', 'Meet & greet', 'Complimentary drinks'] },
+            { name: 'Table (10)', price: '₦200,000', remaining: 5, features: ['Private table for 10', 'Premium positioning', 'Dedicated service', 'Logo placement'] },
+          ].map((ticket) => (
+            <Card key={ticket.name} className="border-white/10 hover:border-gold-500/30 transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h4 className="text-lg font-bold text-white">{ticket.name}</h4>
+                    <p className="text-2xl font-serif text-gold-500 mt-1">{ticket.price}</p>
+                  </div>
+                  <span className="text-[11px] text-dark-400 bg-dark-800/60 px-3 py-1 rounded-full">
+                    {ticket.remaining} remaining
+                  </span>
+                </div>
+                <ul className="space-y-2 mb-5">
+                  {ticket.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm text-dark-300">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-gold-500 shrink-0" /> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Button className="w-full bg-gold-500 hover:bg-gold-600 text-dark-950 font-bold">
+                  <Ticket className="h-4 w-4 mr-2" /> Buy Ticket
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+
+          <div className="text-center pt-4">
+            <p className="text-[11px] text-dark-500 flex items-center justify-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" /> Secure checkout powered by Paystack
+            </p>
+          </div>
         </div>
       );
       case 'FAQ': return <FAQSection event={event} />;
