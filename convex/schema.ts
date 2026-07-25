@@ -317,7 +317,8 @@ export default defineSchema({
     .index('by_orgId', ['orgId'])
     .index('by_status', ['status'])
     .index('by_eventId_status', ['eventId', 'status'])
-    .index('by_submitterId', ['submitterId']),
+    .index('by_submitterId', ['submitterId'])
+    .index('by_submitterEmail', ['submitterEmail']),
 
   // ─── Votes ──────────────────────────────────────────────────────────────
   votes: defineTable({

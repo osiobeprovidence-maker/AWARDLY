@@ -69,12 +69,12 @@ export const getEventNominationStatus = query({
 export const getBySubmitterEmail = query({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    const nominations = await ctx.db
-      .query('nominations')
-      .collect();
+    if (!args.email) return [];
 
-    return nominations
-      .filter((n) => n.submitterEmail === args.email)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return await ctx.db
+      .query('nominations')
+      .withIndex('by_submitterEmail', (q) => q.eq('submitterEmail', args.email))
+      .order('desc')
+      .collect();
   },
 });
