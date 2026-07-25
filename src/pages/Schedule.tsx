@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import { Search, Calendar, Clock, MapPin, Trophy, ArrowRight, ChevronDown, List, Grid3X3, Filter, Radio, Star, Users, Vote, Award, Target, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PublicNav } from '../components/navigation/PublicNav';
+import { PlatformNav } from '../components/navigation/PlatformNav';
 
 const categories = ['All', 'Entertainment', 'Corporate', 'Government', 'Non-Profit', 'Tech'];
 const statuses = ['All', 'Upcoming', 'Nominations Open', 'Voting Live', 'Winners Announced'];
@@ -188,7 +188,7 @@ export function Schedule() {
 
   return (
     <div className="min-h-screen bg-dark-950 font-sans">
-      <PublicNav />
+      <PlatformNav />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         {/* Hero */}

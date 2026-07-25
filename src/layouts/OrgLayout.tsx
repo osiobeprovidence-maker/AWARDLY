@@ -1,12 +1,12 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
-import { PublicNav } from '../components/navigation/PublicNav';
+import { PlatformNav } from '../components/navigation/PlatformNav';
 
 export function OrgLayout() {
   return (
     <div className="min-h-screen bg-dark-950 flex flex-col font-sans">
-      <PublicNav />
+      <PlatformNav />
 
       <main className="flex-1 flex flex-col">
         <Outlet />

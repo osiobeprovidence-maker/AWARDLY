@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import { PublicNav } from '../components/navigation/PublicNav';
+import { PlatformNav } from '../components/navigation/PlatformNav';
 import {
   Trophy, Calendar, Clock, MapPin, Users, Vote, Award, Target, CheckCircle2,
   ArrowRight, Share2, Bookmark, ExternalLink, ChevronDown, ChevronUp,
@@ -573,7 +573,7 @@ export function AwardPortal() {
   if (!award) {
     return (
       <div className="min-h-screen bg-dark-950 font-sans">
-        <PublicNav />
+        <PlatformNav />
         <div className="flex flex-col items-center justify-center py-32 px-4 text-center">
           <div className="h-20 w-20 bg-white/5 rounded-2xl flex items-center justify-center mb-6 border border-white/5">
             <Trophy className="h-10 w-10 text-dark-600" />
@@ -606,7 +606,7 @@ export function AwardPortal() {
 
   return (
     <div className="min-h-screen bg-dark-950 font-sans">
-      <PublicNav />
+      <PlatformNav />
 
       {lightbox && <LightboxModal url={lightbox.url} caption={lightbox.caption} onClose={() => setLightbox(null)} />}
 

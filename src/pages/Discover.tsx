@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import headiesLogo from '../assets/images/headies_logo_gold_1784644513476.jpg';
 import awardStage from '../assets/images/cinematic_award_stage_1784642261177.jpg';
-import { PublicNav } from '../components/navigation/PublicNav';
+import { PlatformNav } from '../components/navigation/PlatformNav';
 
 const categories = ['All', 'Entertainment', 'Corporate', 'Government', 'Non-Profit', 'Tech'];
 
@@ -32,7 +32,7 @@ export function Discover() {
 
   return (
     <div className="min-h-screen bg-dark-950 font-sans">
-      <PublicNav />
+      <PlatformNav />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
         {/* Cinematic Header */}
