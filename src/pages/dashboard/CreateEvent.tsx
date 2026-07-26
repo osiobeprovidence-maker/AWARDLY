@@ -263,6 +263,7 @@ export function CreateEvent() {
           orgId: currentOrg!.id as any,
           name: cat.name,
           rulesSource: cat.rulesSource,
+          firebaseUid: user?.id,
         });
       }
       toast('Draft saved successfully', 'success');
@@ -286,6 +287,7 @@ export function CreateEvent() {
           orgId: currentOrg!.id as any,
           name: cat.name,
           rulesSource: cat.rulesSource,
+          firebaseUid: user?.id,
         });
       }
       await publishEvent({ eventId: eventId as any, firebaseUid: user?.id });

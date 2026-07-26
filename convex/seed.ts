@@ -59,7 +59,6 @@ export const seedDemoData = mutation({
       orgId,
       userId: user._id,
       role: 'owner',
-      status: 'active',
       joinedAt: now,
     });
 
@@ -182,13 +181,16 @@ export const seedDemoData = mutation({
 
       // Increment counts
       const cat = await ctx.db.get(categoryIds[nom.catIndex]);
-      if (cat) {
-        await ctx.db.patch(categoryIds[nom.catIndex], { nomineeCount: cat.nomineeCount + 1 });
+      if (cat && 'nomineeCount' in cat) {
+        await ctx.db.patch(categoryIds[nom.catIndex], { nomineeCount: (cat as any).nomineeCount + 1 });
       }
     }
 
     // Update event nominee count
-    await ctx.db.patch(eventId, { nomineeCount: nomineesData.length });
+    const eventData = await ctx.db.get(eventId);
+    if (eventData && 'nomineeCount' in eventData) {
+      await ctx.db.patch(eventId, { nomineeCount: nomineesData.length });
+    }
 
     // ─── 5. Create Ticket Types ──────────────────────────────────────
     await ctx.db.insert('ticketTypes', {

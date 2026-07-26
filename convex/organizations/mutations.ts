@@ -115,14 +115,16 @@ export const update = mutation({
     timezone: v.optional(v.string()),
     city: v.optional(v.string()),
     supportEmail: v.optional(v.string()),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const { firebaseUid, ...updates } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
     await requirePermission(ctx, user._id, args.orgId, 'manageOrg');
 
-    const { orgId, ...updates } = args;
+    const { orgId, ...patchData } = updates;
     const filtered = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(patchData).filter(([, v]) => v !== undefined)
     );
 
     await ctx.db.patch(orgId, { ...filtered, updatedAt: new Date().toISOString() });
@@ -133,9 +135,12 @@ export const update = mutation({
 });
 
 export const softDelete = mutation({
-  args: { orgId: v.id('organizations') },
+  args: {
+    orgId: v.id('organizations'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     await requirePermission(ctx, user._id, args.orgId, 'manageOrg');
 
     // Only owner can delete
@@ -159,16 +164,15 @@ export const updateBranding = mutation({
     coverUrl: v.optional(v.string()),
     primaryColor: v.string(),
     secondaryColor: v.string(),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const { firebaseUid, ...patchData } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
     await requirePermission(ctx, user._id, args.orgId, 'manageBranding');
 
     await ctx.db.patch(args.orgId, {
-      logoUrl: args.logoUrl,
-      coverUrl: args.coverUrl,
-      primaryColor: args.primaryColor,
-      secondaryColor: args.secondaryColor,
+      ...patchData,
       updatedAt: new Date().toISOString(),
     });
   },
@@ -191,9 +195,10 @@ export const updateSocialLinks = mutation({
       discord: v.optional(v.string()),
       website: v.optional(v.string()),
     }),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     await requirePermission(ctx, user._id, args.orgId, 'manageOrg');
 
     await ctx.db.patch(args.orgId, {

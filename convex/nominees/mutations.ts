@@ -10,25 +10,25 @@ export const create = mutation({
     name: v.string(),
     description: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const { firebaseUid, ...insertData } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
     await requirePermission(ctx, user._id, args.orgId, 'manageCategories');
 
     const nomId = await ctx.db.insert('nominees', {
-      ...args,
+      ...insertData,
       voteCount: 0,
       isDeleted: false,
       createdAt: new Date().toISOString(),
     });
 
-    // Update category nominee count
     const cat = await ctx.db.get(args.categoryId);
     if (cat) {
       await ctx.db.patch(args.categoryId, { nomineeCount: cat.nomineeCount + 1 });
     }
 
-    // Update event nominee count
     const event = await ctx.db.get(args.eventId);
     if (event) {
       await ctx.db.patch(args.eventId, { nomineeCount: event.nomineeCount + 1 });
@@ -44,24 +44,28 @@ export const update = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const { firebaseUid, ...updates } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
     const nom = await ctx.db.get(args.nomineeId);
     if (!nom) throw new Error('Nominee not found');
 
     await requirePermission(ctx, user._id, nom.orgId, 'manageCategories');
 
-    const { nomineeId, ...updates } = args;
     const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
-    await ctx.db.patch(nomineeId, filtered);
+    await ctx.db.patch(args.nomineeId, filtered);
   },
 });
 
 export const softDelete = mutation({
-  args: { nomineeId: v.id('nominees') },
+  args: {
+    nomineeId: v.id('nominees'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const nom = await ctx.db.get(args.nomineeId);
     if (!nom) throw new Error('Nominee not found');
 

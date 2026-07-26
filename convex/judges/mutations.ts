@@ -10,32 +10,29 @@ export const invite = mutation({
     categoryIds: v.array(v.id('categories')),
     deadline: v.optional(v.string()),
     notes: v.optional(v.string()),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     await requirePermission(ctx, user._id, args.orgId, 'manageJudges');
 
-    // Find the target user by email
     const targetUser = await ctx.db
       .query('users')
       .withIndex('by_email', (q) => q.eq('email', args.email))
       .unique();
     if (!targetUser) throw new Error('User not found. They must have an Awwardly account.');
 
-    // Check if already a judge for this event
     const existing = await ctx.db
       .query('judges')
       .withIndex('by_userId_eventId', (q) => q.eq('userId', targetUser._id).eq('eventId', args.eventId))
       .unique();
     if (existing) throw new Error('This user is already a judge for this event.');
 
-    // Ensure target user has a judge membership in the org
     const membership = await ctx.db
       .query('organizationMembers')
       .withIndex('by_orgId_userId', (q) => q.eq('orgId', args.orgId).eq('userId', targetUser._id))
       .unique();
     if (!membership) {
-      // Auto-add as org member with judge role
       await ctx.db.insert('organizationMembers', {
         orgId: args.orgId,
         userId: targetUser._id,
@@ -57,7 +54,6 @@ export const invite = mutation({
       invitedAt: now,
     });
 
-    // Send notification
     const event = await ctx.db.get(args.eventId);
     await createNotification(
       ctx,
@@ -76,9 +72,12 @@ export const invite = mutation({
 });
 
 export const accept = mutation({
-  args: { judgeId: v.id('judges') },
+  args: {
+    judgeId: v.id('judges'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const judge = await ctx.db.get(args.judgeId);
     if (!judge) throw new Error('Judge assignment not found');
     if (judge.userId !== user._id) throw new Error('Not authorized');
@@ -89,9 +88,12 @@ export const accept = mutation({
 });
 
 export const decline = mutation({
-  args: { judgeId: v.id('judges') },
+  args: {
+    judgeId: v.id('judges'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const judge = await ctx.db.get(args.judgeId);
     if (!judge) throw new Error('Judge assignment not found');
     if (judge.userId !== user._id) throw new Error('Not authorized');
@@ -105,9 +107,10 @@ export const assignCategories = mutation({
   args: {
     judgeId: v.id('judges'),
     categoryIds: v.array(v.id('categories')),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const judge = await ctx.db.get(args.judgeId);
     if (!judge) throw new Error('Judge assignment not found');
     await requirePermission(ctx, user._id, judge.orgId, 'manageJudges');
@@ -120,9 +123,10 @@ export const updateDeadline = mutation({
   args: {
     judgeId: v.id('judges'),
     deadline: v.string(),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const judge = await ctx.db.get(args.judgeId);
     if (!judge) throw new Error('Judge assignment not found');
     await requirePermission(ctx, user._id, judge.orgId, 'manageJudges');
@@ -132,9 +136,12 @@ export const updateDeadline = mutation({
 });
 
 export const remove = mutation({
-  args: { judgeId: v.id('judges') },
+  args: {
+    judgeId: v.id('judges'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const judge = await ctx.db.get(args.judgeId);
     if (!judge) throw new Error('Judge assignment not found');
     await requirePermission(ctx, user._id, judge.orgId, 'manageJudges');

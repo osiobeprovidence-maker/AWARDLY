@@ -15,13 +15,15 @@ export const create = mutation({
       duplicatePolicy: v.string(), fraudPrevention: v.string(), startDate: v.string(),
       endDate: v.string(), terms: v.string(), notes: v.optional(v.string()),
     })),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const { firebaseUid, ...insertData } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
     await requirePermission(ctx, user._id, args.orgId, 'manageCategories');
 
     const catId = await ctx.db.insert('categories', {
-      ...args,
+      ...insertData,
       nomineeCount: 0,
       totalVotes: 0,
       isDeleted: false,
@@ -50,24 +52,28 @@ export const update = mutation({
       duplicatePolicy: v.string(), fraudPrevention: v.string(), startDate: v.string(),
       endDate: v.string(), terms: v.string(), notes: v.optional(v.string()),
     })),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const { firebaseUid, ...updates } = args;
+    const user = await getAuthenticatedUser(ctx, firebaseUid);
     const cat = await ctx.db.get(args.categoryId);
     if (!cat) throw new Error('Category not found');
 
     await requirePermission(ctx, user._id, cat.orgId, 'manageCategories');
 
-    const { categoryId, ...updates } = args;
     const filtered = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
-    await ctx.db.patch(categoryId, filtered);
+    await ctx.db.patch(args.categoryId, filtered);
   },
 });
 
 export const softDelete = mutation({
-  args: { categoryId: v.id('categories') },
+  args: {
+    categoryId: v.id('categories'),
+    firebaseUid: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const cat = await ctx.db.get(args.categoryId);
     if (!cat) throw new Error('Category not found');
 
@@ -96,9 +102,10 @@ export const updateBranding = mutation({
       tagline: v.optional(v.string()),
       description: v.optional(v.string()),
     }),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const cat = await ctx.db.get(args.categoryId);
     if (!cat) throw new Error('Category not found');
 
@@ -118,9 +125,10 @@ export const updateJudgingCriteria = mutation({
       maxScore: v.number(),
       weight: v.number(),
     })),
+    firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
     const cat = await ctx.db.get(args.categoryId);
     if (!cat) throw new Error('Category not found');
 
