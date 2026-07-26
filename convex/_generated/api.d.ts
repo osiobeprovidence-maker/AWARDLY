@@ -61,6 +61,7 @@ import type * as payoutAccounts_mutations from "../payoutAccounts/mutations.js";
 import type * as payoutAccounts_queries from "../payoutAccounts/queries.js";
 import type * as portfolio_mutations from "../portfolio/mutations.js";
 import type * as portfolio_queries from "../portfolio/queries.js";
+import type * as seed from "../seed.js";
 import type * as shared_helpers from "../shared/helpers.js";
 import type * as shared_permissions from "../shared/permissions.js";
 import type * as sponsors_mutations from "../sponsors/mutations.js";
@@ -139,6 +140,7 @@ declare const fullApi: ApiFromModules<{
   "payoutAccounts/queries": typeof payoutAccounts_queries;
   "portfolio/mutations": typeof portfolio_mutations;
   "portfolio/queries": typeof portfolio_queries;
+  seed: typeof seed;
   "shared/helpers": typeof shared_helpers;
   "shared/permissions": typeof shared_permissions;
   "sponsors/mutations": typeof sponsors_mutations;
