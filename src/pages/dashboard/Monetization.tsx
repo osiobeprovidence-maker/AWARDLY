@@ -267,8 +267,10 @@ export function Monetization() {
                         <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded ${
                           event.status === 'published' ? 'bg-emerald-500/10 text-emerald-500'
                           : event.status === 'live' ? 'bg-gold-500/10 text-gold-500'
-                          : event.status === 'draft' ? 'bg-white/5 text-dark-400'
-                          : event.status === 'closed' ? 'bg-red-500/10 text-red-500'
+                          : event.status === 'draft' || event.status === 'ready_for_review' ? 'bg-white/5 text-dark-400'
+                          : event.status === 'closed' || event.status === 'archived' ? 'bg-red-500/10 text-red-500'
+                          : event.status === 'voting_ended' ? 'bg-orange-500/10 text-orange-500'
+                          : event.status === 'winners_announced' ? 'bg-gold-500/10 text-gold-500'
                           : 'bg-white/5 text-dark-400'
                         }`}>
                           {event.status}

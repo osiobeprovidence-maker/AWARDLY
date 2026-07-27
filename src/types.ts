@@ -147,7 +147,7 @@ export type Event = {
   theme?: string;
   tagline?: string;
   themeColor?: string;
-  status: 'draft' | 'published' | 'ended';
+  status: 'draft' | 'ready_for_review' | 'published' | 'live' | 'voting_ended' | 'winners_announced' | 'closed' | 'archived';
   isVotingActive: boolean;
   votingType?: 'public' | 'judge' | 'both';
   nominationStart?: string;

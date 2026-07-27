@@ -139,7 +139,7 @@ export function OrgProfile() {
 
   const liveBroadcast = broadcasts.find((b: any) => b.status === 'live');
   const latestBroadcast = broadcasts[0] ?? null;
-  const activeEvents = events.filter((e: any) => e.status === 'published' || e.status === 'live');
+  const activeEvents = events.filter((e: any) => ['published', 'live', 'voting_ended', 'winners_announced'].includes(e.status));
   const totalVotes = events.reduce((sum: number, e: any) => sum + (e.totalVotes ?? 0), 0);
 
   const hasBroadcasts = broadcasts.length > 0;

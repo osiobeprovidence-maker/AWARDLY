@@ -1,38 +1,48 @@
 import React, { useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
+import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Plus, Search, Trophy, ExternalLink, Trash2, AlertTriangle, Calendar, Vote, Loader2 } from 'lucide-react';
+import { Plus, Search, Trophy, AlertTriangle, Calendar, Loader2 } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../lib/convex-auth';
+import { useToast } from '../../lib/toast';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+import { EventStatusBadge, EventStatus, STATUS_CONFIG } from '../../components/dashboard/EventStatusBadge';
+import { EventActionsDropdown } from '../../components/dashboard/EventActionsDropdown';
+import { StatusChangeConfirmModal } from '../../components/dashboard/StatusChangeConfirmModal';
 
-type TabKey = 'all' | 'draft' | 'published' | 'live' | 'closed';
+type TabKey = 'all' | EventStatus;
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'draft', label: 'Draft' },
+  { key: 'ready_for_review', label: 'In Review' },
   { key: 'published', label: 'Published' },
   { key: 'live', label: 'Live' },
-  { key: 'closed', label: 'Closed' },
+  { key: 'voting_ended', label: 'Voting Ended' },
+  { key: 'winners_announced', label: 'Winners' },
+  { key: 'archived', label: 'Archived' },
 ];
-
-const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-dark-800 text-dark-400 border-white/5',
-  published: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  live: 'bg-gold-500/10 text-gold-500 border-gold-500/20',
-  closed: 'bg-red-500/10 text-red-400 border-red-500/20',
-  archived: 'bg-dark-800 text-dark-500 border-white/5',
-};
 
 export function DashboardEvents() {
   const { currentOrg } = useAuth();
+  const toast = useToast();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
   const [search, setSearch] = useState('');
+
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [transitionModal, setTransitionModal] = useState<{
+    eventId: string;
+    eventTitle: string;
+    fromStatus: EventStatus;
+    toStatus: EventStatus;
+  } | null>(null);
+  const [transitioning, setTransitioning] = useState(false);
 
   const allEvents = useQuery(
     api.events.queries.getByOrg,
@@ -42,6 +52,11 @@ export function DashboardEvents() {
   const draftEvents = useQuery(
     api.events.queries.getByOrgAndStatus,
     currentOrg ? { orgId: currentOrg.id as any, status: 'draft' } : 'skip'
+  );
+
+  const readyForReviewEvents = useQuery(
+    api.events.queries.getByOrgAndStatus,
+    currentOrg ? { orgId: currentOrg.id as any, status: 'ready_for_review' } : 'skip'
   );
 
   const publishedEvents = useQuery(
@@ -54,30 +69,53 @@ export function DashboardEvents() {
     currentOrg ? { orgId: currentOrg.id as any, status: 'live' } : 'skip'
   );
 
+  const votingEndedEvents = useQuery(
+    api.events.queries.getByOrgAndStatus,
+    currentOrg ? { orgId: currentOrg.id as any, status: 'voting_ended' } : 'skip'
+  );
+
+  const winnersAnnouncedEvents = useQuery(
+    api.events.queries.getByOrgAndStatus,
+    currentOrg ? { orgId: currentOrg.id as any, status: 'winners_announced' } : 'skip'
+  );
+
   const closedEvents = useQuery(
     api.events.queries.getByOrgAndStatus,
     currentOrg ? { orgId: currentOrg.id as any, status: 'closed' } : 'skip'
   );
 
-  const softDelete = useMutation(api.events.mutations.softDelete);
+  const archivedEvents = useQuery(
+    api.events.queries.getByOrgAndStatus,
+    currentOrg ? { orgId: currentOrg.id as any, status: 'archived' } : 'skip'
+  );
+
+  const deleteEvent = useMutation(api.events.mutations.deleteEvent);
+  const transitionStatus = useMutation(api.events.mutations.transitionStatus);
+  const duplicateEvent = useMutation(api.events.mutations.duplicateEvent);
 
   const isLoading = allEvents === undefined;
 
   const tabCounts = useMemo(() => ({
     all: allEvents?.length ?? 0,
     draft: draftEvents?.length ?? 0,
+    ready_for_review: readyForReviewEvents?.length ?? 0,
     published: publishedEvents?.length ?? 0,
     live: liveEvents?.length ?? 0,
-    closed: closedEvents?.length ?? 0,
-  }), [allEvents, draftEvents, publishedEvents, liveEvents, closedEvents]);
+    voting_ended: votingEndedEvents?.length ?? 0,
+    winners_announced: winnersAnnouncedEvents?.length ?? 0,
+    archived: archivedEvents?.length ?? 0,
+  }), [allEvents, draftEvents, readyForReviewEvents, publishedEvents, liveEvents, votingEndedEvents, winnersAnnouncedEvents, archivedEvents]);
 
   const filteredEvents = useMemo(() => {
     let list: any[] = [];
     if (activeTab === 'all') list = allEvents ?? [];
     else if (activeTab === 'draft') list = draftEvents ?? [];
+    else if (activeTab === 'ready_for_review') list = readyForReviewEvents ?? [];
     else if (activeTab === 'published') list = publishedEvents ?? [];
     else if (activeTab === 'live') list = liveEvents ?? [];
-    else if (activeTab === 'closed') list = closedEvents ?? [];
+    else if (activeTab === 'voting_ended') list = votingEndedEvents ?? [];
+    else if (activeTab === 'winners_announced') list = winnersAnnouncedEvents ?? [];
+    else if (activeTab === 'archived') list = archivedEvents ?? [];
 
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -85,18 +123,51 @@ export function DashboardEvents() {
     }
 
     return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [activeTab, search, allEvents, draftEvents, publishedEvents, liveEvents, closedEvents]);
+  }, [activeTab, search, allEvents, draftEvents, readyForReviewEvents, publishedEvents, liveEvents, votingEndedEvents, winnersAnnouncedEvents, archivedEvents]);
 
   const handleDelete = async () => {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      await softDelete({ eventId: deleteId as any });
+      await deleteEvent({ eventId: deleteId as any });
       setDeleteId(null);
+      toast.toast('Event deleted successfully', 'success');
     } catch (e: any) {
-      console.error('Delete failed:', e);
+      const msg = e?.data?.message || e?.message || 'Delete failed';
+      toast.toast(msg, 'error');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleTransitionRequest = (eventId: string, eventTitle: string, fromStatus: EventStatus, toStatus: EventStatus) => {
+    setTransitionModal({ eventId, eventTitle, fromStatus, toStatus });
+  };
+
+  const handleTransitionConfirm = async () => {
+    if (!transitionModal) return;
+    setTransitioning(true);
+    try {
+      await transitionStatus({
+        eventId: transitionModal.eventId as any,
+        toStatus: transitionModal.toStatus,
+      });
+      toast.toast(`Event moved to "${STATUS_CONFIG[transitionModal.toStatus].label}"`, 'success');
+      setTransitionModal(null);
+    } catch (e: any) {
+      toast.toast(e.message || 'Status change failed', 'error');
+    } finally {
+      setTransitioning(false);
+    }
+  };
+
+  const handleDuplicate = async (eventId: string) => {
+    try {
+      const newId = await duplicateEvent({ eventId: eventId as any });
+      toast.toast('Event duplicated as draft', 'success');
+      navigate(`/dashboard/events/${newId}/manage`);
+    } catch (e: any) {
+      toast.toast(e.message || 'Duplication failed', 'error');
     }
   };
 
@@ -112,9 +183,13 @@ export function DashboardEvents() {
   const emptyMessages: Record<TabKey, { title: string; subtitle: string }> = {
     all: { title: 'No events yet', subtitle: 'Create your first award event to start managing categories and nominees.' },
     draft: { title: 'No draft events', subtitle: 'Events you start creating will appear here as drafts.' },
-    published: { title: 'No published events', subtitle: 'Publish a draft event to make it live for your audience.' },
+    ready_for_review: { title: 'No events in review', subtitle: 'Submit a draft for review to see it here.' },
+    published: { title: 'No published events', subtitle: 'Publish a draft event to make it visible to your audience.' },
     live: { title: 'No live events', subtitle: 'Go live from an event to start receiving votes in real-time.' },
+    voting_ended: { title: 'No events with voting ended', subtitle: 'Events where voting has ended will appear here.' },
+    winners_announced: { title: 'No winners announced', subtitle: 'Announce winners to see them here.' },
     closed: { title: 'No closed events', subtitle: 'Events that have ended will appear here.' },
+    archived: { title: 'No archived events', subtitle: 'Events you archive will appear here.' },
   };
 
   if (!currentOrg) {
@@ -137,7 +212,6 @@ export function DashboardEvents() {
 
       <Card>
         <CardContent className="p-0">
-          {/* Search + Tabs */}
           <div className="px-6 pt-6 pb-0">
             <div className="flex items-center gap-4 mb-6">
               <div className="flex-1 lg:max-w-md">
@@ -180,13 +254,11 @@ export function DashboardEvents() {
             </div>
           </div>
 
-          {/* Loading */}
           {isLoading ? (
             <div className="flex items-center justify-center py-24">
               <Loader2 className="h-6 w-6 text-gold-500 animate-spin" />
             </div>
           ) : filteredEvents.length === 0 ? (
-            /* Empty State */
             <div className="flex flex-col items-center justify-center py-24 text-center px-6">
               <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
                 <Trophy className="h-10 w-10 text-dark-600" />
@@ -200,7 +272,6 @@ export function DashboardEvents() {
               )}
             </div>
           ) : (
-            /* Events Table */
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -242,9 +313,15 @@ export function DashboardEvents() {
                         </div>
                       </td>
                       <td className="px-6 py-5">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${STATUS_STYLES[event.status] || STATUS_STYLES.draft}`}>
-                          {event.status}
-                        </span>
+                        <EventStatusBadge
+                          status={event.status as EventStatus}
+                          onTransition={(toStatus) => handleTransitionRequest(
+                            event._id,
+                            event.title,
+                            event.status as EventStatus,
+                            toStatus
+                          )}
+                        />
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-1.5">
@@ -267,25 +344,27 @@ export function DashboardEvents() {
                         )}
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link to={`/dashboard/events/${event._id}/manage`}>
                             <Button variant="glass" size="sm" className="h-8 text-[10px] font-bold uppercase tracking-wider px-3 bg-white/5 hover:bg-white/10">
                               Manage
                             </Button>
                           </Link>
-                          <Link to={`/org/${currentOrg?.slug || event.orgId}/events/${event._id}`} target="_blank">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-dark-500 hover:text-white">
-                              <ExternalLink className="h-4 w-4" />
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteId(event._id)}
-                            className="h-8 w-8 text-dark-500 hover:text-rose-500 hover:bg-rose-500/10"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <EventActionsDropdown
+                            status={event.status as EventStatus}
+                            eventId={event._id}
+                            orgSlug={currentOrg?.slug}
+                            onEdit={() => navigate(`/dashboard/events/${event._id}/manage`)}
+                            onPreview={() => navigate(`/org/${currentOrg?.slug || event.orgId}/events/${event._id}`)}
+                            onTransition={(toStatus) => handleTransitionRequest(
+                              event._id,
+                              event.title,
+                              event.status as EventStatus,
+                              toStatus
+                            )}
+                            onDuplicate={() => handleDuplicate(event._id)}
+                            onDelete={() => setDeleteId(event._id)}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -297,7 +376,18 @@ export function DashboardEvents() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation */}
+      {/* Status Transition Confirmation Modal */}
+      <StatusChangeConfirmModal
+        open={!!transitionModal}
+        fromStatus={transitionModal?.fromStatus || 'draft'}
+        toStatus={transitionModal?.toStatus || 'draft'}
+        eventTitle={transitionModal?.eventTitle || ''}
+        onConfirm={handleTransitionConfirm}
+        onCancel={() => setTransitionModal(null)}
+        loading={transitioning}
+      />
+
+      {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {deleteId && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

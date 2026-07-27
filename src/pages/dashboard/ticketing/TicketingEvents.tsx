@@ -29,7 +29,7 @@ export function TicketingEvents() {
 
     let status: 'Active' | 'Draft' | 'Completed' = 'Draft';
     if (event.status === 'published' || event.status === 'live') status = 'Active';
-    else if (event.status === 'closed' || event.status === 'archived') status = 'Completed';
+    else if (event.status === 'closed' || event.status === 'archived' || event.status === 'voting_ended' || event.status === 'winners_announced') status = 'Completed';
 
     return {
       id: event._id,

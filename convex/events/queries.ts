@@ -34,7 +34,11 @@ export const getByOrg = query({
 export const getByOrgAndStatus = query({
   args: {
     orgId: v.id('organizations'),
-    status: v.union(v.literal('draft'), v.literal('published'), v.literal('live'), v.literal('closed'), v.literal('archived')),
+    status: v.union(
+      v.literal('draft'), v.literal('ready_for_review'), v.literal('published'),
+      v.literal('live'), v.literal('voting_ended'), v.literal('winners_announced'),
+      v.literal('closed'), v.literal('archived'),
+    ),
   },
   handler: async (ctx, args) => {
     return await ctx.db

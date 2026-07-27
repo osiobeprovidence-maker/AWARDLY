@@ -140,7 +140,11 @@ export default defineSchema({
     tagline: v.optional(v.string()),
     themeColor: v.optional(v.string()),
     timezone: v.optional(v.string()),
-    status: v.union(v.literal('draft'), v.literal('published'), v.literal('live'), v.literal('closed'), v.literal('archived')),
+    status: v.union(
+      v.literal('draft'), v.literal('ready_for_review'), v.literal('published'),
+      v.literal('live'), v.literal('voting_ended'), v.literal('winners_announced'),
+      v.literal('closed'), v.literal('archived'),
+    ),
     isVotingActive: v.boolean(),
     votingType: v.optional(v.union(v.literal('public'), v.literal('member'), v.literal('judge'), v.literal('both'))),
     nominationStart: v.optional(v.string()),

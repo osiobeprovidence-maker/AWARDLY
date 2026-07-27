@@ -63,7 +63,7 @@ export function DashboardAnalytics() {
           { label: 'Total Events', value: events.length, icon: BarChart3 },
           { label: 'Total Nominees', value: nominees.length, icon: Users },
           { label: 'Total Votes', value: totalVotes, icon: Vote },
-          { label: 'Active Events', value: events.filter((e: any) => e.status === 'published').length, icon: TrendingUp },
+          { label: 'Active Events', value: events.filter((e: any) => ['published', 'live', 'voting_ended', 'winners_announced'].includes(e.status)).length, icon: TrendingUp },
         ].map((stat, i) => (
           <Card key={i}>
              <CardContent className="p-0">
