@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as admin_mutations from "../admin/mutations.js";
+import type * as admin_queries from "../admin/queries.js";
 import type * as analytics_mutations from "../analytics/mutations.js";
 import type * as analytics_queries from "../analytics/queries.js";
 import type * as bookmarks_mutations from "../bookmarks/mutations.js";
@@ -19,6 +21,7 @@ import type * as categories_queries from "../categories/queries.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as crons from "../crons.js";
+import type * as dashboard_queries from "../dashboard/queries.js";
 import type * as events_mutations from "../events/mutations.js";
 import type * as events_queries from "../events/queries.js";
 import type * as feeds_mutations from "../feeds/mutations.js";
@@ -87,6 +90,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "admin/mutations": typeof admin_mutations;
+  "admin/queries": typeof admin_queries;
   "analytics/mutations": typeof analytics_mutations;
   "analytics/queries": typeof analytics_queries;
   "bookmarks/mutations": typeof bookmarks_mutations;
@@ -98,6 +103,7 @@ declare const fullApi: ApiFromModules<{
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
   crons: typeof crons;
+  "dashboard/queries": typeof dashboard_queries;
   "events/mutations": typeof events_mutations;
   "events/queries": typeof events_queries;
   "feeds/mutations": typeof feeds_mutations;

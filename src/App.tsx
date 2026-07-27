@@ -64,7 +64,21 @@ import { EventDetails } from './pages/org/EventDetails';
 import { LiveFeed } from './pages/LiveFeed';
 import { ShareView } from './pages/ShareView';
 import { CreateOrgWizard } from './pages/onboarding/CreateOrgWizard';
-import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { AdminLayout } from './layouts/AdminLayout';
+import { AdminOverview } from './pages/admin/AdminOverview';
+import { AdminOrganizations } from './pages/admin/AdminOrganizations';
+import { AdminEvents } from './pages/admin/AdminEvents';
+import { AdminUsers } from './pages/admin/AdminUsers';
+import { AdminVoting } from './pages/admin/AdminVoting';
+import { AdminRevenue } from './pages/admin/AdminRevenue';
+import { AdminTransactions } from './pages/admin/AdminTransactions';
+import { AdminPayouts } from './pages/admin/AdminPayouts';
+import { AdminFraud } from './pages/admin/AdminFraud';
+import { AdminNotifications } from './pages/admin/AdminNotifications';
+import { AdminAudit } from './pages/admin/AdminAudit';
+import { AdminVerifications } from './pages/admin/AdminVerifications';
+import { AdminSettings } from './pages/admin/AdminSettings';
+import { AdminAnalytics } from './pages/admin/AdminAnalytics';
 import { JudgePortalLayout } from './layouts/JudgePortalLayout';
 import { JudgeDashboard, AssignedCategories, NomineeReview, Scorecards, JudgeProgress, JudgeGuidelines, JudgeProfile, JudgeNotifications } from './pages/judge';
 
@@ -184,7 +198,22 @@ export default function App() {
               </Route>
 
               {/* Platform Admin */}
-              <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
+              <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+                <Route index element={<AdminOverview />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="organizations" element={<AdminOrganizations />} />
+                <Route path="events" element={<AdminEvents />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="voting" element={<AdminVoting />} />
+                <Route path="revenue" element={<AdminRevenue />} />
+                <Route path="transactions" element={<AdminTransactions />} />
+                <Route path="payouts" element={<AdminPayouts />} />
+                <Route path="fraud" element={<AdminFraud />} />
+                <Route path="notifications" element={<AdminNotifications />} />
+                <Route path="audit" element={<AdminAudit />} />
+                <Route path="verifications" element={<AdminVerifications />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
 
               {/* Public Share View */}
               <Route path="/share/:token" element={<ShareView />} />
