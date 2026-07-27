@@ -1,6 +1,12 @@
 import { query } from '../_generated/server';
 import { v } from 'convex/values';
 
+const EVENT_STATUSES = [
+  'draft', 'ready_for_review', 'published',
+  'live', 'voting_ended', 'winners_announced',
+  'closed', 'archived',
+] as const;
+
 export const getById = query({
   args: { eventId: v.id('events') },
   handler: async (ctx, args) => {
@@ -34,16 +40,15 @@ export const getByOrg = query({
 export const getByOrgAndStatus = query({
   args: {
     orgId: v.id('organizations'),
-    status: v.union(
-      v.literal('draft'), v.literal('ready_for_review'), v.literal('published'),
-      v.literal('live'), v.literal('voting_ended'), v.literal('winners_announced'),
-      v.literal('closed'), v.literal('archived'),
-    ),
+    status: v.string(),
   },
   handler: async (ctx, args) => {
+    if (!(EVENT_STATUSES as readonly string[]).includes(args.status)) {
+      return [];
+    }
     return await ctx.db
       .query('events')
-      .withIndex('by_orgId_status', (q) => q.eq('orgId', args.orgId).eq('status', args.status))
+      .withIndex('by_orgId_status', (q) => q.eq('orgId', args.orgId).eq('status', args.status as any))
       .filter((q) => q.eq(q.field('isDeleted'), false))
       .collect();
   },
