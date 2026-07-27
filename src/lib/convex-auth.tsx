@@ -93,7 +93,7 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
             name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
             email: firebaseUser.email || '',
             avatarUrl: firebaseUser.photoURL || undefined,
-            role: 'user',
+            role: 'user' as any,
             followingOrgIds: [],
             createdAt: new Date().toISOString(),
           });
@@ -175,11 +175,15 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
     return mappedOrganizations.find(o => o.id === currentOrg._id) ?? null;
   }, [currentOrg, mappedOrganizations]);
 
-  // Enrich user with Convex _id when available
+  // Enrich user with Convex _id and real role when available
   const enrichedUser = useMemo(() => {
     if (!user) return null;
     if (convexUser?._id) {
-      return { ...user, convexUserId: convexUser._id };
+      return {
+        ...user,
+        convexUserId: convexUser._id,
+        role: convexUser.role ?? user.role,
+      };
     }
     return user;
   }, [user, convexUser]);

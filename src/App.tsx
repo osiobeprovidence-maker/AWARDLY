@@ -4,6 +4,7 @@
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
 import { Home } from './pages/Home';
 import { AuthLayout } from './layouts/AuthLayout';
 import { Login } from './pages/auth/Login';
@@ -68,7 +69,16 @@ import { JudgePortalLayout } from './layouts/JudgePortalLayout';
 import { JudgeDashboard, AssignedCategories, NomineeReview, Scorecards, JudgeProgress, JudgeGuidelines, JudgeProfile, JudgeNotifications } from './pages/judge';
 
 import { ToastProvider } from './lib/toast';
-import { AuthProvider } from './lib/convex-auth';
+import { AuthProvider, useAuth } from './lib/convex-auth';
+
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return null;
+  if (!user || (user.role !== 'platform_admin' && user.role !== 'admin')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <>{children}</>;
+}
 
 export default function App() {
   return (
@@ -174,7 +184,7 @@ export default function App() {
               </Route>
 
               {/* Platform Admin */}
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin" element={<AdminGuard><AdminDashboard /></AdminGuard>} />
 
               {/* Public Share View */}
               <Route path="/share/:token" element={<ShareView />} />

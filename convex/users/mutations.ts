@@ -19,6 +19,18 @@ export const syncUser = mutation({
       const updates: Record<string, any> = { lastLoginAt: new Date().toISOString() };
       if (args.name && args.name !== existing.name) updates.name = args.name;
       if (args.avatarUrl && args.avatarUrl !== existing.avatarUrl) updates.avatarUrl = args.avatarUrl;
+
+      // Auto-promote first super admin on login
+      if (existing.role === 'user' && args.email.toLowerCase() === 'riderezzy@gmail.com') {
+        const hasAdmin = await ctx.db
+          .query('users')
+          .filter((q) => q.eq(q.field('role'), 'platform_admin'))
+          .first();
+        if (!hasAdmin) {
+          updates.role = 'platform_admin';
+        }
+      }
+
       await ctx.db.patch(existing._id, updates);
       return existing._id;
     }
@@ -28,7 +40,7 @@ export const syncUser = mutation({
       email: args.email,
       name: args.name,
       avatarUrl: args.avatarUrl,
-      role: 'user',
+      role: args.email.toLowerCase() === 'riderezzy@gmail.com' ? 'platform_admin' : 'user',
       reputationScore: 0,
       awardsCount: 0,
       nominationsCount: 0,
@@ -113,5 +125,31 @@ export const updateRole = mutation({
     }
     await ctx.db.patch(args.userId, { role: args.role });
     return args.userId;
+  },
+});
+
+export const claimSuperAdmin = mutation({
+  args: {
+    email: v.string(),
+    firebaseUid: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const caller = await getAuthenticatedUser(ctx, args.firebaseUid);
+
+    const existingAdmin = await ctx.db
+      .query('users')
+      .filter((q) => q.eq(q.field('role'), 'platform_admin'))
+      .first();
+
+    if (existingAdmin) {
+      throw new Error('A platform admin already exists. Only an existing platform admin can promote users.');
+    }
+
+    if (caller.email.toLowerCase() !== args.email.toLowerCase()) {
+      throw new Error('You can only claim super admin for your own email.');
+    }
+
+    await ctx.db.patch(caller._id, { role: 'platform_admin' });
+    return { success: true, message: `${args.email} is now a platform admin.` };
   },
 });
