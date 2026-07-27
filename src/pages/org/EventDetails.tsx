@@ -5,7 +5,7 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
-import { 
+import { Loader2,
   ArrowLeft, Clock, Info, ShieldCheck, Trophy, CreditCard, 
   ChevronRight, Share2, Sparkles, TrendingUp, Zap, MousePointer2
 } from 'lucide-react';
@@ -35,6 +35,26 @@ export function EventDetails() {
   const [isVoting, setIsVoting] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('10');
   const [isCopied, setIsCopied] = useState(false);
+
+  if (event === undefined) {
+    return (
+      <div className="w-full flex-1 bg-dark-950 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-gold-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="w-full flex-1 bg-dark-950 flex flex-col items-center justify-center gap-4">
+        <Trophy className="h-12 w-12 text-dark-600" />
+        <p className="text-dark-400 text-sm">This event no longer exists.</p>
+        <Link to={org ? `/org/${org.slug || org._id}` : '/'}>
+          <Button variant="outline" size="sm">Go Back</Button>
+        </Link>
+      </div>
+    );
+  }
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(window.location.href);
