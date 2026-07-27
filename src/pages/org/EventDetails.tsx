@@ -7,7 +7,8 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Loader2,
   ArrowLeft, Clock, Info, ShieldCheck, Trophy, CreditCard, 
-  ChevronRight, Share2, Sparkles, TrendingUp, Zap, MousePointer2
+  ChevronRight, Share2, Sparkles, TrendingUp, Zap, MousePointer2,
+  Ticket, ExternalLink, CheckCircle2
 } from 'lucide-react';
 
 export function EventDetails() {
@@ -35,6 +36,11 @@ export function EventDetails() {
   const [isVoting, setIsVoting] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState('10');
   const [isCopied, setIsCopied] = useState(false);
+
+  const ticketTypes = useQuery(
+    api.ticketing.mutations.getByEvent,
+    event && event.ticketingMethod === 'native' ? { eventId: event._id } : 'skip'
+  ) ?? [];
 
   if (event === undefined) {
     return (
@@ -282,6 +288,85 @@ export function EventDetails() {
               </motion.div>
             ))}
           </div>
+
+          {/* Ticketing Section */}
+          {event.ticketingMethod && (
+            <div className="mt-8 space-y-6">
+              <div className="flex items-center gap-3">
+                <Ticket className="h-5 w-5 text-gold-500" />
+                <h3 className="text-xl font-serif text-white">Tickets</h3>
+                {event.ticketingMethod === 'native' && event.ticketing?.ticketStatus === 'connected' && (
+                  <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-gold-500/10 text-gold-500 border border-gold-500/20">
+                    via MyInvite
+                  </span>
+                )}
+                {event.ticketingMethod === 'external' && event.externalTicketing && (
+                  <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    via {event.externalTicketing.platformName || 'External'}
+                  </span>
+                )}
+              </div>
+
+              {event.ticketingMethod === 'external' && event.externalTicketing ? (
+                <Card className="border-white/10 hover:border-gold-500/30 transition-all">
+                  <div className="p-8 text-center space-y-5">
+                    <div className="h-14 w-14 mx-auto rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
+                      <Ticket className="h-7 w-7 text-gold-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-white mb-2">
+                        Tickets on {event.externalTicketing.platformName || 'External Platform'}
+                      </h4>
+                      <p className="text-sm text-dark-400 max-w-md mx-auto">
+                        Tickets are sold through our partner platform. Click below to purchase.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => window.open(event.externalTicketing!.purchaseUrl, '_blank')}
+                      className="bg-gold-500 hover:bg-gold-600 text-dark-950 font-bold px-8"
+                    >
+                      <Ticket className="h-4 w-4 mr-2" /> Get Tickets
+                      <ExternalLink className="h-3 w-3 ml-2" />
+                    </Button>
+                    <p className="text-[10px] text-dark-500 flex items-center justify-center gap-2">
+                      <ShieldCheck className="h-3 w-3 text-emerald-500" /> Redirecting to {event.externalTicketing.platformName || 'external'} — secure checkout
+                    </p>
+                  </div>
+                </Card>
+              ) : event.ticketingMethod === 'native' && ticketTypes.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {ticketTypes.map((tt) => (
+                    <Card key={tt._id} className="border-white/10 hover:border-gold-500/30 transition-all">
+                      <div className="p-5">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="text-base font-bold text-white">{tt.name}</h4>
+                            <p className="text-xl font-serif text-gold-500 mt-1">
+                              ₦{tt.price.toLocaleString()}
+                            </p>
+                          </div>
+                          <span className="text-[10px] text-dark-400 bg-dark-800/60 px-2 py-0.5 rounded-full">
+                            {tt.quantity - tt.sold} left
+                          </span>
+                        </div>
+                        {tt.description && (
+                          <p className="text-xs text-dark-400 mb-3">{tt.description}</p>
+                        )}
+                        <Button className="w-full bg-gold-500 hover:bg-gold-600 text-dark-950 font-bold text-xs">
+                          <Ticket className="h-3.5 w-3.5 mr-2" /> Buy Ticket
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : event.ticketingMethod === 'native' ? (
+                <Card className="border-white/10 p-6 text-center">
+                  <Ticket className="h-8 w-8 text-dark-600 mx-auto mb-3" />
+                  <p className="text-sm text-dark-400">Ticket sales are not yet configured for this event.</p>
+                </Card>
+              ) : null}
+            </div>
+          )}
 
           {/* Sticky Checkout/Voting Panel */}
           <AnimatePresence>

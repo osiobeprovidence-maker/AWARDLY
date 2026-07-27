@@ -58,6 +58,8 @@ interface EventData {
   gallery: Array<{ type: 'photo' | 'video'; url: string; caption: string }>;
   sponsors: Array<{ name: string; tier: string }>;
   faq: Array<{ question: string; answer: string }>;
+  ticketingMethod: 'native' | 'external';
+  externalTicketing?: { platformName?: string; purchaseUrl?: string; apiEndpoint?: string };
   relatedEvents: Array<{ id: string; title: string; image: string; date: string }>;
   broadcast?: {
     youtubeVideoId?: string;
@@ -154,6 +156,7 @@ const eventsData: Record<string, EventData> = {
       { question: 'Can I vote online?', answer: 'Yes! Public voting is open on Awwardly. Vote once per category per day.' },
       { question: 'Is there a dress code?', answer: 'The ceremony follows a Black Tie dress code. Formal attire is required.' },
     ],
+    ticketingMethod: 'native',
     relatedEvents: [
       { id: 'evt2', title: 'Headies Next Rated 2026', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=400', date: '2026-10-15' },
       { id: 'evt3', title: 'Global Music Festival', image: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80&w=400', date: '2026-12-20' },
@@ -216,6 +219,8 @@ const eventsData: Record<string, EventData> = {
     gallery: [],
     sponsors: [{ name: 'Coca-Cola', tier: 'Platinum' }],
     faq: [{ question: 'When do nominations open?', answer: 'Nominations open on July 1, 2026.' }],
+    ticketingMethod: 'external',
+    externalTicketing: { platformName: 'Eventbrite', purchaseUrl: 'https://eventbrite.com/example' },
     relatedEvents: [{ id: 'evt1', title: 'The 17th Headies 2026', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=400', date: '2026-09-04' }],
     broadcast: {
       status: 'upcoming',
@@ -267,6 +272,7 @@ const eventsData: Record<string, EventData> = {
     gallery: [],
     sponsors: [{ name: 'MTN', tier: 'Platinum' }],
     faq: [{ question: 'How many days is the festival?', answer: 'The festival runs for 3 days from December 18-20, 2026.' }],
+    ticketingMethod: 'native',
     relatedEvents: [{ id: 'evt1', title: 'The 17th Headies 2026', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=80&w=400', date: '2026-09-04' }],
     broadcast: {
       status: 'none',
@@ -930,46 +936,81 @@ export function EventHub() {
           <div className="flex items-center gap-3 mb-4">
             <Ticket className="h-6 w-6 text-gold-500" />
             <h3 className="text-xl font-serif text-white">Get Your Tickets</h3>
-            <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-gold-500/10 text-gold-500 border border-gold-500/20">
-              Powered by MyInvite
-            </span>
+            {event.ticketingMethod === 'native' && (
+              <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-gold-500/10 text-gold-500 border border-gold-500/20">
+                Powered by MyInvite
+              </span>
+            )}
+            {event.ticketingMethod === 'external' && event.externalTicketing && (
+              <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                via {event.externalTicketing.platformName || 'External Platform'}
+              </span>
+            )}
           </div>
 
-          {[
-            { name: 'Regular', price: '₦5,000', remaining: 142, features: ['Standard seating', 'Event access', 'Digital ticket'] },
-            { name: 'VIP', price: '₦25,000', remaining: 28, features: ['Premium seating', 'Backstage access', 'Meet & greet', 'Complimentary drinks'] },
-            { name: 'Table (10)', price: '₦200,000', remaining: 5, features: ['Private table for 10', 'Premium positioning', 'Dedicated service', 'Logo placement'] },
-          ].map((ticket) => (
-            <Card key={ticket.name} className="border-white/10 hover:border-gold-500/30 transition-all">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h4 className="text-lg font-bold text-white">{ticket.name}</h4>
-                    <p className="text-2xl font-serif text-gold-500 mt-1">{ticket.price}</p>
-                  </div>
-                  <span className="text-[11px] text-dark-400 bg-dark-800/60 px-3 py-1 rounded-full">
-                    {ticket.remaining} remaining
-                  </span>
+          {event.ticketingMethod === 'external' && event.externalTicketing ? (
+            <Card className="border-white/10 hover:border-gold-500/30 transition-all">
+              <CardContent className="p-8 text-center space-y-6">
+                <div className="h-16 w-16 mx-auto rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
+                  <Ticket className="h-8 w-8 text-gold-500" />
                 </div>
-                <ul className="space-y-2 mb-5">
-                  {ticket.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-dark-300">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-gold-500 shrink-0" /> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button className="w-full bg-gold-500 hover:bg-gold-600 text-dark-950 font-bold">
-                  <Ticket className="h-4 w-4 mr-2" /> Buy Ticket
+                <div>
+                  <h4 className="text-lg font-bold text-white mb-2">Tickets Available on {event.externalTicketing.platformName || 'External Platform'}</h4>
+                  <p className="text-sm text-dark-400">
+                    Tickets for this event are sold through our partner platform. Click below to purchase.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => window.open(event.externalTicketing!.purchaseUrl, '_blank')}
+                  className="bg-gold-500 hover:bg-gold-600 text-dark-950 font-bold px-8"
+                >
+                  <Ticket className="h-4 w-4 mr-2" /> Get Tickets
+                  <ExternalLink className="h-3 w-3 ml-2" />
                 </Button>
+                <p className="text-[10px] text-dark-500 flex items-center justify-center gap-2">
+                  <ShieldCheck className="h-3 w-3 text-emerald-500" /> Redirecting to {event.externalTicketing.platformName || 'external'} — secure checkout
+                </p>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            <>
+              {[
+                { name: 'Regular', price: '₦5,000', remaining: 142, features: ['Standard seating', 'Event access', 'Digital ticket'] },
+                { name: 'VIP', price: '₦25,000', remaining: 28, features: ['Premium seating', 'Backstage access', 'Meet & greet', 'Complimentary drinks'] },
+                { name: 'Table (10)', price: '₦200,000', remaining: 5, features: ['Private table for 10', 'Premium positioning', 'Dedicated service', 'Logo placement'] },
+              ].map((ticket) => (
+                <Card key={ticket.name} className="border-white/10 hover:border-gold-500/30 transition-all">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="text-lg font-bold text-white">{ticket.name}</h4>
+                        <p className="text-2xl font-serif text-gold-500 mt-1">{ticket.price}</p>
+                      </div>
+                      <span className="text-[11px] text-dark-400 bg-dark-800/60 px-3 py-1 rounded-full">
+                        {ticket.remaining} remaining
+                      </span>
+                    </div>
+                    <ul className="space-y-2 mb-5">
+                      {ticket.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2 text-sm text-dark-300">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-gold-500 shrink-0" /> {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button className="w-full bg-gold-500 hover:bg-gold-600 text-dark-950 font-bold">
+                      <Ticket className="h-4 w-4 mr-2" /> Buy Ticket
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
 
-          <div className="text-center pt-4">
-            <p className="text-[11px] text-dark-500 flex items-center justify-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-500" /> Secure checkout powered by Paystack
-            </p>
-          </div>
+              <div className="text-center pt-4">
+                <p className="text-[11px] text-dark-500 flex items-center justify-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-500" /> Secure checkout powered by Paystack
+                </p>
+              </div>
+            </>
+          )}
         </div>
       );
       case 'FAQ': return <FAQSection event={event} />;

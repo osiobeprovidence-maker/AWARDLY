@@ -39,6 +39,12 @@ export const create = mutation({
     votingStart: v.optional(v.string()),
     votingEnd: v.optional(v.string()),
     awardFormat: v.optional(v.union(v.literal('online'), v.literal('physical'), v.literal('hybrid'))),
+    ticketingMethod: v.optional(v.union(v.literal('native'), v.literal('external'))),
+    externalTicketing: v.optional(v.object({
+      platformName: v.optional(v.string()),
+      purchaseUrl: v.optional(v.string()),
+      apiEndpoint: v.optional(v.string()),
+    })),
     ceremony: v.optional(v.object({
       venueName: v.optional(v.string()),
       venueAddress: v.optional(v.string()),
@@ -113,6 +119,12 @@ export const update = mutation({
     youtubeVideoId: v.optional(v.string()),
     muxPlaybackId: v.optional(v.string()),
     firebaseUid: v.optional(v.string()),
+    ticketingMethod: v.optional(v.union(v.literal('native'), v.literal('external'))),
+    externalTicketing: v.optional(v.object({
+      platformName: v.optional(v.string()),
+      purchaseUrl: v.optional(v.string()),
+      apiEndpoint: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args) => {
     const { eventId, firebaseUid, ...updates } = args;

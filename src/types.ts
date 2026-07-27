@@ -158,6 +158,8 @@ export type Event = {
   categoryCount?: number;
   nomineeCount?: number;
   totalVotes?: number;
+  ticketingMethod?: 'native' | 'external';
+  externalTicketing?: { platformName?: string; purchaseUrl?: string; apiEndpoint?: string };
   createdAt: string;
 };
 

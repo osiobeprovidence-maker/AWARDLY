@@ -189,7 +189,11 @@ export default defineSchema({
       winnerAnnouncementDate: v.optional(v.string()),
     })),
 
-    // ─── Ticketing (Powered by MyInvite) ───────────────────────────────────
+    // ─── Ticketing ──────────────────────────────────────────────────────────
+    ticketingMethod: v.optional(v.union(
+      v.literal('native'),
+      v.literal('external'),
+    )),
     ticketing: v.optional(v.object({
       provider: v.optional(v.union(v.literal('myinvite'))),
       ticketEventId: v.optional(v.string()),
@@ -204,6 +208,11 @@ export default defineSchema({
       ticketRevenue: v.optional(v.number()),
       guestCount: v.optional(v.number()),
       eventName: v.optional(v.string()),
+    })),
+    externalTicketing: v.optional(v.object({
+      platformName: v.optional(v.string()),
+      purchaseUrl: v.optional(v.string()),
+      apiEndpoint: v.optional(v.string()),
     })),
 
     isDeleted: v.boolean(),

@@ -93,6 +93,12 @@ interface EventData {
     ticketUrl: string;
     eventName: string;
   };
+  ticketingMethod: 'native' | 'external' | '';
+  externalTicketing: {
+    platformName: string;
+    purchaseUrl: string;
+    apiEndpoint: string;
+  };
 }
 
 const DEFAULT_DATA: EventData = {
@@ -133,6 +139,12 @@ const DEFAULT_DATA: EventData = {
     ticketEventId: '',
     ticketUrl: '',
     eventName: '',
+  },
+  ticketingMethod: '',
+  externalTicketing: {
+    platformName: '',
+    purchaseUrl: '',
+    apiEndpoint: '',
   },
 };
 
@@ -246,6 +258,12 @@ export function CreateEvent() {
       votingStart: data.votingStart || undefined,
       votingEnd: data.votingEnd || undefined,
       awardFormat: data.awardFormat || undefined,
+      ticketingMethod: (data.ticketingMethod === 'native' || data.ticketingMethod === 'external') ? data.ticketingMethod : undefined,
+      externalTicketing: data.ticketingMethod === 'external' && data.externalTicketing.purchaseUrl ? {
+        platformName: data.externalTicketing.platformName || undefined,
+        purchaseUrl: data.externalTicketing.purchaseUrl || undefined,
+        apiEndpoint: data.externalTicketing.apiEndpoint || undefined,
+      } : undefined,
       ceremony: ceremonyData,
       firebaseUid: user?.id || undefined,
     };
@@ -1065,11 +1083,8 @@ export function CreateEvent() {
               <Ticket className="h-5 w-5 text-gold-500" />
             </div>
             Ticketing
-            <span className="ml-auto text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-gold-500/10 text-gold-500 border border-gold-500/20">
-              Powered by MyInvite
-            </span>
           </CardTitle>
-          <CardDescription>Sell tickets for your award ceremony without leaving Awwardly.</CardDescription>
+          <CardDescription>Choose how you want to sell tickets for this event.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {(data.awardFormat === 'online') ? (
@@ -1078,68 +1093,103 @@ export function CreateEvent() {
               <p className="text-dark-400 text-sm font-medium">Ticketing not available for online-only events</p>
               <p className="text-dark-600 text-[11px] mt-1">Ticketing is available for physical and hybrid ceremonies</p>
             </div>
-          ) : !data.ticketing.connected ? (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-dark-800/60 border border-white/5">
-                <div className="h-3 w-3 rounded-full bg-dark-600" />
-                <div>
-                  <p className="text-xs font-bold text-dark-400 uppercase tracking-widest">Status</p>
-                  <p className="text-sm text-white">Not Connected</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <button className="p-6 rounded-2xl bg-gold-500/10 border border-gold-500/20 text-left hover:bg-gold-500/15 transition-all group">
-                  <Ticket className="h-8 w-8 text-gold-500 mb-3" />
-                  <p className="text-sm font-bold text-white">Create Ticket Event</p>
-                  <p className="text-[11px] text-dark-400 mt-1">Set up a new ticketing event on MyInvite</p>
-                </button>
-                <button className="p-6 rounded-2xl bg-white/[0.03] border border-white/5 text-left hover:bg-white/[0.06] transition-all group">
-                  <LinkIcon className="h-8 w-8 text-dark-500 mb-3 group-hover:text-gold-500 transition-colors" />
-                  <p className="text-sm font-bold text-white">Connect Existing Event</p>
-                  <p className="text-[11px] text-dark-400 mt-1">Link an existing MyInvite event</p>
-                </button>
-              </div>
-
-              <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3">
-                <ShieldCheck className="h-5 w-5 text-gold-500 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-sm text-white font-medium">Secure event registration powered by MyInvite</p>
-                  <p className="text-xs text-dark-400 mt-1">Handle ticket sales, attendee registration, QR check-in, and guest management — all within Awwardly.</p>
-                </div>
-              </div>
-            </div>
           ) : (
             <div className="space-y-6">
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-gold-500/10 border border-gold-500/20">
-                <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                <div>
-                  <p className="text-xs font-bold text-gold-500 uppercase tracking-widest">Status</p>
-                  <p className="text-sm text-white font-medium">Connected</p>
-                </div>
-                <span className="ml-auto text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  MyInvite ✓
-                </span>
+              <p className="text-[10px] text-dark-500 font-bold uppercase tracking-widest">Ticketing Method</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  onClick={() => update({ ticketingMethod: 'native' })}
+                  className={`p-6 rounded-2xl text-left transition-all border ${
+                    data.ticketingMethod === 'native'
+                      ? 'bg-gold-500/10 border-gold-500/30 ring-1 ring-gold-500/20'
+                      : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <Ticket className="h-6 w-6 text-gold-500" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gold-500">Recommended</span>
+                  </div>
+                  <p className="text-sm font-bold text-white mb-1">Awardly Native Ticketing</p>
+                  <p className="text-[11px] text-dark-400 leading-relaxed">Create ticket types, sell directly on Awardly, QR check-in, revenue analytics — all built-in.</p>
+                </button>
+                <button
+                  onClick={() => update({ ticketingMethod: 'external' })}
+                  className={`p-6 rounded-2xl text-left transition-all border ${
+                    data.ticketingMethod === 'external'
+                      ? 'bg-gold-500/10 border-gold-500/30 ring-1 ring-gold-500/20'
+                      : 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <ExternalLink className="h-6 w-6 text-dark-400" />
+                  </div>
+                  <p className="text-sm font-bold text-white mb-1">External Ticketing Platform</p>
+                  <p className="text-[11px] text-dark-400 leading-relaxed">Link to Eventbrite, MyInvite, Humanitix, Ticketmaster, or any other provider.</p>
+                </button>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-                  <p className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">Event Name</p>
-                  <p className="text-sm text-white mt-1">{data.ticketing.eventName || 'Not set'}</p>
+              {data.ticketingMethod === 'native' && (
+                <div className="space-y-4 pt-4 border-t border-white/5">
+                  <div className="p-4 rounded-xl bg-gold-500/5 border border-gold-500/10 flex items-start gap-3">
+                    <ShieldCheck className="h-5 w-5 text-gold-500 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm text-white font-medium">Awardly Native Ticketing</p>
+                      <p className="text-xs text-dark-400 mt-1">Create ticket types after publishing. Supports multiple types (VIP, Regular, Table), discount codes, QR check-in, and real-time sales analytics.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['Multiple Ticket Types', 'QR Code Check-in', 'Revenue Analytics'].map((f) => (
+                      <div key={f} className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-center">
+                        <Check className="h-4 w-4 text-gold-500 mx-auto mb-1.5" />
+                        <p className="text-[10px] text-dark-300 font-medium">{f}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-                  <p className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">Tickets Sold</p>
-                  <p className="text-sm text-white mt-1">0</p>
-                </div>
-                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
-                  <p className="text-[10px] font-bold text-dark-500 uppercase tracking-widest">Revenue</p>
-                  <p className="text-sm text-white mt-1">Managed by MyInvite</p>
-                </div>
-              </div>
+              )}
 
-              <Button variant="outline" className="w-full border-white/10 hover:bg-white/5">
-                <ExternalLink className="h-4 w-4 mr-2" /> Manage Event
-              </Button>
+              {data.ticketingMethod === 'external' && (
+                <div className="space-y-4 pt-4 border-t border-white/5">
+                  <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3">
+                    <ExternalLink className="h-5 w-5 text-dark-400 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm text-white font-medium">External Ticketing</p>
+                      <p className="text-xs text-dark-400 mt-1">Visitors will click "Get Tickets" and be redirected to your external ticketing page.</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="text-[10px] text-dark-500 font-bold uppercase tracking-widest mb-1.5 block">Platform Name</label>
+                      <Input
+                        value={data.externalTicketing.platformName}
+                        onChange={(e) => update({ externalTicketing: { ...data.externalTicketing, platformName: e.target.value } })}
+                        placeholder="e.g. Eventbrite, MyInvite, Humanitix"
+                        className="h-10 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-dark-500 font-bold uppercase tracking-widest mb-1.5 block">Ticket Purchase URL *</label>
+                      <Input
+                        value={data.externalTicketing.purchaseUrl}
+                        onChange={(e) => update({ externalTicketing: { ...data.externalTicketing, purchaseUrl: e.target.value } })}
+                        placeholder="https://eventbrite.com/your-event"
+                        className="h-10 text-xs"
+                      />
+                      <p className="text-[10px] text-dark-600 mt-1">The link visitors will be taken to when they click "Get Tickets"</p>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-dark-500 font-bold uppercase tracking-widest mb-1.5 block">API Endpoint <span className="text-dark-600">(optional)</span></label>
+                      <Input
+                        value={data.externalTicketing.apiEndpoint}
+                        onChange={(e) => update({ externalTicketing: { ...data.externalTicketing, apiEndpoint: e.target.value } })}
+                        placeholder="https://api.eventbrite.com/v3/..."
+                        className="h-10 text-xs"
+                      />
+                      <p className="text-[10px] text-dark-600 mt-1">If your provider offers an API, we can sync ticket data in the future</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -1209,8 +1259,17 @@ export function CreateEvent() {
         </ReviewSection>
 
         <ReviewSection title="Ticketing" onEdit={() => goTo(6)}>
-          <ReviewRow label="Status" value={data.ticketing.connected ? 'Connected (MyInvite)' : 'Not Connected'} />
-          {data.ticketing.connected && <ReviewRow label="Event" value={data.ticketing.eventName} />}
+          <ReviewRow label="Method" value={
+            data.ticketingMethod === 'native' ? 'Awardly Native Ticketing' :
+            data.ticketingMethod === 'external' ? `External (${data.externalTicketing.platformName || 'Not specified'})` :
+            'Not configured'
+          } />
+          {data.ticketingMethod === 'external' && data.externalTicketing.purchaseUrl && (
+            <ReviewRow label="Purchase URL" value={data.externalTicketing.purchaseUrl} />
+          )}
+          {data.ticketingMethod === 'native' && (
+            <ReviewRow label="Status" value={data.ticketing.connected ? 'Connected (MyInvite)' : 'Configure after publishing'} />
+          )}
         </ReviewSection>
       </CardContent>
     </Card>
