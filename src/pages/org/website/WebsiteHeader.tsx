@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, Trophy, Globe } from 'lucide-react';
+import { CheckCircle2, Trophy, Menu, X, LogOut } from 'lucide-react';
+import { useAuth } from '../../../lib/convex-auth';
 
 interface WebsiteHeaderProps {
   org: any;
@@ -13,9 +14,11 @@ interface WebsiteHeaderProps {
 
 export function WebsiteHeader({ org, navigation, activePage, onNavigate, liveBroadcast }: WebsiteHeaderProps) {
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const { user, signOut } = useAuth();
 
   React.useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 200);
+    const handleScroll = () => setIsScrolled(window.scrollY > 60);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -24,113 +27,174 @@ export function WebsiteHeader({ org, navigation, activePage, onNavigate, liveBro
     .filter((n) => n.isEnabled)
     .sort((a, b) => a.order - b.order);
 
+  const handleNav = (pageId: string) => {
+    onNavigate(pageId);
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
-      <div className="relative h-[25vh] sm:h-[35vh] w-full">
-        {org.coverUrl ? (
-          <img src={org.coverUrl} alt="Cover" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
-        ) : (
-          <div className="h-full w-full bg-dark-900" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/20 to-transparent" />
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-20 sm:-mt-24">
-        <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-8 group">
-          <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
-            <div className="h-28 w-28 sm:h-36 sm:w-36 rounded-2xl border-4 border-dark-950 bg-dark-900 overflow-hidden shrink-0 relative shadow-2xl transition-transform group-hover:scale-105 duration-500">
+      {/* ─── Top Bar: Org branding + Nav + Auth ─── */}
+      <header className={`sticky top-0 z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-dark-950/95 backdrop-blur-2xl border-b border-white/5 shadow-2xl'
+          : 'bg-dark-950/60 backdrop-blur-xl'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left: Org Logo + Name */}
+            <Link to={`/org/${org.slug}`} onClick={() => handleNav('home')}
+              className="flex items-center gap-3 shrink-0 group">
               {org.logoUrl ? (
-                <img src={org.logoUrl} alt="Logo" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <img src={org.logoUrl} alt={org.name}
+                  className="h-9 w-9 rounded-lg object-cover border border-white/10 group-hover:border-gold-500/30 transition-colors"
+                  referrerPolicy="no-referrer" />
               ) : (
-                <span className="text-4xl text-dark-500 font-serif flex h-full w-full justify-center items-center">{org.name[0]}</span>
+                <div className="h-9 w-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-serif text-gold-500 text-sm group-hover:border-gold-500/30 transition-colors">
+                  {org.name[0]}
+                </div>
               )}
-            </div>
-            <div className="mb-2">
-              <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                <h1 className="text-2xl sm:text-4xl font-serif text-white font-medium">{org.name}</h1>
-                {org.isVerified && <CheckCircle2 className="h-6 w-6 text-gold-500" />}
+              <div className="hidden sm:flex items-center gap-2">
+                <span className="text-white font-serif text-sm font-medium group-hover:text-gold-400 transition-colors">
+                  {org.name}
+                </span>
+                {org.isVerified && <CheckCircle2 className="h-4 w-4 text-gold-500" />}
+                {liveBroadcast && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-red-500/10 border border-red-500/20 rounded text-[9px] font-bold text-red-400 uppercase tracking-widest flex items-center gap-1">
+                    <span className="h-1 w-1 bg-red-500 rounded-full animate-pulse" /> Live
+                  </span>
+                )}
               </div>
-              <p className="text-dark-400 text-lg flex items-center justify-center md:justify-start gap-3">
-                <span>@{org.slug}</span>
-                <span className="h-1 w-1 bg-dark-600 rounded-full" />
-                <span className="text-gold-500/80 font-bold text-xs uppercase tracking-widest">{org.type} Hub</span>
-              </p>
-            </div>
-          </div>
-        </div>
+            </Link>
 
-        <div className="bg-dark-900/40 backdrop-blur-md rounded-2xl border border-white/5 p-4 mb-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <nav className="flex items-center gap-1 overflow-x-auto scrollbar-hide w-full md:w-auto">
+            {/* Center: Navigation */}
+            <nav className="hidden lg:flex items-center gap-0.5">
               {enabledNav.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.pageId)}
-                  className={`relative px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
+                  onClick={() => handleNav(item.pageId)}
+                  className={`relative px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
                     activePage === item.pageId
-                      ? 'bg-gold-500 text-dark-950'
+                      ? 'bg-gold-500 text-dark-950 shadow-lg shadow-gold-500/20'
                       : 'text-dark-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   {item.label}
                   {item.pageId === 'voting' && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-gold-500 animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-gold-500 animate-pulse" />
                   )}
                   {item.pageId === 'live-feed' && liveBroadcast && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
                   )}
                 </button>
               ))}
             </nav>
-            <div className="hidden md:flex items-center gap-3 shrink-0">
-              <span className="text-dark-400 text-xs font-bold uppercase tracking-widest">
-                {org.followerCount.toLocaleString()} Members
-              </span>
+
+            {/* Right: Auth */}
+            <div className="hidden lg:flex items-center gap-3 shrink-0">
+              {user ? (
+                <Link to="/dashboard" className="flex items-center gap-2 group">
+                  <div className="h-8 w-8 rounded-lg bg-gold-500 flex items-center justify-center text-dark-950 text-xs font-bold overflow-hidden border-2 border-white/10 group-hover:border-gold-500/50 transition-colors">
+                    {user.avatarUrl ? (
+                      <img src={user.avatarUrl} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                    ) : (
+                      user.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link to="/auth/login"
+                    className="px-4 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest text-dark-300 hover:text-white hover:bg-white/5 transition-all">
+                    Sign In
+                  </Link>
+                  <Link to="/auth/signup"
+                    className="px-4 py-1.5 rounded-lg bg-gold-500 text-dark-950 text-[11px] font-bold uppercase tracking-widest hover:bg-gold-400 transition-colors shadow-lg shadow-gold-500/10">
+                    Get Started
+                  </Link>
+                </div>
+              )}
             </div>
+
+            {/* Mobile menu button */}
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 text-dark-300 hover:text-white">
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
+      {/* ─── Mobile Menu ─── */}
       <AnimatePresence>
-        {isScrolled && (
+        {mobileMenuOpen && (
           <motion.div
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            exit={{ y: -100 }}
-            className="fixed top-16 left-0 right-0 z-[40] bg-dark-900/90 backdrop-blur-2xl border-b border-white/5 px-6 py-2 hidden md:block"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] lg:hidden"
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {org.logoUrl ? (
-                  <img src={org.logoUrl} className="h-8 w-8 rounded-lg object-cover" alt="logo" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center font-serif text-gold-500 text-sm">
-                    {org.name[0]}
-                  </div>
-                )}
-                <span className="text-white font-serif text-sm">{org.name}</span>
-                {liveBroadcast && (
-                  <span className="text-red-400 text-[10px] font-bold uppercase tracking-widest flex items-center">
-                    <span className="h-1.5 w-1.5 bg-red-500 rounded-full mr-1.5 animate-pulse" /> Live
-                  </span>
-                )}
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute inset-y-0 right-0 w-80 bg-dark-950 border-l border-white/10 flex flex-col shadow-[-20px_0_50px_-20px_rgba(0,0,0,0.5)]"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                  {org.logoUrl ? (
+                    <img src={org.logoUrl} className="h-8 w-8 rounded-lg object-cover" alt="" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center font-serif text-gold-500 text-sm">
+                      {org.name[0]}
+                    </div>
+                  )}
+                  <span className="text-white font-serif text-sm">{org.name}</span>
+                </div>
+                <button onClick={() => setMobileMenuOpen(false)}
+                  className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 text-dark-400 hover:text-white">
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <nav className="flex items-center gap-1">
+
+              <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-1">
                 {enabledNav.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => { onNavigate(item.pageId); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  <button key={item.id} onClick={() => handleNav(item.pageId)}
+                    className={`px-4 py-3 rounded-xl text-left text-sm font-medium transition-all ${
                       activePage === item.pageId
-                        ? 'bg-gold-500 text-dark-950'
-                        : 'text-dark-400 hover:text-white'
-                    }`}
-                  >
+                        ? 'bg-gold-500/10 text-gold-500 font-bold'
+                        : 'text-dark-300 hover:text-white hover:bg-white/5'
+                    }`}>
                     {item.label}
                   </button>
                 ))}
               </nav>
-            </div>
+
+              <div className="p-4 border-t border-white/5">
+                {user ? (
+                  <div className="flex items-center gap-3">
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 h-10 rounded-xl bg-gold-500 text-dark-950 text-xs font-bold uppercase tracking-widest flex items-center justify-center">
+                      Dashboard
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Link to="/auth/login" onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 h-10 rounded-xl border border-white/10 text-white text-xs font-bold uppercase tracking-widest flex items-center justify-center hover:bg-white/5 transition-colors">
+                      Sign In
+                    </Link>
+                    <Link to="/auth/signup" onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 h-10 rounded-xl bg-gold-500 text-dark-950 text-xs font-bold uppercase tracking-widest flex items-center justify-center">
+                      Get Started
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
