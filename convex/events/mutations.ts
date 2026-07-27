@@ -261,94 +261,93 @@ export const deleteEvent = mutation({
 
     const eid = args.eventId;
 
-    // ── 1. Ticketing ───────────────────────────────────────────────────────
-    for (const doc of await ctx.db.query('checkinLogs').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
-    for (const doc of await ctx.db.query('ticketDiscounts').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
-    for (const doc of await ctx.db.query('ticketOrders').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
-    for (const doc of await ctx.db.query('ticketTypes').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
+    async function deleteByIndex<Table extends string>(
+      table: Table,
+      indexName: string,
+      key: string,
+      value: any,
+    ) {
+      const docs = await (ctx.db as any)
+        .query(table)
+        .withIndex(indexName, (q: any) => q.eq(key, value))
+        .collect();
+      for (const doc of docs) {
+        await ctx.db.delete(doc._id);
+      }
     }
 
-    // ── 2. Live / Broadcasts ──────────────────────────────────────────────
-    const broadcasts = await ctx.db.query('broadcasts').withIndex('by_eventId', q => q.eq('eventId', eid)).collect();
+    // ── 1. Ticketing ───────────────────────────────────────────────────────
+    await deleteByIndex('checkinLogs', 'by_eventId', 'eventId', eid);
+    await deleteByIndex('ticketDiscounts', 'by_eventId', 'eventId', eid);
+    await deleteByIndex('ticketOrders', 'by_eventId', 'eventId', eid);
+    await deleteByIndex('ticketTypes', 'by_eventId', 'eventId', eid);
+
+    // ── 2. Broadcasts + children (liveChat, liveReactions, liveAnalytics) ──
+    const broadcasts = await ctx.db
+      .query('broadcasts')
+      .withIndex('by_eventId', (q) => q.eq('eventId', eid))
+      .collect();
     for (const bc of broadcasts) {
-      for (const r of await ctx.db.query('liveReactions').withIndex('by_broadcastId', q => q.eq('broadcastId', bc._id)).collect()) {
-        await ctx.db.delete(r._id);
-      }
-      for (const m of await ctx.db.query('liveChat').withIndex('by_broadcastId', q => q.eq('broadcastId', bc._id)).collect()) {
-        await ctx.db.delete(m._id);
-      }
-      for (const a of await ctx.db.query('liveAnalytics').withIndex('by_broadcastId', q => q.eq('broadcastId', bc._id)).collect()) {
-        await ctx.db.delete(a._id);
-      }
+      await deleteByIndex('liveReactions', 'by_broadcastId', 'broadcastId', bc._id);
+      await deleteByIndex('liveChat', 'by_broadcastId', 'broadcastId', bc._id);
+      await deleteByIndex('liveAnalytics', 'by_broadcastId', 'broadcastId', bc._id);
       await ctx.db.delete(bc._id);
-    }
-    for (const doc of await ctx.db.query('liveAnalytics').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
     }
 
     // ── 3. Judging ────────────────────────────────────────────────────────
-    for (const doc of await ctx.db.query('judgeScores').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
-    for (const doc of await ctx.db.query('judges').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
+    await deleteByIndex('judgeScores', 'by_eventId', 'eventId', eid);
+    await deleteByIndex('judges', 'by_eventId', 'eventId', eid);
 
     // ── 4. Voting ─────────────────────────────────────────────────────────
-    for (const doc of await ctx.db.query('votes').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
+    await deleteByIndex('votes', 'by_eventId', 'eventId', eid);
 
     // ── 5. Nominations & Nominees ─────────────────────────────────────────
-    for (const doc of await ctx.db.query('nominations').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
-    const nomineeIds: string[] = [];
-    for (const doc of await ctx.db.query('nominees').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      nomineeIds.push(doc._id);
+    await deleteByIndex('nominations', 'by_eventId', 'eventId', eid);
+
+    const nomineeDocs = await ctx.db
+      .query('nominees')
+      .withIndex('by_eventId', (q) => q.eq('eventId', eid))
+      .collect();
+    const nomineeIds = nomineeDocs.map((d) => d._id);
+    for (const doc of nomineeDocs) {
       await ctx.db.delete(doc._id);
     }
 
     // ── 6. Categories ─────────────────────────────────────────────────────
-    for (const doc of await ctx.db.query('categories').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
+    await deleteByIndex('categories', 'by_eventId', 'eventId', eid);
 
-    // ── 7. Feed Posts (and nested comments / polls) ───────────────────────
-    for (const post of await ctx.db.query('feedPosts').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      for (const c of await ctx.db.query('comments').withIndex('by_postId', q => q.eq('postId', post._id)).collect()) {
-        await ctx.db.delete(c._id);
-      }
-      for (const poll of await ctx.db.query('postPolls').withIndex('by_postId', q => q.eq('postId', post._id)).collect()) {
-        for (const pv of await ctx.db.query('postPollVotes').withIndex('by_pollId', q => q.eq('pollId', poll._id)).collect()) {
-          await ctx.db.delete(pv._id);
-        }
+    // ── 7. Feed Posts + nested comments / polls ───────────────────────────
+    const posts = await ctx.db
+      .query('feedPosts')
+      .withIndex('by_eventId', (q) => q.eq('eventId', eid))
+      .collect();
+    for (const post of posts) {
+      await deleteByIndex('comments', 'by_postId', 'postId', post._id);
+      const polls = await ctx.db
+        .query('postPolls')
+        .withIndex('by_postId', (q) => q.eq('postId', post._id))
+        .collect();
+      for (const poll of polls) {
+        await deleteByIndex('postPollVotes', 'by_pollId', 'pollId', poll._id);
         await ctx.db.delete(poll._id);
       }
       await ctx.db.delete(post._id);
     }
 
     // ── 8. Analytics ──────────────────────────────────────────────────────
-    for (const doc of await ctx.db.query('analyticsEvents').withIndex('by_eventId', q => q.eq('eventId', eid)).collect()) {
-      await ctx.db.delete(doc._id);
-    }
+    await deleteByIndex('analyticsEvents', 'by_eventId', 'eventId', eid);
 
-    // ── 9. Notifications (no eventId index – full scan with filter) ───────
-    for (const doc of await ctx.db.query('notifications').collect()) {
-      if (doc.eventId === eid) {
+    // ── 9. Notifications (full scan – no eventId index) ───────────────────
+    const allNotifications = await ctx.db.query('notifications').collect();
+    for (const doc of allNotifications) {
+      if (doc.eventId && doc.eventId === eid) {
         await ctx.db.delete(doc._id);
       }
     }
 
-    // ── 10. Bookmarks (targetType = 'event', targetId = string) ──────────
-    for (const doc of await ctx.db.query('bookmarks').collect()) {
+    // ── 10. Bookmarks (full scan – no targetId index) ─────────────────────
+    const allBookmarks = await ctx.db.query('bookmarks').collect();
+    for (const doc of allBookmarks) {
       if (doc.targetType === 'event' && doc.targetId === eid) {
         await ctx.db.delete(doc._id);
       }
@@ -356,7 +355,13 @@ export const deleteEvent = mutation({
 
     // ── 11. Likes on deleted nominees ─────────────────────────────────────
     for (const nid of nomineeIds) {
-      for (const doc of await ctx.db.query('likes').withIndex('by_targetType_targetId', q => q.eq('targetType', 'nominee').eq('targetId', nid)).collect()) {
+      const likeDocs = await ctx.db
+        .query('likes')
+        .withIndex('by_targetType_targetId', (q) =>
+          q.eq('targetType', 'nominee').eq('targetId', nid as any)
+        )
+        .collect();
+      for (const doc of likeDocs) {
         await ctx.db.delete(doc._id);
       }
     }
