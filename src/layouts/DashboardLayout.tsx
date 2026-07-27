@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Radio, Trophy, Users, Settings, Vote,
   Presentation, TrendingUp, LogOut, Menu, X, Bell, Search,
   User, ArrowLeft, Gavel, Image, Ticket, Bookmark, Handshake,
-  Award, Palette, ChevronDown
+  Award, Palette, ChevronDown, Globe
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -32,6 +32,7 @@ const orgNavItems = [
   { icon: TrendingUp, label: 'Analytics', to: '/dashboard/analytics' },
   { icon: TrendingUp, label: 'Monetization', to: '/dashboard/monetization' },
   { icon: Image, label: 'Media Center', to: '/dashboard/media' },
+  { icon: Globe, label: 'Website', to: '/dashboard/website' },
   { icon: Settings, label: 'Settings', to: '/dashboard/settings' },
 ];
 

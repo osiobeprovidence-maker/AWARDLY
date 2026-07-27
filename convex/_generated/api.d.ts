@@ -82,6 +82,8 @@ import type * as users_mutations from "../users/mutations.js";
 import type * as users_queries from "../users/queries.js";
 import type * as votes_mutations from "../votes/mutations.js";
 import type * as votes_queries from "../votes/queries.js";
+import type * as websites_mutations from "../websites/mutations.js";
+import type * as websites_queries from "../websites/queries.js";
 
 import type {
   ApiFromModules,
@@ -164,6 +166,8 @@ declare const fullApi: ApiFromModules<{
   "users/queries": typeof users_queries;
   "votes/mutations": typeof votes_mutations;
   "votes/queries": typeof votes_queries;
+  "websites/mutations": typeof websites_mutations;
+  "websites/queries": typeof websites_queries;
 }>;
 
 /**

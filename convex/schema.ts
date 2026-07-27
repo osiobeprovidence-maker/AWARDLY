@@ -960,4 +960,87 @@ export default defineSchema({
   })
     .index('by_eventId', ['eventId'])
     .index('by_orderId', ['orderId']),
+
+  // ─── Organization Websites ────────────────────────────────────────────
+  organizationWebsites: defineTable({
+    orgId: v.id('organizations'),
+    theme: v.union(
+      v.literal('classic'), v.literal('modern'), v.literal('luxury'),
+      v.literal('festival'), v.literal('corporate'), v.literal('entertainment'),
+    ),
+    navigation: v.array(v.object({
+      id: v.string(),
+      label: v.string(),
+      pageId: v.string(),
+      isEnabled: v.boolean(),
+      order: v.number(),
+      isExternal: v.optional(v.boolean()),
+      externalUrl: v.optional(v.string()),
+    })),
+    homepageSections: v.array(v.object({
+      id: v.string(),
+      type: v.string(),
+      isEnabled: v.boolean(),
+      order: v.number(),
+      title: v.optional(v.string()),
+      subtitle: v.optional(v.string()),
+      content: v.optional(v.string()),
+      backgroundColor: v.optional(v.string()),
+      backgroundImage: v.optional(v.string()),
+      ctaText: v.optional(v.string()),
+      ctaUrl: v.optional(v.string()),
+      mediaUrl: v.optional(v.string()),
+      metadata: v.optional(v.record(v.string(), v.string())),
+    })),
+    seo: v.optional(v.object({
+      title: v.optional(v.string()),
+      description: v.optional(v.string()),
+      keywords: v.optional(v.array(v.string())),
+      ogImage: v.optional(v.string()),
+    })),
+    customDomain: v.optional(v.string()),
+    headerStyle: v.optional(v.union(v.literal('default'), v.literal('centered'), v.literal('minimal'))),
+    footerStyle: v.optional(v.union(v.literal('default'), v.literal('centered'), v.literal('minimal'))),
+    footerContent: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index('by_orgId', ['orgId']),
+
+  // ─── Website Pages ──────────────────────────────────────────────────
+  websitePages: defineTable({
+    orgId: v.id('organizations'),
+    websiteId: v.id('organizationWebsites'),
+    pageId: v.string(),
+    title: v.string(),
+    slug: v.string(),
+    content: v.string(),
+    sections: v.array(v.object({
+      id: v.string(),
+      type: v.string(),
+      isEnabled: v.boolean(),
+      order: v.number(),
+      title: v.optional(v.string()),
+      subtitle: v.optional(v.string()),
+      content: v.optional(v.string()),
+      backgroundColor: v.optional(v.string()),
+      backgroundImage: v.optional(v.string()),
+      ctaText: v.optional(v.string()),
+      ctaUrl: v.optional(v.string()),
+      mediaUrl: v.optional(v.string()),
+      metadata: v.optional(v.record(v.string(), v.string())),
+    })),
+    seo: v.optional(v.object({
+      title: v.optional(v.string()),
+      description: v.optional(v.string()),
+      keywords: v.optional(v.array(v.string())),
+      ogImage: v.optional(v.string()),
+    })),
+    isPublished: v.boolean(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index('by_orgId', ['orgId'])
+    .index('by_websiteId', ['websiteId'])
+    .index('by_orgId_pageId', ['orgId', 'pageId']),
 });
