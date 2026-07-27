@@ -27,7 +27,7 @@ const TABS: { key: TabKey; label: string }[] = [
 ];
 
 export function DashboardEvents() {
-  const { currentOrg } = useAuth();
+  const { currentOrg, user } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabKey>('all');
@@ -129,7 +129,7 @@ export function DashboardEvents() {
     if (!deleteId) return;
     setDeleting(true);
     try {
-      await deleteEvent({ eventId: deleteId as any });
+      await deleteEvent({ eventId: deleteId as any, firebaseUid: user?.id });
       setDeleteId(null);
       toast.toast('Event deleted successfully', 'success');
     } catch (e: any) {
@@ -151,6 +151,7 @@ export function DashboardEvents() {
       await transitionStatus({
         eventId: transitionModal.eventId as any,
         toStatus: transitionModal.toStatus,
+        firebaseUid: user?.id,
       });
       toast.toast(`Event moved to "${STATUS_CONFIG[transitionModal.toStatus].label}"`, 'success');
       setTransitionModal(null);
@@ -163,7 +164,7 @@ export function DashboardEvents() {
 
   const handleDuplicate = async (eventId: string) => {
     try {
-      const newId = await duplicateEvent({ eventId: eventId as any });
+      const newId = await duplicateEvent({ eventId: eventId as any, firebaseUid: user?.id });
       toast.toast('Event duplicated as draft', 'success');
       navigate(`/dashboard/events/${newId}/manage`);
     } catch (e: any) {

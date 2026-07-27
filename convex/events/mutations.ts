@@ -483,36 +483,78 @@ export const transitionStatus = mutation({
     firebaseUid: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
-    const event = await ctx.db.get(args.eventId);
-    if (!event) throw new Error('Event not found');
+    try {
+      const user = await getAuthenticatedUser(ctx, args.firebaseUid);
 
-    await requirePermission(ctx, user._id, event.orgId, 'manageEvents');
+      const event = await ctx.db.get(args.eventId);
+      if (!event) {
+        throw new Error('Event not found.');
+      }
 
-    const allowed = VALID_TRANSITIONS[event.status as EventStatus];
-    if (!allowed || !allowed.includes(args.toStatus)) {
-      throw new Error(
-        `Cannot transition from "${event.status}" to "${args.toStatus}"`
+      if (event.isDeleted) {
+        throw new Error('Cannot change status of a deleted event.');
+      }
+
+      await requirePermission(ctx, user._id, event.orgId, 'manageEvents');
+
+      const VALID_STATUSES: EventStatus[] = [
+        'draft', 'ready_for_review', 'published',
+        'live', 'voting_ended', 'winners_announced',
+        'closed', 'archived',
+      ];
+      if (!VALID_STATUSES.includes(args.toStatus)) {
+        throw new Error(`Invalid status "${args.toStatus}".`);
+      }
+
+      const allowed = VALID_TRANSITIONS[event.status as EventStatus];
+      if (!allowed) {
+        throw new Error(
+          `Event has unknown status "${event.status}". Cannot transition.`
+        );
+      }
+      if (!allowed.includes(args.toStatus)) {
+        throw new Error(
+          `Cannot transition from "${event.status}" to "${args.toStatus}". Allowed: ${allowed.join(', ')}`
+        );
+      }
+
+      const now = new Date().toISOString();
+      const patches: Record<string, string | boolean> = {
+        status: args.toStatus,
+        updatedAt: now,
+      };
+
+      if (args.toStatus === 'live') {
+        patches.isVotingActive = true;
+      } else if (
+        args.toStatus === 'voting_ended' ||
+        args.toStatus === 'closed' ||
+        args.toStatus === 'archived'
+      ) {
+        patches.isVotingActive = false;
+      }
+
+      await ctx.db.patch(args.eventId, patches);
+
+      await logAudit(
+        ctx,
+        event.orgId,
+        user._id,
+        `transition:${args.toStatus}`,
+        'event',
+        args.eventId,
+        { from: event.status, to: args.toStatus }
       );
+
+      return {
+        success: true,
+        previousStatus: event.status,
+        currentStatus: args.toStatus,
+      };
+    } catch (err: any) {
+      console.error('[transitionStatus] Error:', err?.message ?? err);
+      throw new Error(err?.message || 'Failed to transition event status.');
     }
-
-    const now = new Date().toISOString();
-    const patches: Record<string, any> = { status: args.toStatus, updatedAt: now };
-
-    if (args.toStatus === 'live') {
-      patches.isVotingActive = true;
-    } else if (args.toStatus === 'voting_ended' || args.toStatus === 'closed') {
-      patches.isVotingActive = false;
-    } else if (args.toStatus === 'archived') {
-      patches.isVotingActive = false;
-    }
-
-    await ctx.db.patch(args.eventId, patches);
-
-    await logAudit(ctx, event.orgId, user._id, `transition:${args.toStatus}`, 'event', args.eventId, {
-      from: event.status,
-      to: args.toStatus,
-    });
   },
 });
 
