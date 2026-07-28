@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { ConvexProvider, ConvexReactClient, useQuery, useMutation } from 'convex/react';
-import { auth, onAuthChange, signInWithGoogle as fbGoogle, signInWithEmail as fbEmail, signUpWithEmail as fbSignUp, signOut as fbSignOut } from './firebase';
+import { auth, onAuthChange, signInWithGoogle as fbGoogle, signInWithEmail as fbEmail, signUpWithEmail as fbSignUp, signOut as fbSignOut, handleRedirectResult } from './firebase';
 import { api } from '../../convex/_generated/api';
 import type { User, Organization, OrganizationMember, MemberRole } from '../types';
 
@@ -64,6 +64,11 @@ function AuthProviderInner({ children }: { children: React.ReactNode }) {
     api.organizations.queries.getByIds,
     orgIds.length > 0 ? { ids: orgIds } : 'skip'
   );
+
+  // Handle redirect result on mount (for signInWithRedirect flow)
+  useEffect(() => {
+    handleRedirectResult().catch(() => {});
+  }, []);
 
   // Firebase auth state listener
   useEffect(() => {

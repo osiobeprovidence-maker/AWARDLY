@@ -2,7 +2,8 @@ import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendSignInLinkToEmail,
@@ -32,8 +33,12 @@ export const googleProvider = new GoogleAuthProvider();
 // ─── Auth Functions ─────────────────────────────────────────────────────────
 
 export async function signInWithGoogle() {
-  const result = await signInWithPopup(auth, googleProvider);
-  return result.user;
+  await signInWithRedirect(auth, googleProvider);
+}
+
+export async function handleRedirectResult() {
+  const result = await getRedirectResult(auth);
+  return result?.user ?? null;
 }
 
 export async function signInWithEmail(email: string, password: string) {

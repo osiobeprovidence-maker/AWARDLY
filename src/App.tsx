@@ -10,6 +10,7 @@ import { AuthLayout } from './layouts/AuthLayout';
 import { Login } from './pages/auth/Login';
 import { Signup } from './pages/auth/Signup';
 import { PostAuthRedirect } from './pages/auth/PostAuthRedirect';
+import { PaymentCallback } from './pages/PaymentCallback';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { DashboardOverview } from './pages/dashboard/Overview';
 import { DashboardFeed } from './pages/dashboard/Feed';
@@ -125,6 +126,7 @@ export default function App() {
               </Route>
 
               <Route path="/onboarding" element={<CreateOrgWizard />} />
+              <Route path="/payment/callback" element={<PaymentCallback />} />
               
               {/* Dashboard routes */}
               <Route path="/dashboard" element={<DashboardLayout />}>

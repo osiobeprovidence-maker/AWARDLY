@@ -20,7 +20,7 @@ export function usePaystackPayment(options: UsePaystackPaymentOptions) {
 
     try {
       const reference = options.reference || generateReference();
-      const callbackUrl = `${window.location.origin}/payment/callback`;
+      const callbackUrl = `${window.location.origin}/payment/callback?ref=${reference}`;
 
       const initResult = await initializePayment({
         email: options.email,
@@ -30,6 +30,7 @@ export function usePaystackPayment(options: UsePaystackPaymentOptions) {
         callback_url: callbackUrl,
         metadata: {
           ...metadata,
+          reference,
           custom_fields: [
             {
               display_name: 'Organization',
@@ -44,58 +45,18 @@ export function usePaystackPayment(options: UsePaystackPaymentOptions) {
         throw new Error(initResult.message || 'Failed to initialize payment');
       }
 
-      const { authorization_url, access_code, reference: ref } = initResult.data;
+      const { authorization_url } = initResult.data;
 
-      const popup = window.open(
-        authorization_url,
-        'paystack_checkout',
-        'width=500,height=700,scrollbars=yes,resizable=yes'
-      );
+      // Store pending payment state for callback page to pick up
+      sessionStorage.setItem('paystack_pending', JSON.stringify({
+        reference,
+        email: options.email,
+        amount: options.amount,
+        onSuccess: true,
+      }));
 
-      if (!popup) {
-        throw new Error('Popup blocked. Please allow popups for this site.');
-      }
-
-      return new Promise<void>((resolve, reject) => {
-        const pollTimer = setInterval(async () => {
-          try {
-            if (!popup || popup.closed) {
-              clearInterval(pollTimer);
-              try {
-                const verifyResult = await verifyPayment(ref);
-                if (verifyResult.status && verifyResult.data.status === 'success') {
-                  options.onSuccess?.({
-                    ...initResult.data,
-                    verified: true,
-                  });
-                  resolve();
-                } else {
-                  const err = new Error('Payment was not completed');
-                  setError(err.message);
-                  options.onError?.(err);
-                  reject(err);
-                }
-              } catch {
-                const err = new Error('Could not verify payment status');
-                setError(err.message);
-                options.onError?.(err);
-                reject(err);
-              }
-              setIsProcessing(false);
-            }
-          } catch {
-            // keep polling
-          }
-        }, 2000);
-
-        setTimeout(() => {
-          clearInterval(pollTimer);
-          if (popup && !popup.closed) {
-            popup.close();
-          }
-          setIsProcessing(false);
-        }, 300000);
-      });
+      // Redirect to Paystack checkout (avoids COOP popup issues)
+      window.location.href = authorization_url;
     } catch (err: any) {
       const message = err.message || 'Payment failed';
       setError(message);

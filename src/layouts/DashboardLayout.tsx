@@ -10,6 +10,7 @@ import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { BrandLogo } from '../components/brand/BrandLogo';
 import { NotificationPopover } from '../components/dashboard/NotificationPopover';
+import { ConnectionStatus } from '../components/dashboard/ConnectionStatus';
 import { useToast } from '../lib/toast';
 import { useAuth } from '../lib/convex-auth';
 
@@ -303,6 +304,7 @@ export function DashboardLayout() {
           </motion.div>
         </div>
       </main>
+      <ConnectionStatus />
     </div>
   );
 }
