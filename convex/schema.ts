@@ -1011,6 +1011,17 @@ export default defineSchema({
     headerStyle: v.optional(v.union(v.literal('default'), v.literal('centered'), v.literal('minimal'))),
     footerStyle: v.optional(v.union(v.literal('default'), v.literal('centered'), v.literal('minimal'))),
     footerContent: v.optional(v.string()),
+    socialLinks: v.optional(v.object({
+      facebook: v.optional(v.string()),
+      twitter: v.optional(v.string()),
+      instagram: v.optional(v.string()),
+      linkedin: v.optional(v.string()),
+      youtube: v.optional(v.string()),
+      tiktok: v.optional(v.string()),
+    })),
+    isPublished: v.boolean(),
+    publishedAt: v.optional(v.string()),
+    lastPublishedAt: v.optional(v.string()),
     createdAt: v.string(),
     updatedAt: v.string(),
   })

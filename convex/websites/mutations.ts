@@ -50,6 +50,7 @@ export const createWebsite = mutation({
       theme: 'classic',
       navigation: DEFAULT_NAVIGATION,
       homepageSections: DEFAULT_HOMEPAGE_SECTIONS,
+      isPublished: false,
       createdAt: now,
       updatedAt: now,
     });
@@ -266,6 +267,64 @@ export const updateWebsiteSettings = mutation({
     if (args.customDomain !== undefined) patches.customDomain = args.customDomain;
 
     await ctx.db.patch(website._id, patches);
+    return { success: true };
+  },
+});
+
+export const togglePublish = mutation({
+  args: {
+    firebaseUid: v.optional(v.string()),
+    orgId: v.id('organizations'),
+    isPublished: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    await requireOrgAdmin(ctx, args.firebaseUid, args.orgId);
+    const website = await ctx.db
+      .query('organizationWebsites')
+      .withIndex('by_orgId', (q) => q.eq('orgId', args.orgId))
+      .unique();
+    if (!website) throw new Error('Website not found');
+
+    const now = new Date().toISOString();
+    const patches: Record<string, any> = {
+      isPublished: args.isPublished,
+      updatedAt: now,
+    };
+    if (args.isPublished) {
+      patches.publishedAt = website.publishedAt ?? now;
+      patches.lastPublishedAt = now;
+    }
+
+    await ctx.db.patch(website._id, patches);
+    return { success: true };
+  },
+});
+
+export const updateSocialLinks = mutation({
+  args: {
+    firebaseUid: v.optional(v.string()),
+    orgId: v.id('organizations'),
+    socialLinks: v.object({
+      facebook: v.optional(v.string()),
+      twitter: v.optional(v.string()),
+      instagram: v.optional(v.string()),
+      linkedin: v.optional(v.string()),
+      youtube: v.optional(v.string()),
+      tiktok: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    await requireOrgAdmin(ctx, args.firebaseUid, args.orgId);
+    const website = await ctx.db
+      .query('organizationWebsites')
+      .withIndex('by_orgId', (q) => q.eq('orgId', args.orgId))
+      .unique();
+    if (!website) throw new Error('Website not found');
+
+    await ctx.db.patch(website._id, {
+      socialLinks: args.socialLinks,
+      updatedAt: new Date().toISOString(),
+    });
     return { success: true };
   },
 });

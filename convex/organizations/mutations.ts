@@ -88,6 +88,50 @@ export const create = mutation({
 
     await logAudit(ctx, orgId, user._id, 'create', 'organization', orgId);
 
+    const DEFAULT_NAVIGATION = [
+      { id: 'home', label: 'Home', pageId: 'home', isEnabled: true, order: 0 },
+      { id: 'about', label: 'About', pageId: 'about', isEnabled: true, order: 1 },
+      { id: 'events', label: 'Events', pageId: 'events', isEnabled: true, order: 2 },
+      { id: 'winners', label: 'Winners', pageId: 'winners', isEnabled: true, order: 3 },
+      { id: 'media', label: 'Media', pageId: 'media', isEnabled: true, order: 4 },
+      { id: 'voting', label: 'Voting', pageId: 'voting', isEnabled: false, order: 5 },
+      { id: 'live-feed', label: 'Live Feed', pageId: 'live-feed', isEnabled: false, order: 6 },
+      { id: 'contact', label: 'Contact', pageId: 'contact', isEnabled: true, order: 7 },
+    ];
+
+    const DEFAULT_HOMEPAGE_SECTIONS = [
+      { id: 'hero', type: 'hero', isEnabled: true, order: 0, title: 'Welcome', subtitle: 'Celebrating Excellence' },
+      { id: 'featured-events', type: 'featured_events', isEnabled: true, order: 1, title: 'Featured Awards' },
+      { id: 'sponsors', type: 'sponsors', isEnabled: true, order: 2, title: 'Our Sponsors' },
+      { id: 'newsletter', type: 'newsletter', isEnabled: true, order: 3, title: 'Stay Updated', subtitle: 'Subscribe to our newsletter' },
+    ];
+
+    const websiteId = await ctx.db.insert('organizationWebsites', {
+      orgId,
+      theme: 'classic',
+      navigation: DEFAULT_NAVIGATION,
+      homepageSections: DEFAULT_HOMEPAGE_SECTIONS,
+      isPublished: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const defaultPages = ['home', 'about', 'events', 'winners', 'media', 'voting', 'live-feed', 'contact'];
+    for (const pageId of defaultPages) {
+      await ctx.db.insert('websitePages', {
+        orgId,
+        websiteId,
+        pageId,
+        title: pageId.charAt(0).toUpperCase() + pageId.slice(1).replace(/-/g, ' '),
+        slug: pageId,
+        content: '',
+        sections: [],
+        isPublished: pageId === 'home' || pageId === 'about',
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
     return orgId;
   },
 });

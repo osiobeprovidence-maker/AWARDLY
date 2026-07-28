@@ -23,7 +23,7 @@ import { DashboardLive } from './pages/dashboard/Live';
 import { DashboardMedia } from './pages/dashboard/Media';
 import { DashboardAnalytics } from './pages/dashboard/Analytics';
 import { DashboardSettings } from './pages/dashboard/Settings';
-import { WebsiteBuilder } from './pages/dashboard/website';
+import { WebsiteLayout, WebsiteDashboard, WebsiteNavigation, WebsiteHomepage, WebsitePages, WebsiteTheme, WebsiteSeo, WebsiteAppearance, WebsiteAnalytics } from './pages/dashboard/website';
 import { Billing } from './pages/dashboard/Billing';
 import { Partners } from './pages/dashboard/Partners';
 import { Sponsors } from './pages/dashboard/SponsorsPage';
@@ -170,7 +170,16 @@ export default function App() {
                   <Route path="settings" element={<TicketingSettings />} />
                 </Route>
                 <Route path="settings" element={<DashboardSettings />} />
-                <Route path="website" element={<WebsiteBuilder />} />
+                <Route path="website" element={<WebsiteLayout />}>
+                  <Route index element={<WebsiteDashboard />} />
+                  <Route path="navigation" element={<WebsiteNavigation />} />
+                  <Route path="homepage" element={<WebsiteHomepage />} />
+                  <Route path="pages" element={<WebsitePages />} />
+                  <Route path="theme" element={<WebsiteTheme />} />
+                  <Route path="seo" element={<WebsiteSeo />} />
+                  <Route path="appearance" element={<WebsiteAppearance />} />
+                  <Route path="analytics" element={<WebsiteAnalytics />} />
+                </Route>
                 <Route path="profile" element={<UserProfile />} />
                 <Route path="profile/:userId" element={<UserProfile />} />
                 <Route path="my-awards" element={<MyAwards />} />
