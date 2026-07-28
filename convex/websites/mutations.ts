@@ -15,23 +15,167 @@ async function requireOrgAdmin(ctx: any, firebaseUid: string | undefined, orgId:
   return user;
 }
 
-const DEFAULT_NAVIGATION = [
-  { id: 'home', label: 'Home', pageId: 'home', isEnabled: true, order: 0 },
-  { id: 'about', label: 'About', pageId: 'about', isEnabled: true, order: 1 },
-  { id: 'events', label: 'Events', pageId: 'events', isEnabled: true, order: 2 },
-  { id: 'winners', label: 'Winners', pageId: 'winners', isEnabled: true, order: 3 },
-  { id: 'media', label: 'Media', pageId: 'media', isEnabled: true, order: 4 },
-  { id: 'voting', label: 'Voting', pageId: 'voting', isEnabled: false, order: 5 },
-  { id: 'live-feed', label: 'Live Feed', pageId: 'live-feed', isEnabled: false, order: 6 },
-  { id: 'contact', label: 'Contact', pageId: 'contact', isEnabled: true, order: 7 },
-];
+const ORG_TYPE_LABELS: Record<string, string> = {
+  company: 'organization', government: 'government body', nonprofit: 'nonprofit',
+  university: 'university', community: 'community', media: 'media outlet',
+  individual: 'initiative', other: 'organization',
+};
 
-const DEFAULT_HOMEPAGE_SECTIONS = [
-  { id: 'hero', type: 'hero', isEnabled: true, order: 0, title: 'Welcome', subtitle: 'Celebrating Excellence' },
-  { id: 'featured-events', type: 'featured_events', isEnabled: true, order: 1, title: 'Featured Awards' },
-  { id: 'sponsors', type: 'sponsors', isEnabled: true, order: 2, title: 'Our Sponsors' },
-  { id: 'newsletter', type: 'newsletter', isEnabled: true, order: 3, title: 'Stay Updated', subtitle: 'Subscribe to our newsletter' },
-];
+function buildStarterContent(org: any) {
+  const name = org.name;
+  const typeLabel = ORG_TYPE_LABELS[org.type] ?? 'organization';
+  const location = [org.city, org.country].filter(Boolean).join(', ') || '';
+  const locationPhrase = location ? ` based in ${location}` : '';
+
+  return {
+    navigation: [
+      { id: 'home', label: 'Home', pageId: 'home', isEnabled: true, order: 0 },
+      { id: 'about', label: 'About', pageId: 'about', isEnabled: true, order: 1 },
+      { id: 'events', label: 'Events', pageId: 'events', isEnabled: true, order: 2 },
+      { id: 'winners', label: 'Winners', pageId: 'winners', isEnabled: true, order: 3 },
+      { id: 'media', label: 'Media', pageId: 'media', isEnabled: true, order: 4 },
+      { id: 'voting', label: 'Voting', pageId: 'voting', isEnabled: false, order: 5 },
+      { id: 'live-feed', label: 'Live Feed', pageId: 'live-feed', isEnabled: false, order: 6 },
+      { id: 'contact', label: 'Contact', pageId: 'contact', isEnabled: true, order: 7 },
+    ],
+    homepageSections: [
+      {
+        id: 'hero', type: 'hero', isEnabled: true, order: 0,
+        title: name,
+        subtitle: org.description || `Welcome to ${name}`,
+        content: org.description || `A premier ${typeLabel}${locationPhrase} celebrating excellence and innovation.`,
+        ctaText: 'Explore Awards',
+        ctaUrl: '/events',
+        backgroundImage: org.coverUrl || '',
+      },
+      {
+        id: 'about', type: 'about', isEnabled: true, order: 1,
+        title: `About ${name}`,
+        subtitle: 'Our Story',
+        content: org.description
+          || `${name} is a leading ${typeLabel}${locationPhrase} dedicated to recognizing outstanding achievements and fostering a community of excellence. Since ${org.foundedYear || 'our founding'}, we have been committed to honoring the best and brightest in our field.`,
+        metadata: {
+          mission: `To empower and celebrate excellence within the ${typeLabel} community through meaningful recognition and connection.`,
+          vision: `To be the most respected platform for honoring achievement and driving innovation in our industry.`,
+        },
+      },
+      {
+        id: 'featured-events', type: 'featured_events', isEnabled: true, order: 2,
+        title: 'Featured Awards',
+        subtitle: 'Discover our flagship programs',
+        content: '',
+      },
+      {
+        id: 'sponsors', type: 'sponsors', isEnabled: true, order: 3,
+        title: 'Our Partners',
+        subtitle: 'Proudly supported by industry leaders',
+      },
+      {
+        id: 'gallery', type: 'gallery', isEnabled: true, order: 4,
+        title: 'Gallery',
+        subtitle: 'Moments from our events',
+      },
+      {
+        id: 'newsletter', type: 'newsletter', isEnabled: true, order: 5,
+        title: 'Stay Updated',
+        subtitle: `Subscribe to receive the latest news and updates from ${name}.`,
+      },
+      {
+        id: 'faq', type: 'faq', isEnabled: true, order: 6,
+        title: 'Frequently Asked Questions',
+        subtitle: 'Common questions about our programs',
+      },
+      {
+        id: 'contact', type: 'contact', isEnabled: true, order: 7,
+        title: 'Get in Touch',
+        subtitle: `We'd love to hear from you`,
+      },
+    ],
+    seo: {
+      title: `${name} - Awards & Recognition`,
+      description: org.description || `Official website of ${name}. Explore our awards, events, and programs.`,
+      keywords: [name, 'awards', 'recognition', org.type, location].filter(Boolean),
+    },
+    footerContent: `© ${new Date().getFullYear()} ${name}. All rights reserved.`,
+  };
+}
+
+export const ensureWebsite = mutation({
+  args: { firebaseUid: v.optional(v.string()), orgId: v.id('organizations') },
+  handler: async (ctx, args) => {
+    const user = await getAuthenticatedUser(ctx, args.firebaseUid);
+
+    const existing = await ctx.db
+      .query('organizationWebsites')
+      .withIndex('by_orgId', (q) => q.eq('orgId', args.orgId))
+      .unique();
+    if (existing) return { websiteId: existing._id, created: false };
+
+    const org = await ctx.db.get(args.orgId);
+    if (!org) throw new Error('Organization not found');
+
+    const membership = await ctx.db
+      .query('organizationMembers')
+      .withIndex('by_orgId_userId', (q) => q.eq('orgId', args.orgId).eq('userId', user._id))
+      .unique();
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      if (user.role !== 'platform_admin') {
+        throw new Error('Access denied: organization admin required');
+      }
+    }
+
+    const starter = buildStarterContent(org);
+    const now = new Date().toISOString();
+
+    const websiteId = await ctx.db.insert('organizationWebsites', {
+      orgId: args.orgId,
+      theme: 'classic',
+      navigation: starter.navigation,
+      homepageSections: starter.homepageSections,
+      seo: starter.seo,
+      footerContent: starter.footerContent,
+      isPublished: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const defaultPages = [
+      { pageId: 'home', title: 'Home', published: true },
+      { pageId: 'about', title: 'About', published: true },
+      { pageId: 'events', title: 'Events', published: true },
+      { pageId: 'winners', title: 'Winners', published: false },
+      { pageId: 'media', title: 'Media', published: true },
+      { pageId: 'voting', title: 'Voting', published: false },
+      { pageId: 'live-feed', title: 'Live Feed', published: false },
+      { pageId: 'contact', title: 'Contact', published: true },
+    ];
+    for (const p of defaultPages) {
+      let content = '';
+      if (p.pageId === 'about') {
+        content = `<h2>About ${org.name}</h2><p>${org.description || `${org.name} is a leading organization dedicated to recognizing excellence and innovation.`}</p><h3>Our Mission</h3><p>To empower and celebrate excellence through meaningful recognition and connection.</p><h3>Our Vision</h3><p>To be the most respected platform for honoring achievement in our industry.</p>`;
+      } else if (p.pageId === 'contact') {
+        content = `<h2>Contact Us</h2><p>Email: ${org.contactEmail || 'contact@example.com'}</p>${org.phone ? `<p>Phone: ${org.phone}</p>` : ''}${location ? `<p>Location: ${location}</p>` : ''}`;
+      } else if (p.pageId === 'home') {
+        content = `<h1>Welcome to ${org.name}</h1><p>${org.description || `A premier organization celebrating excellence.`}</p>`;
+      }
+
+      await ctx.db.insert('websitePages', {
+        orgId: args.orgId,
+        websiteId,
+        pageId: p.pageId,
+        title: p.title,
+        slug: p.pageId,
+        content,
+        sections: [],
+        isPublished: p.published,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    return { websiteId, created: true };
+  },
+});
 
 export const createWebsite = mutation({
   args: { firebaseUid: v.optional(v.string()), orgId: v.id('organizations') },
@@ -44,30 +188,44 @@ export const createWebsite = mutation({
       .unique();
     if (existing) throw new Error('Website already exists for this organization');
 
+    const org = await ctx.db.get(args.orgId);
+    if (!org) throw new Error('Organization not found');
+    const starter = buildStarterContent(org);
     const now = new Date().toISOString();
+
     const websiteId = await ctx.db.insert('organizationWebsites', {
       orgId: args.orgId,
       theme: 'classic',
-      navigation: DEFAULT_NAVIGATION,
-      homepageSections: DEFAULT_HOMEPAGE_SECTIONS,
+      navigation: starter.navigation,
+      homepageSections: starter.homepageSections,
+      seo: starter.seo,
+      footerContent: starter.footerContent,
       isPublished: false,
       createdAt: now,
       updatedAt: now,
     });
 
-    const defaultPages = ['home', 'about', 'events', 'winners', 'media', 'voting', 'live-feed', 'contact'];
-    for (const pageId of defaultPages) {
+    const defaultPages = [
+      { pageId: 'home', title: 'Home', published: true },
+      { pageId: 'about', title: 'About', published: true },
+      { pageId: 'events', title: 'Events', published: true },
+      { pageId: 'winners', title: 'Winners', published: false },
+      { pageId: 'media', title: 'Media', published: true },
+      { pageId: 'voting', title: 'Voting', published: false },
+      { pageId: 'live-feed', title: 'Live Feed', published: false },
+      { pageId: 'contact', title: 'Contact', published: true },
+    ];
+    for (const p of defaultPages) {
+      let content = '';
+      if (p.pageId === 'about') {
+        content = `<h2>About ${org.name}</h2><p>${org.description || `${org.name} is a leading organization.`}</p>`;
+      } else if (p.pageId === 'contact') {
+        content = `<h2>Contact Us</h2><p>Email: ${org.contactEmail}</p>`;
+      }
       await ctx.db.insert('websitePages', {
-        orgId: args.orgId,
-        websiteId,
-        pageId,
-        title: pageId.charAt(0).toUpperCase() + pageId.slice(1).replace(/-/g, ' '),
-        slug: pageId,
-        content: '',
-        sections: [],
-        isPublished: pageId === 'home' || pageId === 'about',
-        createdAt: now,
-        updatedAt: now,
+        orgId: args.orgId, websiteId, pageId: p.pageId, title: p.title,
+        slug: p.pageId, content, sections: [], isPublished: p.published,
+        createdAt: now, updatedAt: now,
       });
     }
 

@@ -1,9 +1,1 @@
-export { WebsiteLayout } from './WebsiteLayout';
-export { WebsiteDashboard } from './WebsiteDashboard';
-export { WebsiteNavigation } from './WebsiteNavigation';
-export { WebsiteHomepage } from './WebsiteHomepage';
-export { WebsitePages } from './WebsitePages';
-export { WebsiteTheme } from './WebsiteTheme';
-export { WebsiteSeo } from './WebsiteSeo';
-export { WebsiteAppearance } from './WebsiteAppearance';
-export { WebsiteAnalytics } from './WebsiteAnalytics';
+export { WebsiteManager } from './WebsiteManager';
