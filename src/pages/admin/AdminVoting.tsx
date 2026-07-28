@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button';
 import { useToast } from '../../lib/toast';
 import { Vote, Loader2, TrendingUp, AlertTriangle, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { ChartContainer } from '../../components/ui/ChartContainer';
 
 export function AdminVoting() {
   const { user } = useAuth();
@@ -59,9 +60,8 @@ export function AdminVoting() {
             <CardTitle>Votes (Last 7 Days)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[250px] w-full">
-              {voting.votesChart.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
+            {voting.votesChart.length > 0 ? (
+                <ChartContainer height={250}>
                   <BarChart data={voting.votesChart}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                     <XAxis dataKey="name" stroke="#5d5d5d" fontSize={10} axisLine={false} tickLine={false} />
@@ -69,11 +69,10 @@ export function AdminVoting() {
                     <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontSize: 12 }} />
                     <Bar dataKey="votes" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-dark-500 text-sm">No vote data yet</div>
+                <div className="h-[250px] flex items-center justify-center text-dark-500 text-sm">No vote data yet</div>
               )}
-            </div>
           </CardContent>
         </Card>
 

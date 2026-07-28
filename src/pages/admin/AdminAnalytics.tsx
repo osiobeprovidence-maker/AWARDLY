@@ -4,7 +4,8 @@ import { api } from '../../../convex/_generated/api';
 import { useAuth } from '../../lib/convex-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { BarChart3, Loader2, Users, Building2, Trophy, Globe } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { ChartContainer } from '../../components/ui/ChartContainer';
 
 export function AdminAnalytics() {
   const { user } = useAuth();
@@ -66,8 +67,7 @@ export function AdminAnalytics() {
             <CardTitle>Platform Growth</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height={300}>
+              <ChartContainer height={300}>
                 <BarChart data={growthData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="name" stroke="#5d5d5d" fontSize={10} axisLine={false} tickLine={false} />
@@ -75,8 +75,7 @@ export function AdminAnalytics() {
                   <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontSize: 12 }} />
                   <Bar dataKey="count" fill="#eab308" radius={[4, 4, 0, 0]} />
                 </BarChart>
-              </ResponsiveContainer>
-            </div>
+              </ChartContainer>
           </CardContent>
         </Card>
 

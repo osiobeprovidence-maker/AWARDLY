@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
-import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell } from 'recharts';
+import { ChartContainer } from '../../components/ui/ChartContainer';
 import { TrendingUp, Users, DollarSign, Vote, Globe, Smartphone, BarChart3 } from 'lucide-react';
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { useAuth } from '../../lib/convex-auth';
@@ -89,8 +90,7 @@ export function DashboardAnalytics() {
                   <p className="text-sm text-dark-500 max-w-xs">Create your first event and share it to start seeing audience analytics here.</p>
                 </div>
               ) : (
-                <div className="h-[350px] w-full">
-                 <ResponsiveContainer width="100%" height={350}>
+                <ChartContainer height={350}>
                     <AreaChart data={emptyVisitData}>
                      <defs>
                        <linearGradient id="growth" x1="0" y1="0" x2="0" y2="1">
@@ -107,8 +107,7 @@ export function DashboardAnalytics() {
                      />
                      <Area type="monotone" dataKey="value" stroke="#d4a352" strokeWidth={2} fill="url(#growth)" />
                     </AreaChart>
-                 </ResponsiveContainer>
-                </div>
+                </ChartContainer>
               )}
            </CardContent>
         </Card>

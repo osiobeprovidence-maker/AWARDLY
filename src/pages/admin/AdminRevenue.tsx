@@ -4,7 +4,8 @@ import { api } from '../../../convex/_generated/api';
 import { useAuth } from '../../lib/convex-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { DollarSign, Loader2, TrendingUp, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { ChartContainer } from '../../components/ui/ChartContainer';
 
 export function AdminRevenue() {
   const { user } = useAuth();
@@ -66,9 +67,8 @@ export function AdminRevenue() {
             <CardTitle>Revenue Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full">
-              {stats.revenueChart.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+            {stats.revenueChart.length > 0 ? (
+                <ChartContainer height={300}>
                   <AreaChart data={stats.revenueChart}>
                     <defs>
                       <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
@@ -82,11 +82,10 @@ export function AdminRevenue() {
                     <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontSize: 12 }} formatter={(value: number) => [`₦${value.toLocaleString()}`, 'Revenue']} />
                     <Area type="monotone" dataKey="rev" stroke="#eab308" strokeWidth={3} fill="url(#revGrad)" />
                   </AreaChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-dark-500 text-sm">No revenue data yet</div>
+                <div className="h-[300px] flex items-center justify-center text-dark-500 text-sm">No revenue data yet</div>
               )}
-            </div>
           </CardContent>
         </Card>
 

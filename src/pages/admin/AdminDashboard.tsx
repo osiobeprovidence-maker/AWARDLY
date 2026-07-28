@@ -8,7 +8,8 @@ import {
   ExternalLink, Activity, Loader2, DollarSign, Vote, Trophy, Ban, Eye,
   CheckCircle2, XCircle
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { ChartContainer } from '../../components/ui/ChartContainer';
 import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { useAuth } from '../../lib/convex-auth';
@@ -133,9 +134,8 @@ export function AdminDashboard() {
               <CardTitle>Platform Revenue (Weekly)</CardTitle>
             </CardHeader>
             <CardContent className="mt-4">
-              <div className="h-[300px] w-full">
-                {stats.revenueChart.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
+              {stats.revenueChart.length > 0 ? (
+                  <ChartContainer height={300}>
                     <AreaChart data={stats.revenueChart}>
                       <defs>
                         <linearGradient id="ecosystem" x1="0" y1="0" x2="0" y2="1">
@@ -152,11 +152,10 @@ export function AdminDashboard() {
                       />
                       <Area type="monotone" dataKey="rev" stroke="#6366f1" strokeWidth={3} fill="url(#ecosystem)" />
                     </AreaChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-dark-500 text-sm">No revenue data yet</div>
+                  <div className="h-[300px] flex items-center justify-center text-dark-500 text-sm">No revenue data yet</div>
                 )}
-              </div>
             </CardContent>
           </Card>
 

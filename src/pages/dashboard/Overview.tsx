@@ -14,8 +14,9 @@ import { useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, PieChart, Pie, Cell
+  PieChart, Pie, Cell
 } from 'recharts';
+import { ChartContainer } from '../../components/ui/ChartContainer';
 
 function StatCard({ label, value, icon: Icon, color, to, sub, delay = 0 }: {
   label: string;
@@ -307,9 +308,8 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             {chartData.length > 0 ? (
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData}>
+              <ChartContainer height={256}>
+                <AreaChart data={chartData}>
                     <defs>
                       <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#c68a35" stopOpacity={0.3} />
@@ -345,8 +345,7 @@ export function DashboardOverview() {
                       fill="url(#goldGradient)"
                     />
                   </AreaChart>
-                </ResponsiveContainer>
-              </div>
+              </ChartContainer>
             ) : (
               <div className="h-64 flex items-center justify-center text-dark-500 text-sm">
                 No analytics data yet
@@ -363,8 +362,7 @@ export function DashboardOverview() {
           <CardContent>
             {eventPipelineData.length > 0 ? (
               <div className="space-y-4">
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer height={192}>
                     <PieChart>
                       <Pie
                         data={eventPipelineData}
@@ -389,8 +387,7 @@ export function DashboardOverview() {
                         }}
                       />
                     </PieChart>
-                  </ResponsiveContainer>
-                </div>
+                </ChartContainer>
                 <div className="grid grid-cols-2 gap-2">
                   {eventPipelineData.map((d) => (
                     <div key={d.name} className="flex items-center gap-2 text-xs">
@@ -420,8 +417,7 @@ export function DashboardOverview() {
           <CardContent>
             {nominationPieData.length > 0 ? (
               <div className="space-y-4">
-                <div className="h-40">
-                  <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer height={160}>
                     <PieChart>
                       <Pie
                         data={nominationPieData}
@@ -446,8 +442,7 @@ export function DashboardOverview() {
                         }}
                       />
                     </PieChart>
-                  </ResponsiveContainer>
-                </div>
+                </ChartContainer>
                 <div className="space-y-2">
                   {nominationPieData.map((d) => (
                     <div key={d.name} className="flex items-center justify-between text-xs">
